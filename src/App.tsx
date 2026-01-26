@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Copy, Heart, ArrowClockwise, Check, Plus, X, Shuffle, Export } from '@phosphor-icons/react'
+import { Copy, Heart, ArrowClockwise, Check, Plus, X, Shuffle, Export, SpeakerHigh, SpeakerSlash, Sparkle } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -8,12 +8,97 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import { useKV } from '@github/spark/hooks'
 import { toast, Toaster } from 'sonner'
 
 declare const spark: {
   llmPrompt: (strings: TemplateStringsArray, ...values: unknown[]) => string
   llm: (prompt: string, model?: string, jsonMode?: boolean) => Promise<string>
+}
+
+const useSound = () => {
+  const audioContextRef = useRef<AudioContext | null>(null)
+  
+  const getContext = () => {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new AudioContext()
+    }
+    return audioContextRef.current
+  }
+  
+  const playMysticChime = () => {
+    const ctx = getContext()
+    const now = ctx.currentTime
+    
+    const frequencies = [523.25, 659.25, 783.99, 1046.5]
+    frequencies.forEach((freq, i) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.frequency.value = freq
+      osc.type = 'sine'
+      gain.gain.setValueAtTime(0, now + i * 0.15)
+      gain.gain.linearRampToValueAtTime(0.15, now + i * 0.15 + 0.05)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.15 + 0.8)
+      osc.start(now + i * 0.15)
+      osc.stop(now + i * 0.15 + 0.8)
+    })
+  }
+  
+  const playReveal = () => {
+    const ctx = getContext()
+    const now = ctx.currentTime
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.frequency.setValueAtTime(300, now)
+    osc.frequency.exponentialRampToValueAtTime(600, now + 0.2)
+    osc.type = 'triangle'
+    gain.gain.setValueAtTime(0.2, now)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3)
+    osc.start(now)
+    osc.stop(now + 0.3)
+  }
+  
+  const playShake = () => {
+    const ctx = getContext()
+    const now = ctx.currentTime
+    for (let i = 0; i < 5; i++) {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.frequency.value = 150 + Math.random() * 100
+      osc.type = 'square'
+      gain.gain.setValueAtTime(0.05, now + i * 0.1)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.08)
+      osc.start(now + i * 0.1)
+      osc.stop(now + i * 0.1 + 0.08)
+    }
+  }
+  
+  const playSuccess = () => {
+    const ctx = getContext()
+    const now = ctx.currentTime
+    const notes = [523.25, 659.25, 783.99]
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.frequency.value = freq
+      osc.type = 'sine'
+      gain.gain.setValueAtTime(0.2, now + i * 0.1)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.3)
+      osc.start(now + i * 0.1)
+      osc.stop(now + i * 0.1 + 0.3)
+    })
+  }
+  
+  return { playMysticChime, playReveal, playShake, playSuccess }
 }
 
 interface Question {
@@ -110,9 +195,35 @@ export default function App() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [loadingPhrase, setLoadingPhrase] = useState('')
+  const [loadingProgress, setLoadingProgress] = useState(0)
   const [quickAnswer, setQuickAnswer] = useState<{text: string, type: string} | null>(null)
   const [isShakingOrb, setIsShakingOrb] = useState(false)
   const [savedQuestions, setSavedQuestions] = useKV<Question[]>('oracle-saved-questions', [])
+  const [soundEnabled, setSoundEnabled] = useKV<boolean>('oracle-sound-enabled', true)
+  const [animationsEnabled, setAnimationsEnabled] = useKV<boolean>('oracle-animations-enabled', true)
+  
+  const sounds = useSound()
+  
+  const playSound = (soundFn: () => void) => {
+    if (soundEnabled) {
+      soundFn()
+    }
+  }
+  
+  useEffect(() => {
+    if (isGenerating) {
+      setLoadingProgress(0)
+      const interval = setInterval(() => {
+        setLoadingProgress(prev => {
+          if (prev >= 90) return prev
+          return prev + Math.random() * 15
+        })
+      }, 300)
+      return () => clearInterval(interval)
+    } else {
+      setLoadingProgress(100)
+    }
+  }, [isGenerating])
 
   const addTopic = (topic: string) => {
     const trimmed = topic.trim()
@@ -166,6 +277,7 @@ export default function App() {
     setQuestions([])
     setCurrentQuestionIndex(0)
     setLoadingPhrase(getRandomLoadingPhrase())
+    playSound(sounds.playMysticChime)
 
     const prompt = spark.llmPrompt`Generate 8 simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
 
@@ -198,6 +310,7 @@ Return a JSON object with a "questions" array containing exactly 8 objects, each
         vibe: q.vibe || getRandomVibe()
       }))
       setQuestions(generatedQuestions)
+      playSound(sounds.playSuccess)
       toast.success('🔮 The oracle has spoken!')
     } catch {
       toast.error('🌙 The oracle needs a moment... Please try again.')
@@ -210,6 +323,7 @@ Return a JSON object with a "questions" array containing exactly 8 objects, each
     if (questions.length === 0) return
     
     setIsGenerating(true)
+    playSound(sounds.playMysticChime)
 
     const prompt = spark.llmPrompt`Generate 1 new simple question for a fireside chat about accessibility and inclusion.
 
@@ -239,6 +353,7 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
       const updatedQuestions = [...questions]
       updatedQuestions[currentQuestionIndex] = newQuestion
       setQuestions(updatedQuestions)
+      playSound(sounds.playReveal)
       toast.success('✨ Fresh wisdom revealed!')
     } catch {
       toast.error('🌙 Try again in a moment...')
@@ -291,11 +406,21 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
   const shakeTheOrb = () => {
     setIsShakingOrb(true)
     setQuickAnswer(null)
+    playSound(sounds.playShake)
     setTimeout(() => {
       setQuickAnswer(getRandomResponse())
       setIsShakingOrb(false)
+      playSound(sounds.playReveal)
     }, 1500)
   }
+
+  const animationProps = animationsEnabled 
+    ? { initial: { opacity: 0, y: -20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.6 } }
+    : { initial: {}, animate: {}, transition: { duration: 0 } }
+
+  const floatAnimation = animationsEnabled
+    ? { y: [0, -8, 0] }
+    : {}
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
@@ -304,19 +429,75 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
       <div className="max-w-5xl mx-auto">
         <motion.header 
           className="text-center mb-10"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          {...animationProps}
         >
-          <motion.div 
-            className="inline-block mb-4"
-            animate={{ y: [0, -8, 0] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <div className="w-24 h-24 mx-auto rounded-full crystal-ball mystic-glow flex items-center justify-center">
-              <span className="text-5xl">🔮</span>
+          <div className="flex justify-end mb-4 gap-4 flex-wrap">
+            <div className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border">
+              <Sparkle size={20} className="text-primary" />
+              <Label htmlFor="animations-toggle" className="text-sm font-medium cursor-pointer">Animations</Label>
+              <Switch 
+                id="animations-toggle"
+                checked={animationsEnabled ?? true}
+                onCheckedChange={setAnimationsEnabled}
+              />
             </div>
-          </motion.div>
+            <div className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border">
+              {soundEnabled ? <SpeakerHigh size={20} className="text-primary" /> : <SpeakerSlash size={20} className="text-muted-foreground" />}
+              <Label htmlFor="sound-toggle" className="text-sm font-medium cursor-pointer">Sound</Label>
+              <Switch 
+                id="sound-toggle"
+                checked={soundEnabled ?? true}
+                onCheckedChange={setSoundEnabled}
+              />
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-center gap-6 flex-wrap mb-4">
+            <motion.div 
+              className="inline-block"
+              animate={animationsEnabled ? floatAnimation : {}}
+              transition={animationsEnabled ? { duration: 4, repeat: Infinity, ease: "easeInOut" } : {}}
+            >
+              <div className="w-24 h-24 rounded-full crystal-ball mystic-glow flex items-center justify-center">
+                <span className="text-5xl">🔮</span>
+              </div>
+            </motion.div>
+            
+            <motion.button
+              onClick={shakeTheOrb}
+              disabled={isShakingOrb}
+              className="w-20 h-20 rounded-full crystal-ball mystic-glow flex items-center justify-center text-4xl cursor-pointer hover:scale-110 transition-transform disabled:cursor-wait relative group"
+              animate={isShakingOrb && animationsEnabled ? { 
+                x: [0, -10, 10, -10, 10, 0],
+                rotate: [0, -5, 5, -5, 5, 0]
+              } : {}}
+              transition={{ duration: 0.5, repeat: isShakingOrb ? Infinity : 0 }}
+              aria-label="Shake the oracle orb for a yes/no answer"
+            >
+              🎱
+              <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                Shake me!
+              </span>
+            </motion.button>
+          </div>
+          
+          <AnimatePresence>
+            {quickAnswer && !isShakingOrb && (
+              <motion.div
+                initial={animationsEnabled ? { opacity: 0, scale: 0.8, y: -10 } : {}}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={animationsEnabled ? { opacity: 0, scale: 0.8, y: -10 } : {}}
+                className={`inline-block mb-4 px-6 py-3 rounded-xl text-lg font-bold ${
+                  quickAnswer.type === 'yes' ? 'bg-green-500/20 text-green-400 border-2 border-green-500/30' :
+                  quickAnswer.type === 'no' ? 'bg-red-500/20 text-red-400 border-2 border-red-500/30' :
+                  'bg-primary/20 text-primary border-2 border-primary/30'
+                }`}
+              >
+                {quickAnswer.text}
+              </motion.div>
+            )}
+          </AnimatePresence>
+          
           <h1 className="text-4xl md:text-6xl font-bold text-foreground tracking-tight mb-3">
             The Oracle of Inclusion</h1>
           <p className="text-muted-foreground text-xl md:text-2xl">
@@ -332,9 +513,9 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
 
         <div className="grid lg:grid-cols-2 gap-6">
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
+            initial={animationsEnabled ? { opacity: 0, x: -20 } : {}}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
+            transition={animationsEnabled ? { duration: 0.5, delay: 0.1 } : { duration: 0 }}
           >
             <Card className="p-6 md:p-8 bg-card border-2 border-border mystic-glow relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" />
@@ -471,9 +652,9 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
+            initial={animationsEnabled ? { opacity: 0, x: 20 } : {}}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            transition={animationsEnabled ? { duration: 0.5, delay: 0.2 } : { duration: 0 }}
             className="space-y-6"
           >
             <Card className="p-6 md:p-8 bg-card border-2 border-border relative overflow-hidden min-h-[400px]">
@@ -505,22 +686,31 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
               {isGenerating && (
                 <div className="text-center py-12">
                   <motion.div
-                    animate={{ 
+                    animate={animationsEnabled ? { 
                       scale: [1, 1.2, 1],
                       rotate: [0, 10, -10, 0]
-                    }}
+                    } : {}}
                     transition={{ duration: 2, repeat: Infinity }}
                     className="text-8xl mb-6"
                   >
                     ✨
                   </motion.div>
                   <motion.p 
-                    className="text-xl text-primary font-medium"
-                    animate={{ opacity: [0.7, 1, 0.7] }}
+                    className="text-xl text-primary font-medium mb-4"
+                    animate={animationsEnabled ? { opacity: [0.7, 1, 0.7] } : {}}
                     transition={{ duration: 1.5, repeat: Infinity }}
                   >
                     {loadingPhrase}
                   </motion.p>
+                  <div className="w-full max-w-xs mx-auto h-3 bg-muted rounded-full overflow-hidden">
+                    <motion.div 
+                      className="h-full bg-gradient-to-r from-primary via-accent to-primary rounded-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${loadingProgress}%` }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-2">Summoning wisdom...</p>
                 </div>
               )}
 
@@ -528,10 +718,10 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
                 {currentQuestion && !isGenerating && (
                   <motion.div
                     key={currentQuestion.id}
-                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                    initial={animationsEnabled ? { opacity: 0, y: 20, scale: 0.95 } : {}}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                    transition={{ duration: 0.4 }}
+                    exit={animationsEnabled ? { opacity: 0, y: -20, scale: 0.95 } : {}}
+                    transition={animationsEnabled ? { duration: 0.4 } : { duration: 0 }}
                     className="space-y-6"
                   >
                     <div className="text-center mb-4 flex items-center justify-center gap-3 flex-wrap">
@@ -674,56 +864,11 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
           </motion.div>
         </div>
 
-        <motion.div 
-          className="mt-12 mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-        >
-          <Card className="p-6 bg-card/50 border-2 border-border max-w-md mx-auto text-center">
-            <h3 className="text-xl font-bold text-foreground mb-4 flex items-center justify-center gap-2">
-              <span>🎱</span> Quick Oracle <span className="text-sm font-normal text-muted-foreground">(just for fun!)</span>
-            </h3>
-            <p className="text-muted-foreground mb-4 text-base">Think of a yes/no question, then shake the orb!</p>
-            
-            <motion.button
-              onClick={shakeTheOrb}
-              disabled={isShakingOrb}
-              className="w-20 h-20 mx-auto rounded-full crystal-ball mystic-glow flex items-center justify-center text-4xl cursor-pointer hover:scale-110 transition-transform disabled:cursor-wait"
-              animate={isShakingOrb ? { 
-                x: [0, -10, 10, -10, 10, 0],
-                rotate: [0, -5, 5, -5, 5, 0]
-              } : {}}
-              transition={{ duration: 0.5, repeat: isShakingOrb ? Infinity : 0 }}
-              aria-label="Shake the oracle orb for a yes/no answer"
-            >
-              🎱
-            </motion.button>
-            
-            <AnimatePresence>
-              {quickAnswer && !isShakingOrb && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className={`mt-4 p-3 rounded-lg text-lg font-bold ${
-                    quickAnswer.type === 'yes' ? 'bg-green-500/20 text-green-400' :
-                    quickAnswer.type === 'no' ? 'bg-red-500/20 text-red-400' :
-                    'bg-primary/20 text-primary'
-                  }`}
-                >
-                  {quickAnswer.text}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </Card>
-        </motion.div>
-
         <motion.footer 
           className="text-center mt-8 text-muted-foreground text-lg"
-          initial={{ opacity: 0 }}
+          initial={animationsEnabled ? { opacity: 0 } : {}}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
+          transition={animationsEnabled ? { delay: 0.8 } : { duration: 0 }}
         >
           <p className="font-medium">"Nothing about us without us" ✊ — Disability Rights Movement</p>
         </motion.footer>
