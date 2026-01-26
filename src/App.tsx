@@ -336,10 +336,12 @@ export default function App() {
       ? focusAreasLabels.join(', ')
       : 'accessibility and inclusion in technology'
 
-    const vibeDistribution = VIBE_TYPES.map((vibe, idx) => {
-      const count = Math.floor(questionCount / 4) + (idx < questionCount % 4 ? 1 : 0)
-      return `${count} ${vibe.split(' ')[1]}`
-    }).join(', ')
+    const vibeDistribution = questionCount === 1 
+      ? 'any vibe of your choice'
+      : VIBE_TYPES.map((vibe, idx) => {
+          const count = Math.floor(questionCount / 4) + (idx < questionCount % 4 ? 1 : 0)
+          return `${count} ${vibe.split(' ')[1]}`
+        }).join(', ')
 
     const prompt = spark.llmPrompt`Generate ${questionCount} simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
 
@@ -780,17 +782,17 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                           id="question-count-slider"
                           value={[questionCount]}
                           onValueChange={(value) => setQuestionCount(value[0])}
-                          min={5}
+                          min={1}
                           max={10}
                           step={1}
                           className="w-full [&_[data-radix-slider-track]]:bg-muted [&_[data-radix-slider-range]]:bg-accent [&_[data-radix-slider-thumb]]:bg-accent [&_[data-radix-slider-thumb]]:border-2 [&_[data-radix-slider-thumb]]:border-foreground"
-                          aria-valuemin={5}
+                          aria-valuemin={1}
                           aria-valuemax={10}
                           aria-valuenow={questionCount}
-                          aria-valuetext={`${questionCount} questions`}
+                          aria-valuetext={`${questionCount} question${questionCount === 1 ? '' : 's'}`}
                         />
                         <div className="flex justify-between mt-2 text-base text-foreground font-bold" aria-hidden="true">
-                          <span>5</span>
+                          <span>1</span>
                           <span>10</span>
                         </div>
                       </div>
@@ -839,7 +841,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     <Button 
                       onClick={resetForm}
                       variant="outline"
-                      className="py-7 px-6 border-2 border-muted-foreground text-muted-foreground hover:bg-muted hover:text-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                      className="py-7 px-6 border-2 border-border text-muted-foreground hover:bg-muted hover:text-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
                       aria-label="Reset form"
                     >
                       <ArrowCounterClockwise size={24} aria-hidden="true" />
