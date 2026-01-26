@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
@@ -175,9 +174,10 @@ const FOCUS_AREAS = [
   { id: 'leadership', label: '👔 Leadership' },
   { id: 'education', label: '📖 Education' },
   { id: 'advocacy', label: '📣 Advocacy & Community' },
+  { id: 'other', label: '✏️ Other' },
 ]
 
-const QUESTION_COUNTS = [4, 6, 8, 10, 12]
+const QUESTION_COUNTS = [5, 6, 7, 8, 9, 10]
 
 const MYSTICAL_RESPONSES = [
   { text: "The spirits say... YES! ✨", type: "yes" },
@@ -201,9 +201,9 @@ export default function App() {
   const [topics, setTopics] = useState<string[]>([])
   const [topicInput, setTopicInput] = useState('')
   const [focusAreas, setFocusAreas] = useState<string[]>([])
+  const [otherFocusArea, setOtherFocusArea] = useState('')
   const [experience, setExperience] = useState('')
-  const [additionalNotes, setAdditionalNotes] = useState('')
-  const [questionCount, setQuestionCount] = useState(8)
+  const [questionCount, setQuestionCount] = useState(5)
   const [questions, setQuestions] = useState<Question[]>([])
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -212,6 +212,7 @@ export default function App() {
   const [loadingProgress, setLoadingProgress] = useState(0)
   const [quickAnswer, setQuickAnswer] = useState<{text: string, type: string} | null>(null)
   const [isShakingOrb, setIsShakingOrb] = useState(false)
+  const [showQuickOracle, setShowQuickOracle] = useState(false)
   const [savedQuestions, setSavedQuestions] = useKV<Question[]>('oracle-saved-questions', [])
   const [soundEnabled, setSoundEnabled] = useKV<boolean>('oracle-sound-enabled', true)
   const [animationsEnabled, setAnimationsEnabled] = useKV<boolean>('oracle-animations-enabled', true)
@@ -272,9 +273,9 @@ export default function App() {
     setTopics([])
     setTopicInput('')
     setFocusAreas([])
+    setOtherFocusArea('')
     setExperience('')
-    setAdditionalNotes('')
-    setQuestionCount(8)
+    setQuestionCount(5)
     setQuestions([])
     setCurrentQuestionIndex(0)
     setQuickAnswer(null)
@@ -316,8 +317,12 @@ export default function App() {
     setLoadingPhrase(getRandomLoadingPhrase())
     playSound(sounds.playMysticChime)
 
-    const focusAreasText = focusAreas.length > 0 
-      ? FOCUS_AREAS.filter(a => focusAreas.includes(a.id)).map(a => a.label).join(', ')
+    const focusAreasLabels = FOCUS_AREAS.filter(a => focusAreas.includes(a.id) && a.id !== 'other').map(a => a.label)
+    if (focusAreas.includes('other') && otherFocusArea.trim()) {
+      focusAreasLabels.push(otherFocusArea.trim())
+    }
+    const focusAreasText = focusAreasLabels.length > 0 
+      ? focusAreasLabels.join(', ')
       : 'accessibility and inclusion in technology'
 
     const vibeDistribution = VIBE_TYPES.map((vibe, idx) => {
@@ -331,7 +336,6 @@ Context:
 - Topics: ${topics.length > 0 ? topics.join(', ') : 'accessibility, inclusion, disability in tech, universal design, assistive technology'}
 - Guest's work area: ${focusAreasText}
 - Experience: ${experience || 'not specified'}
-- Extra notes: ${additionalNotes || 'none'}
 
 Rules:
 - Write at a 9th grade reading level or lower
@@ -477,31 +481,89 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
     <div className="min-h-screen bg-background p-4 md:p-8">
       <Toaster position="top-center" theme="dark" />
       
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         <motion.header 
           className="text-center mb-10"
           {...animationProps}
         >
-          <div className="flex justify-end mb-4 gap-4 flex-wrap">
-            <div className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border">
-              <Sparkle size={20} className="text-primary" />
-              <Label htmlFor="animations-toggle" className="text-sm font-medium cursor-pointer">Animations</Label>
-              <Switch 
-                id="animations-toggle"
-                checked={animationsEnabled ?? true}
-                onCheckedChange={setAnimationsEnabled}
-              />
-            </div>
-            <div className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border">
-              {soundEnabled ? <SpeakerHigh size={20} className="text-primary" /> : <SpeakerSlash size={20} className="text-muted-foreground" />}
-              <Label htmlFor="sound-toggle" className="text-sm font-medium cursor-pointer">Sound</Label>
-              <Switch 
-                id="sound-toggle"
-                checked={soundEnabled ?? true}
-                onCheckedChange={setSoundEnabled}
-              />
+          <div className="flex justify-between items-start mb-4 flex-wrap gap-4">
+            <button
+              onClick={() => setShowQuickOracle(!showQuickOracle)}
+              className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border hover:border-primary transition-colors"
+              title="Quick Answer Oracle"
+            >
+              <span className="text-2xl">🎱</span>
+              <span className="text-sm font-medium">Quick Oracle</span>
+            </button>
+            
+            <div className="flex gap-4 flex-wrap">
+              <div className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border">
+                <Sparkle size={20} className="text-primary" />
+                <Label htmlFor="animations-toggle" className="text-sm font-medium cursor-pointer">Animations</Label>
+                <Switch 
+                  id="animations-toggle"
+                  checked={animationsEnabled ?? true}
+                  onCheckedChange={setAnimationsEnabled}
+                />
+              </div>
+              <div className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border">
+                {soundEnabled ? <SpeakerHigh size={20} className="text-primary" /> : <SpeakerSlash size={20} className="text-muted-foreground" />}
+                <Label htmlFor="sound-toggle" className="text-sm font-medium cursor-pointer">Sound</Label>
+                <Switch 
+                  id="sound-toggle"
+                  checked={soundEnabled ?? true}
+                  onCheckedChange={setSoundEnabled}
+                />
+              </div>
             </div>
           </div>
+
+          <AnimatePresence>
+            {showQuickOracle && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mb-6 overflow-hidden"
+              >
+                <Card className="p-6 bg-card border-2 border-border">
+                  <div className="flex flex-col items-center gap-4">
+                    <p className="text-muted-foreground text-lg">Need a quick yes/no/maybe? Shake the 8-ball!</p>
+                    <motion.button
+                      onClick={shakeTheOrb}
+                      disabled={isShakingOrb}
+                      className="w-20 h-20 rounded-full crystal-ball mystic-glow flex items-center justify-center text-4xl cursor-pointer hover:scale-110 transition-transform disabled:cursor-wait"
+                      animate={isShakingOrb && animationsEnabled ? { 
+                        x: [0, -10, 10, -10, 10, 0],
+                        rotate: [0, -5, 5, -5, 5, 0]
+                      } : {}}
+                      transition={{ duration: 0.5, repeat: isShakingOrb ? Infinity : 0 }}
+                      aria-label="Shake the oracle orb for a yes/no answer"
+                    >
+                      🎱
+                    </motion.button>
+                    
+                    <AnimatePresence>
+                      {quickAnswer && !isShakingOrb && (
+                        <motion.div
+                          initial={animationsEnabled ? { opacity: 0, scale: 0.8 } : {}}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={animationsEnabled ? { opacity: 0, scale: 0.8 } : {}}
+                          className={`px-6 py-3 rounded-xl text-lg font-bold ${
+                            quickAnswer.type === 'yes' ? 'bg-green-500/20 text-green-400 border-2 border-green-500/30' :
+                            quickAnswer.type === 'no' ? 'bg-red-500/20 text-red-400 border-2 border-red-500/30' :
+                            'bg-primary/20 text-primary border-2 border-primary/30'
+                          }`}
+                        >
+                          {quickAnswer.text}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
           
           <motion.div 
             className="inline-block mb-4"
@@ -520,10 +582,10 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
           </p>
         </motion.header>
 
-        <div className="grid lg:grid-cols-2 gap-6">
+        {questions.length === 0 ? (
           <motion.div
-            initial={animationsEnabled ? { opacity: 0, x: -20 } : {}}
-            animate={{ opacity: 1, x: 0 }}
+            initial={animationsEnabled ? { opacity: 0, y: 20 } : {}}
+            animate={{ opacity: 1, y: 0 }}
             transition={animationsEnabled ? { duration: 0.5, delay: 0.1 } : { duration: 0 }}
           >
             <Card className="p-6 md:p-8 bg-card border-2 border-border mystic-glow relative overflow-hidden">
@@ -619,6 +681,18 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
                       </div>
                     ))}
                   </div>
+                  
+                  {focusAreas.includes('other') && (
+                    <div className="mt-3">
+                      <Input
+                        id="other-focus-area"
+                        value={otherFocusArea}
+                        onChange={(e) => setOtherFocusArea(e.target.value)}
+                        placeholder="Describe your focus area..."
+                        className="bg-input border-2 border-border text-foreground placeholder:text-muted-foreground text-lg py-6"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -659,19 +733,6 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
                   </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="notes" className="text-foreground mb-3 block text-lg font-semibold">
-                    📝 Extra Notes (optional)
-                  </Label>
-                  <Textarea
-                    id="notes"
-                    value={additionalNotes}
-                    onChange={(e) => setAdditionalNotes(e.target.value)}
-                    placeholder="Any specific topics to cover or avoid..."
-                    className="bg-input border-2 border-border text-foreground placeholder:text-muted-foreground min-h-[100px] text-lg"
-                  />
-                </div>
-
                 <div className="flex gap-3">
                   <Button 
                     onClick={generateQuestions}
@@ -704,37 +765,19 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
               </div>
             </Card>
           </motion.div>
-
+        ) : (
           <motion.div
-            initial={animationsEnabled ? { opacity: 0, x: 20 } : {}}
-            animate={{ opacity: 1, x: 0 }}
-            transition={animationsEnabled ? { duration: 0.5, delay: 0.2 } : { duration: 0 }}
+            initial={animationsEnabled ? { opacity: 0, y: 20 } : {}}
+            animate={{ opacity: 1, y: 0 }}
+            transition={animationsEnabled ? { duration: 0.5 } : { duration: 0 }}
             className="space-y-6"
           >
-            <Card className="p-6 md:p-8 bg-card border-2 border-border relative overflow-hidden min-h-[400px]">
+            <Card className="p-6 md:p-8 bg-card border-2 border-border relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-accent via-primary to-accent" />
               
               <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">
-                {questions.length > 0 ? 'Your Question' : 'The Oracle Awaits'}
+                Your Question
               </h2>
-
-              {questions.length === 0 && !isGenerating && (
-                <div className="text-center py-8">
-                  <motion.div
-                    animate={{ scale: [1, 1.05, 1], rotate: [0, 5, -5, 0] }}
-                    transition={{ duration: 4, repeat: Infinity }}
-                    className="text-8xl mb-6"
-                  >
-                    🌌
-                  </motion.div>
-                  <p className="text-xl text-muted-foreground mb-4">
-                    The spirits await your inquiry...
-                  </p>
-                  <p className="text-xl text-muted-foreground">
-                    Fill in your details, then click <span className="text-primary font-bold">"Reveal My Questions!"</span> ✨
-                  </p>
-                </div>
-              )}
 
               {isGenerating && (
                 <div className="text-center py-12">
@@ -852,16 +895,25 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
                       </Button>
                     </div>
 
-                    <div className="flex justify-center pt-2">
+                    <div className="flex flex-wrap gap-3 justify-center pt-2">
                       <Button
                         variant="outline"
                         size="lg"
                         onClick={generateQuestions}
                         disabled={isGenerating}
-                        className="text-lg py-6 px-8 border-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground"
+                        className="text-lg py-6 px-6 border-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground"
                       >
                         <ArrowClockwise size={22} className="mr-2" />
-                        🎲 Shuffle All Questions
+                        🎲 Shuffle All
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={resetForm}
+                        className="text-lg py-6 px-6 border-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                      >
+                        <ArrowCounterClockwise size={22} className="mr-2" />
+                        Start Over
                       </Button>
                     </div>
                   </motion.div>
@@ -915,62 +967,7 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
               </Card>
             )}
           </motion.div>
-        </div>
-
-        <motion.div
-          initial={animationsEnabled ? { opacity: 0, y: 20 } : {}}
-          animate={{ opacity: 1, y: 0 }}
-          transition={animationsEnabled ? { duration: 0.5, delay: 0.3 } : { duration: 0 }}
-          className="mt-8"
-        >
-          <Card className="p-6 md:p-8 bg-card border-2 border-border relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-secondary via-accent to-secondary" />
-            
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="text-center md:text-left">
-                <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-                  Quick Answer Oracle
-                </h2>
-                <p className="text-muted-foreground text-lg">
-                  Need a quick yes/no/maybe? Shake the magic 8-ball!
-                </p>
-              </div>
-              
-              <div className="flex flex-col items-center gap-4">
-                <motion.button
-                  onClick={shakeTheOrb}
-                  disabled={isShakingOrb}
-                  className="w-24 h-24 rounded-full crystal-ball mystic-glow flex items-center justify-center text-5xl cursor-pointer hover:scale-110 transition-transform disabled:cursor-wait"
-                  animate={isShakingOrb && animationsEnabled ? { 
-                    x: [0, -10, 10, -10, 10, 0],
-                    rotate: [0, -5, 5, -5, 5, 0]
-                  } : {}}
-                  transition={{ duration: 0.5, repeat: isShakingOrb ? Infinity : 0 }}
-                  aria-label="Shake the oracle orb for a yes/no answer"
-                >
-                  🎱
-                </motion.button>
-                
-                <AnimatePresence>
-                  {quickAnswer && !isShakingOrb && (
-                    <motion.div
-                      initial={animationsEnabled ? { opacity: 0, scale: 0.8, y: -10 } : {}}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={animationsEnabled ? { opacity: 0, scale: 0.8, y: -10 } : {}}
-                      className={`px-6 py-3 rounded-xl text-lg font-bold ${
-                        quickAnswer.type === 'yes' ? 'bg-green-500/20 text-green-400 border-2 border-green-500/30' :
-                        quickAnswer.type === 'no' ? 'bg-red-500/20 text-red-400 border-2 border-red-500/30' :
-                        'bg-primary/20 text-primary border-2 border-primary/30'
-                      }`}
-                    >
-                      {quickAnswer.text}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-          </Card>
-        </motion.div>
+        )}
 
         <motion.footer 
           className="text-center mt-8 text-muted-foreground text-lg"
