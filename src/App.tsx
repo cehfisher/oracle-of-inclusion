@@ -56,10 +56,10 @@ const MYSTICAL_LOADING_PHRASES = [
   "Consulting the accessibility spirits... 👻",
   "Reading the WCAG tea leaves... 🍵",
   "Channeling the wisdom of the ancients... 📜",
-  "The crystal ball is warming up... 🔥",
+  "The cosmic energy is warming up... 🔥",
   "Summoning inclusive insights... ✨",
   "Decoding the cosmic keyboard shortcuts... ⌨️",
-  "The oracle stirs from its slumber... 💤",
+  "The oracle stirs from its slumber... 🌙",
 ]
 
 const getRandomLoadingPhrase = (): string => {
@@ -349,12 +349,11 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           >
             <div className="w-24 h-24 mx-auto rounded-full crystal-ball mystic-glow flex items-center justify-center">
-              <span className="text-5xl">🔮</span>
+              <span className="text-5xl">🌟</span>
             </div>
           </motion.div>
           <h1 className="text-4xl md:text-6xl font-bold text-foreground tracking-tight mb-3">
-            The Oracle of Inclusion ✨
-          </h1>
+            The Oracle of Inclusion 🔮</h1>
           <p className="text-muted-foreground text-xl md:text-2xl">
             "Ask, and the wisdom shall be revealed..." 🌟
           </p>
@@ -376,7 +375,7 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" />
               
               <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6 flex items-center gap-3">
-                <span className="text-3xl">🔮</span>
+                <span className="text-3xl">🌙</span>
                 Consult the Oracle
               </h2>
 
@@ -497,7 +496,7 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
                     </motion.div>
                   ) : (
                     <>
-                      <span className="text-2xl mr-3">🔮</span>
+                      <span className="text-2xl mr-3">✨</span>
                       Reveal My Questions!
                     </>
                   )}
@@ -527,7 +526,7 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
                     transition={{ duration: 4, repeat: Infinity }}
                     className="text-8xl mb-6"
                   >
-                    🔮
+                    🌌
                   </motion.div>
                   <p className="text-xl text-muted-foreground mb-4">
                     The spirits await your inquiry...
@@ -548,7 +547,7 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
                     transition={{ duration: 2, repeat: Infinity }}
                     className="text-8xl mb-6"
                   >
-                    🔮
+                    ✨
                   </motion.div>
                   <motion.p 
                     className="text-xl text-primary font-medium"
@@ -748,7 +747,7 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
               transition={{ duration: 0.5, repeat: isShakingOrb ? Infinity : 0 }}
               aria-label="Shake the oracle orb for a yes/no answer"
             >
-              🔮
+              🎱
             </motion.button>
             
             <AnimatePresence>
