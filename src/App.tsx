@@ -452,63 +452,21 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
             </div>
           </div>
           
-          <div className="flex items-center justify-center gap-6 flex-wrap mb-4">
-            <motion.div 
-              className="inline-block"
-              animate={animationsEnabled ? floatAnimation : {}}
-              transition={animationsEnabled ? { duration: 4, repeat: Infinity, ease: "easeInOut" } : {}}
-            >
-              <div className="w-24 h-24 rounded-full crystal-ball mystic-glow flex items-center justify-center">
-                <span className="text-5xl">🔮</span>
-              </div>
-            </motion.div>
-            
-            <motion.button
-              onClick={shakeTheOrb}
-              disabled={isShakingOrb}
-              className="w-20 h-20 rounded-full crystal-ball mystic-glow flex items-center justify-center text-4xl cursor-pointer hover:scale-110 transition-transform disabled:cursor-wait relative group"
-              animate={isShakingOrb && animationsEnabled ? { 
-                x: [0, -10, 10, -10, 10, 0],
-                rotate: [0, -5, 5, -5, 5, 0]
-              } : {}}
-              transition={{ duration: 0.5, repeat: isShakingOrb ? Infinity : 0 }}
-              aria-label="Shake the oracle orb for a yes/no answer"
-            >
-              🎱
-              <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                Shake me!
-              </span>
-            </motion.button>
-          </div>
-          
-          <AnimatePresence>
-            {quickAnswer && !isShakingOrb && (
-              <motion.div
-                initial={animationsEnabled ? { opacity: 0, scale: 0.8, y: -10 } : {}}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={animationsEnabled ? { opacity: 0, scale: 0.8, y: -10 } : {}}
-                className={`inline-block mb-4 px-6 py-3 rounded-xl text-lg font-bold ${
-                  quickAnswer.type === 'yes' ? 'bg-green-500/20 text-green-400 border-2 border-green-500/30' :
-                  quickAnswer.type === 'no' ? 'bg-red-500/20 text-red-400 border-2 border-red-500/30' :
-                  'bg-primary/20 text-primary border-2 border-primary/30'
-                }`}
-              >
-                {quickAnswer.text}
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <motion.div 
+            className="inline-block mb-4"
+            animate={animationsEnabled ? floatAnimation : {}}
+            transition={animationsEnabled ? { duration: 4, repeat: Infinity, ease: "easeInOut" } : {}}
+          >
+            <div className="w-24 h-24 rounded-full crystal-ball mystic-glow flex items-center justify-center">
+              <span className="text-5xl">🔮</span>
+            </div>
+          </motion.div>
           
           <h1 className="text-4xl md:text-6xl font-bold text-foreground tracking-tight mb-3">
             The Oracle of Inclusion</h1>
           <p className="text-muted-foreground text-xl md:text-2xl">
             "Ask, and the wisdom shall be revealed..."
           </p>
-          <div className="flex items-center justify-center gap-3 mt-5 flex-wrap">
-            <span className="text-lg px-4 py-2 rounded-full bg-primary/20 text-primary font-medium">♿ Disability</span>
-            <span className="text-lg px-4 py-2 rounded-full bg-accent/20 text-accent font-medium">💻 Tech</span>
-            <span className="text-lg px-4 py-2 rounded-full bg-secondary/30 text-secondary-foreground font-medium">🎨 Design</span>
-            <span className="text-lg px-4 py-2 rounded-full bg-primary/20 text-primary font-medium">🌈 Life</span>
-          </div>
         </motion.header>
 
         <div className="grid lg:grid-cols-2 gap-6">
@@ -520,8 +478,7 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
             <Card className="p-6 md:p-8 bg-card border-2 border-border mystic-glow relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" />
               
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6 flex items-center gap-3">
-                <span className="text-3xl">🌙</span>
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">
                 Consult the Oracle
               </h2>
 
@@ -660,8 +617,7 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
             <Card className="p-6 md:p-8 bg-card border-2 border-border relative overflow-hidden min-h-[400px]">
               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-accent via-primary to-accent" />
               
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6 flex items-center gap-3">
-                <span className="text-3xl">✨</span>
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">
                 {questions.length > 0 ? 'Your Question' : 'The Oracle Awaits'}
               </h2>
 
@@ -864,13 +820,68 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
           </motion.div>
         </div>
 
+        <motion.div
+          initial={animationsEnabled ? { opacity: 0, y: 20 } : {}}
+          animate={{ opacity: 1, y: 0 }}
+          transition={animationsEnabled ? { duration: 0.5, delay: 0.3 } : { duration: 0 }}
+          className="mt-8"
+        >
+          <Card className="p-6 md:p-8 bg-card border-2 border-border relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-secondary via-accent to-secondary" />
+            
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="text-center md:text-left">
+                <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+                  Quick Answer Oracle
+                </h2>
+                <p className="text-muted-foreground text-lg">
+                  Need a quick yes/no/maybe? Shake the magic 8-ball!
+                </p>
+              </div>
+              
+              <div className="flex flex-col items-center gap-4">
+                <motion.button
+                  onClick={shakeTheOrb}
+                  disabled={isShakingOrb}
+                  className="w-24 h-24 rounded-full crystal-ball mystic-glow flex items-center justify-center text-5xl cursor-pointer hover:scale-110 transition-transform disabled:cursor-wait"
+                  animate={isShakingOrb && animationsEnabled ? { 
+                    x: [0, -10, 10, -10, 10, 0],
+                    rotate: [0, -5, 5, -5, 5, 0]
+                  } : {}}
+                  transition={{ duration: 0.5, repeat: isShakingOrb ? Infinity : 0 }}
+                  aria-label="Shake the oracle orb for a yes/no answer"
+                >
+                  🎱
+                </motion.button>
+                
+                <AnimatePresence>
+                  {quickAnswer && !isShakingOrb && (
+                    <motion.div
+                      initial={animationsEnabled ? { opacity: 0, scale: 0.8, y: -10 } : {}}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={animationsEnabled ? { opacity: 0, scale: 0.8, y: -10 } : {}}
+                      className={`px-6 py-3 rounded-xl text-lg font-bold ${
+                        quickAnswer.type === 'yes' ? 'bg-green-500/20 text-green-400 border-2 border-green-500/30' :
+                        quickAnswer.type === 'no' ? 'bg-red-500/20 text-red-400 border-2 border-red-500/30' :
+                        'bg-primary/20 text-primary border-2 border-primary/30'
+                      }`}
+                    >
+                      {quickAnswer.text}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+
         <motion.footer 
           className="text-center mt-8 text-muted-foreground text-lg"
           initial={animationsEnabled ? { opacity: 0 } : {}}
           animate={{ opacity: 1 }}
           transition={animationsEnabled ? { delay: 0.8 } : { duration: 0 }}
         >
-          <p className="font-medium">"Nothing about us without us" ✊ — Disability Rights Movement</p>
+          <p className="font-medium">"Nothing about us without us" — Disability Rights Movement</p>
         </motion.footer>
       </div>
     </div>
