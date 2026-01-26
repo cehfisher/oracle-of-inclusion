@@ -588,6 +588,19 @@ Return a JSON object with a "question" string property.`
                       </Button>
                     </div>
 
+                    <div className="flex justify-center pt-2">
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={generateQuestions}
+                        disabled={isGenerating}
+                        className="text-lg py-6 px-8 border-2 border-accent/50 text-accent hover:bg-accent/10"
+                      >
+                        <ArrowClockwise size={22} className="mr-2" />
+                        🎲 Shuffle All Questions
+                      </Button>
+                    </div>
+
                     <div className="flex gap-3 justify-center pt-4">
                       <Button
                         variant="secondary"
