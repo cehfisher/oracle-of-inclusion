@@ -20,7 +20,40 @@ declare const spark: {
 interface Question {
   id: string
   text: string
+  wisdom: string
   isFavorite: boolean
+}
+
+const WISDOM_QUOTES = [
+  "The path to inclusion begins with a single accessible step.",
+  "What is designed for one, often benefits all.",
+  "True innovation removes barriers, not people.",
+  "The curb cut of today becomes the ramp of tomorrow.",
+  "Listen first to those with lived experience.",
+  "Accessibility is not a feature—it is a foundation.",
+  "The most powerful technology is that which empowers.",
+  "Design for the margins, and the center will follow.",
+  "Every barrier removed opens a thousand doors.",
+  "Nothing about us without us—this is the oracle's first truth.",
+  "The keyboard speaks louder than the mouse.",
+  "Alt text is poetry for the unseen.",
+  "Patience with technology teaches patience with oneself.",
+  "The screen reader sees what the eye cannot.",
+  "Contrast is not just visual—it is essential.",
+  "A focus ring is a beacon of navigation.",
+  "Captions carry voices across silent waters.",
+  "The best designs anticipate, not accommodate.",
+  "Speed is privilege; patience is power.",
+  "Disability is not inability—it is diversity.",
+  "The semantic web speaks truth to all machines.",
+  "What slows one may stop another—design for all.",
+  "Empathy without action is merely sympathy.",
+  "The strongest bridges are built with ARIA.",
+  "Neurodiversity is humanity's creative edge."
+]
+
+const getRandomWisdom = (): string => {
+  return WISDOM_QUOTES[Math.floor(Math.random() * WISDOM_QUOTES.length)]
 }
 
 const TOPIC_SUGGESTIONS = [
@@ -122,6 +155,7 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
       const generatedQuestions: Question[] = parsed.questions.map((q: string, i: number) => ({
         id: `q-${Date.now()}-${i}`,
         text: q,
+        wisdom: getRandomWisdom(),
         isFavorite: false
       }))
       setQuestions(generatedQuestions)
@@ -133,7 +167,8 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
   }
 
   const copyQuestion = async (question: Question) => {
-    await navigator.clipboard.writeText(question.text)
+    const textToCopy = `${question.text}\n\n✨ "${question.wisdom}"`
+    await navigator.clipboard.writeText(textToCopy)
     setCopiedId(question.id)
     toast.success('Wisdom copied to your scroll!')
     setTimeout(() => setCopiedId(null), 2000)
@@ -412,7 +447,13 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
                     >
                       <div className="flex items-start gap-3">
                         <span className="text-primary font-semibold text-sm mt-0.5">{index + 1}.</span>
-                        <p className="text-foreground leading-relaxed flex-1 text-[17px]">{question.text}</p>
+                        <div className="flex-1">
+                          <p className="text-foreground leading-relaxed text-[17px]">{question.text}</p>
+                          <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-md bg-gradient-to-r from-primary/10 via-accent/5 to-secondary/10 border border-primary/20">
+                            <Sparkle size={14} weight="fill" className="text-primary shrink-0" />
+                            <p className="text-sm italic text-primary/90 leading-snug">"{question.wisdom}"</p>
+                          </div>
+                        </div>
                       </div>
                       <div className="flex gap-1 mt-3 ml-6">
                         <Button
@@ -462,7 +503,15 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
                       key={question.id}
                       className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border group"
                     >
-                      <p className="text-foreground text-sm flex-1 leading-relaxed">{question.text}</p>
+                      <div className="flex-1">
+                        <p className="text-foreground text-sm leading-relaxed">{question.text}</p>
+                        {question.wisdom && (
+                          <div className="mt-2 flex items-center gap-1.5">
+                            <Sparkle size={12} weight="fill" className="text-primary/70 shrink-0" />
+                            <p className="text-xs italic text-primary/70">"{question.wisdom}"</p>
+                          </div>
+                        )}
+                      </div>
                       <button
                         onClick={() => removeSavedQuestion(question.id)}
                         className="text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
