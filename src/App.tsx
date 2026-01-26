@@ -100,6 +100,39 @@ const FOCUS_AREAS = [
   'Consulting'
 ]
 
+const SAMPLE_QUESTIONS: Question[] = [
+  {
+    id: 'sample-1',
+    text: 'What moment made you realize accessibility matters?',
+    wisdom: 'The path to inclusion begins with a single accessible step.',
+    isFavorite: false
+  },
+  {
+    id: 'sample-2',
+    text: 'How do you explain your work to someone outside tech?',
+    wisdom: 'What is designed for one, often benefits all.',
+    isFavorite: false
+  },
+  {
+    id: 'sample-3',
+    text: 'What advice would you give your younger self about disability?',
+    wisdom: 'Disability is not inability—it is diversity.',
+    isFavorite: false
+  },
+  {
+    id: 'sample-4',
+    text: "What's one small change that made a big difference for you?",
+    wisdom: 'Every barrier removed opens a thousand doors.',
+    isFavorite: false
+  },
+  {
+    id: 'sample-5',
+    text: 'How do you handle pushback when advocating for access?',
+    wisdom: "Nothing about us without us—this is the oracle's first truth.",
+    isFavorite: false
+  }
+]
+
 export default function App() {
   const [topics, setTopics] = useState<string[]>([])
   const [topicInput, setTopicInput] = useState('')
@@ -422,15 +455,35 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
               </h2>
 
               {questions.length === 0 && !isGenerating && (
-                <div className="text-center py-12 text-muted-foreground">
-                  <motion.div
-                    animate={{ scale: [1, 1.05, 1], opacity: [0.3, 0.5, 0.3] }}
-                    transition={{ duration: 3, repeat: Infinity }}
-                  >
-                    <Eye size={64} weight="duotone" className="mx-auto mb-4 text-muted-foreground/40" />
-                  </motion.div>
-                  <p className="italic text-xl">The crystal awaits your inquiry...</p>
-                  <p className="text-base mt-2">Share the seeker's details to receive wisdom</p>
+                <div className="space-y-4">
+                  <div className="text-center pb-4 text-muted-foreground border-b border-border/50">
+                    <p className="italic text-lg">Sample questions to inspire your consultation...</p>
+                  </div>
+                  <div className="space-y-3">
+                    {SAMPLE_QUESTIONS.map((question, index) => (
+                      <div
+                        key={question.id}
+                        className="group p-4 rounded-lg bg-muted/20 border border-border/50"
+                      >
+                        <div className="flex items-start gap-3">
+                          <span className="text-muted-foreground font-semibold text-base mt-0.5">{index + 1}.</span>
+                          <div className="flex-1">
+                            <p className="text-muted-foreground leading-relaxed text-lg">{question.text}</p>
+                            <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-md bg-primary/5 border border-primary/10">
+                              <Sparkle size={16} weight="fill" className="text-primary/50 shrink-0" />
+                              <p className="text-base italic text-primary/70 leading-snug">"{question.wisdom}"</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-center pt-4 border-t border-border/50">
+                    <p className="text-muted-foreground text-base">
+                      <Eye size={18} weight="duotone" className="inline mr-2 text-primary" />
+                      Fill in the seeker's details and generate your own custom questions
+                    </p>
+                  </div>
                 </div>
               )}
 
