@@ -97,7 +97,27 @@ const FOCUS_AREAS = [
   '👔 Leadership & Management',
   '📢 Advocacy & Policy',
   '📖 Education & Training',
-  '🤝 Consulting'
+  '🤝 Consulting',
+  '🧪 Quality Assurance & Testing',
+  '📊 Data Science & Analytics',
+  '🛡️ Security & Privacy',
+  '☁️ DevOps & Infrastructure',
+  '📱 Mobile Development',
+  '🎮 Gaming & Interactive Media',
+  '🤖 AI & Machine Learning',
+  '🎬 Video & Multimedia',
+  '📣 Marketing & Communications',
+  '🧑‍💼 Human Resources & Recruiting',
+  '⚖️ Legal & Compliance',
+  '💰 Product Management',
+  '🎧 Customer Support & Success',
+  '🏥 Healthcare Technology',
+  '🎓 Academia & Research',
+  '🌐 Localization & Internationalization',
+  '🧩 Accessibility Specialist',
+  '🎤 Public Speaking & Thought Leadership',
+  '📝 Technical Writing & Documentation',
+  '🛠️ Hardware & Assistive Technology'
 ]
 
 export default function App() {
