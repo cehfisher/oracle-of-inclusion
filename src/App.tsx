@@ -66,7 +66,27 @@ const TOPIC_SUGGESTIONS = [
   'Disability Advocacy',
   'Universal Design',
   'Mental Health',
-  'Workplace Accommodations'
+  'Workplace Accommodations',
+  'Chronic Illness',
+  'Deaf Culture',
+  'Blind & Low Vision',
+  'Mobility & Physical',
+  'Learning Differences',
+  'Autism & ADHD',
+  'Invisible Disabilities',
+  'Accessible Gaming',
+  'Alt Text & Captions',
+  'Keyboard Navigation',
+  'Color Blindness',
+  'Cognitive Load',
+  'Plain Language',
+  'Voice Control',
+  'AI & Disability',
+  'Remote Work Access',
+  'Accessible Events',
+  'Self-Advocacy',
+  'Disability Pride',
+  'Accessible Transit'
 ]
 
 const FOCUS_AREAS = [
@@ -128,24 +148,24 @@ export default function App() {
                            tone[0] < 70 ? 'balanced between casual conversation and thoughtful exploration' :
                            'deep, reflective, and philosophically engaging'
 
-    const prompt = spark.llmPrompt`Generate 8 engaging questions for an informal fireside chat focused on accessibility, inclusion, disability, and technology.
+    const prompt = spark.llmPrompt`Generate 8 simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
 
 Context:
-- Topics to explore: ${topics.length > 0 ? topics.join(', ') : 'accessibility, inclusion, disability in tech, universal design, assistive technology'}
-- Guest's focus area: ${focusArea || 'accessibility and inclusion in technology'}
-- Experience level: ${experience || 'not specified'}
-- Tone should be: ${toneDescription}
-- Additional context: ${additionalNotes || 'none'}
+- Topics: ${topics.length > 0 ? topics.join(', ') : 'accessibility, inclusion, disability in tech, universal design, assistive technology'}
+- Guest's work area: ${focusArea || 'accessibility and inclusion in technology'}
+- Experience: ${experience || 'not specified'}
+- Tone: ${toneDescription}
+- Extra notes: ${additionalNotes || 'none'}
 
-Requirements:
-- Questions should feel like a mystical oracle revealing wisdom - conversational but profound
-- Focus on accessibility, inclusion, disability rights, universal design, assistive technology, neurodiversity, or related themes
-- Mix personal journey questions with broader impact questions
-- Include questions about challenges, victories, and future visions
-- Avoid yes/no questions - aim for open-ended discussion starters
-- Include at least one unexpected or creative question that reveals deeper truths
-- Questions should empower and center the disability community perspective
-- Keep questions concise but thought-provoking
+Rules:
+- Write at a 9th grade reading level or lower
+- Use short sentences (under 20 words each)
+- Use simple, everyday words - no jargon
+- Make questions easy to understand on first read
+- Ask open questions (not yes/no)
+- Mix personal story questions with big picture questions
+- Center the disability community voice
+- Keep each question to 1-2 sentences max
 
 Return a JSON object with a "questions" array containing exactly 8 question strings.`
 
@@ -213,18 +233,18 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
               <Eye size={40} weight="duotone" className="text-primary" />
             </div>
           </motion.div>
-          <h1 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight mb-2">
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight mb-2">
             The Oracle of Inclusion
           </h1>
-          <p className="text-muted-foreground text-lg md:text-xl italic">
+          <p className="text-muted-foreground text-xl md:text-2xl italic">
             "Ask, and the wisdom of accessibility shall be revealed..."
           </p>
           <div className="flex items-center justify-center gap-2 mt-4">
-            <Star size={16} weight="fill" className="text-primary shimmer-animation" />
-            <span className="text-sm text-muted-foreground tracking-widest uppercase">
+            <Star size={18} weight="fill" className="text-primary shimmer-animation" />
+            <span className="text-base text-muted-foreground tracking-widest uppercase">
               Disability • Tech • Design • Life
             </span>
-            <Star size={16} weight="fill" className="text-accent shimmer-animation" />
+            <Star size={18} weight="fill" className="text-accent shimmer-animation" />
           </div>
         </motion.header>
 
@@ -237,8 +257,8 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
             <Card className="p-6 bg-card border-2 border-border mystic-glow relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-accent to-primary" />
               
-              <h2 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
-                <Sparkle size={24} weight="fill" className="text-primary" />
+              <h2 className="text-2xl font-semibold text-foreground mb-6 flex items-center gap-2">
+                <Sparkle size={28} weight="fill" className="text-primary" />
                 Consult the Oracle
               </h2>
 
@@ -284,12 +304,12 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
                       </Badge>
                     ))}
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {TOPIC_SUGGESTIONS.filter(s => !topics.includes(s)).slice(0, 5).map(suggestion => (
+                  <div className="flex flex-wrap gap-2">
+                    {TOPIC_SUGGESTIONS.filter(s => !topics.includes(s)).slice(0, 10).map(suggestion => (
                       <button
                         key={suggestion}
                         onClick={() => addTopic(suggestion)}
-                        className="text-xs px-2.5 py-1.5 rounded-full border border-border text-muted-foreground hover:border-primary hover:text-primary transition-all hover:bg-primary/5"
+                        className="text-sm px-3 py-2 rounded-full border border-border text-muted-foreground hover:border-primary hover:text-primary transition-all hover:bg-primary/5"
                       >
                         + {suggestion}
                       </button>
@@ -396,8 +416,8 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
             <Card className="p-6 bg-card border-2 border-border relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent via-primary to-accent" />
               
-              <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-                <Star size={24} weight="fill" className="text-accent" />
+              <h2 className="text-2xl font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Star size={28} weight="fill" className="text-accent" />
                 Revealed Wisdom
               </h2>
 
@@ -407,10 +427,10 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
                     animate={{ scale: [1, 1.05, 1], opacity: [0.3, 0.5, 0.3] }}
                     transition={{ duration: 3, repeat: Infinity }}
                   >
-                    <Eye size={56} weight="duotone" className="mx-auto mb-4 text-muted-foreground/40" />
+                    <Eye size={64} weight="duotone" className="mx-auto mb-4 text-muted-foreground/40" />
                   </motion.div>
-                  <p className="italic text-lg">The crystal awaits your inquiry...</p>
-                  <p className="text-sm mt-2">Share the seeker's details to receive wisdom</p>
+                  <p className="italic text-xl">The crystal awaits your inquiry...</p>
+                  <p className="text-base mt-2">Share the seeker's details to receive wisdom</p>
                 </div>
               )}
 
@@ -420,9 +440,9 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
                     animate={{ 
                       scale: [1, 1.2, 1],
                       boxShadow: [
-                        '0 0 20px oklch(0.75 0.18 55 / 0.3)',
-                        '0 0 40px oklch(0.65 0.20 320 / 0.5)',
-                        '0 0 20px oklch(0.75 0.18 55 / 0.3)'
+                        '0 0 20px oklch(0.80 0.16 55 / 0.3)',
+                        '0 0 40px oklch(0.72 0.18 320 / 0.5)',
+                        '0 0 20px oklch(0.80 0.16 55 / 0.3)'
                       ]
                     }}
                     transition={{ duration: 2, repeat: Infinity }}
@@ -430,7 +450,7 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
                   >
                     <Eye size={48} weight="duotone" className="text-primary" />
                   </motion.div>
-                  <p className="text-muted-foreground mt-6 italic text-lg">The oracle peers into the mists...</p>
+                  <p className="text-muted-foreground mt-6 italic text-xl">The oracle peers into the mists...</p>
                 </div>
               )}
 
@@ -446,16 +466,16 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
                       className="group p-4 rounded-lg bg-muted/40 border border-border hover:border-primary/50 transition-all hover:bg-muted/60"
                     >
                       <div className="flex items-start gap-3">
-                        <span className="text-primary font-semibold text-sm mt-0.5">{index + 1}.</span>
+                        <span className="text-primary font-semibold text-base mt-0.5">{index + 1}.</span>
                         <div className="flex-1">
-                          <p className="text-foreground leading-relaxed text-[17px]">{question.text}</p>
+                          <p className="text-foreground leading-relaxed text-lg">{question.text}</p>
                           <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-md bg-gradient-to-r from-primary/10 via-accent/5 to-secondary/10 border border-primary/20">
-                            <Sparkle size={14} weight="fill" className="text-primary shrink-0" />
-                            <p className="text-sm italic text-primary/90 leading-snug">"{question.wisdom}"</p>
+                            <Sparkle size={16} weight="fill" className="text-primary shrink-0" />
+                            <p className="text-base italic text-primary leading-snug">"{question.wisdom}"</p>
                           </div>
                         </div>
                       </div>
-                      <div className="flex gap-1 mt-3 ml-6">
+                      <div className="flex gap-2 mt-3 ml-6">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -463,11 +483,11 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
                           className="text-muted-foreground hover:text-foreground hover:bg-primary/10"
                         >
                           {copiedId === question.id ? (
-                            <Check size={16} className="text-green-400" />
+                            <Check size={18} className="text-green-400" />
                           ) : (
-                            <Copy size={16} />
+                            <Copy size={18} />
                           )}
-                          <span className="ml-1.5 text-xs">Copy</span>
+                          <span className="ml-1.5 text-sm">Copy</span>
                         </Button>
                         <Button
                           variant="ghost"
@@ -476,11 +496,11 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
                           className="text-muted-foreground hover:text-foreground hover:bg-accent/10"
                         >
                           <Heart 
-                            size={16} 
+                            size={18} 
                             weight={question.isFavorite ? 'fill' : 'regular'}
                             className={question.isFavorite ? 'text-accent' : ''}
                           />
-                          <span className="ml-1.5 text-xs">Treasure</span>
+                          <span className="ml-1.5 text-sm">Treasure</span>
                         </Button>
                       </div>
                     </motion.div>
@@ -493,22 +513,22 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
               <Card className="p-6 bg-card border-2 border-border relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-secondary to-accent" />
                 
-                <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <Heart size={24} weight="fill" className="text-accent" />
+                <h2 className="text-2xl font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <Heart size={28} weight="fill" className="text-accent" />
                   Treasured Wisdom ({(savedQuestions ?? []).length})
                 </h2>
                 <div className="space-y-2">
                   {(savedQuestions ?? []).map((question) => (
                     <div
                       key={question.id}
-                      className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border group"
+                      className="flex items-start gap-3 p-4 rounded-lg bg-muted/30 border border-border group"
                     >
                       <div className="flex-1">
-                        <p className="text-foreground text-sm leading-relaxed">{question.text}</p>
+                        <p className="text-foreground text-base leading-relaxed">{question.text}</p>
                         {question.wisdom && (
-                          <div className="mt-2 flex items-center gap-1.5">
-                            <Sparkle size={12} weight="fill" className="text-primary/70 shrink-0" />
-                            <p className="text-xs italic text-primary/70">"{question.wisdom}"</p>
+                          <div className="mt-2 flex items-center gap-2">
+                            <Sparkle size={14} weight="fill" className="text-primary shrink-0" />
+                            <p className="text-sm italic text-primary">"{question.wisdom}"</p>
                           </div>
                         )}
                       </div>
@@ -517,7 +537,7 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
                         className="text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
                         aria-label="Remove from treasured"
                       >
-                        <X size={16} />
+                        <X size={18} />
                       </button>
                     </div>
                   ))}
@@ -528,7 +548,7 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
         </div>
 
         <motion.footer 
-          className="text-center mt-12 text-muted-foreground text-sm"
+          className="text-center mt-12 text-muted-foreground text-base"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
