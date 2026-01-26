@@ -1,11 +1,10 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkle, Copy, Heart, ArrowClockwise, Check, Plus, X, Star, Eye, ArrowRight, Shuffle } from '@phosphor-icons/react'
+import { Sparkle, Copy, Heart, ArrowClockwise, Check, Plus, X, Shuffle, Export } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Slider } from '@/components/ui/slider'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -22,6 +21,7 @@ interface Question {
   text: string
   wisdom: string
   isFavorite: boolean
+  vibe: string
 }
 
 const WISDOM_QUOTES = [
@@ -89,68 +89,19 @@ const TOPIC_SUGGESTIONS = [
   '🚌 Accessible Transit'
 ]
 
-const FOCUS_AREA_CATEGORIES = [
-  {
-    label: '🛠️ Engineering & Technical',
-    options: [
-      '💻 Software Engineering',
-      '📱 Mobile Development',
-      '☁️ DevOps & Infrastructure',
-      '🛡️ Security & Privacy',
-      '🤖 AI & Machine Learning',
-      '📊 Data Science & Analytics',
-      '🧪 Quality Assurance & Testing',
-      '🛠️ Hardware & Assistive Tech',
-    ]
-  },
-  {
-    label: '🎨 Design & Creative',
-    options: [
-      '🎨 Product Design',
-      '✍️ Content & UX Writing',
-      '🎬 Video & Multimedia',
-      '🎮 Gaming & Interactive Media',
-      '📝 Technical Writing & Docs',
-    ]
-  },
-  {
-    label: '🧩 Accessibility & Inclusion',
-    options: [
-      '🧩 Accessibility Specialist',
-      '🌐 Localization & i18n',
-      '🔬 A11y Research & Strategy',
-      '📢 Disability Advocacy',
-    ]
-  },
-  {
-    label: '👔 Leadership & Business',
-    options: [
-      '👔 Leadership & Management',
-      '💰 Product Management',
-      '📣 Marketing & Communications',
-      '🧑‍💼 Human Resources & Recruiting',
-      '⚖️ Legal & Compliance',
-      '🤝 Consulting',
-    ]
-  },
-  {
-    label: '📖 Education & Community',
-    options: [
-      '📖 Education & Training',
-      '🎓 Academia & Research',
-      '🎤 Public Speaking',
-      '🎧 Customer Support & Success',
-    ]
-  },
-  {
-    label: '🏥 Specialized Industries',
-    options: [
-      '🏥 Healthcare Technology',
-      '🏛️ Government & Public Sector',
-      '🎓 EdTech',
-      '💳 FinTech',
-    ]
-  }
+const VIBE_LABELS = ['😜 Whimsical', '🤗 Warm', '🤔 Thoughtful', '🧘 Deep']
+
+const FOCUS_AREAS = [
+  '💻 Engineering & Development',
+  '🎨 Design & Creative',
+  '🧩 Accessibility Specialist',
+  '👔 Leadership & Management',
+  '📖 Education & Advocacy',
+  '🏥 Healthcare & Public Sector',
+  '📣 Marketing & Communications',
+  '🧑‍💼 HR & Recruiting',
+  '🎮 Gaming & Media',
+  '🤝 Consulting & Strategy',
 ]
 
 export default function App() {
@@ -158,7 +109,6 @@ export default function App() {
   const [topicInput, setTopicInput] = useState('')
   const [focusArea, setFocusArea] = useState('')
   const [experience, setExperience] = useState('')
-  const [tone, setTone] = useState([50])
   const [additionalNotes, setAdditionalNotes] = useState('')
   const [questions, setQuestions] = useState<Question[]>([])
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
@@ -185,12 +135,32 @@ export default function App() {
     }
   }
 
-  const getToneLabel = (value: number) => {
-    if (value < 25) return '😜 Whimsical & Light'
-    if (value < 45) return '🤗 Warm & Curious'
-    if (value < 55) return '⚖️ Balanced'
-    if (value < 75) return '🤔 Thoughtful'
-    return '🧘 Deep & Profound'
+  const getRandomVibe = (): string => {
+    return VIBE_LABELS[Math.floor(Math.random() * VIBE_LABELS.length)]
+  }
+
+  const exportSavedQuestions = () => {
+    const saved = savedQuestions ?? []
+    if (saved.length === 0) {
+      toast.error('No saved questions to export!')
+      return
+    }
+    
+    const content = saved.map((q, i) => 
+      `${i + 1}. ${q.text}\n   ${q.vibe} | ✨ "${q.wisdom}"`
+    ).join('\n\n')
+    
+    const header = `🔮 Oracle of Inclusion - Saved Questions\n${'='.repeat(45)}\n\n`
+    const fullContent = header + content + `\n\n---\n"Nothing about us without us" ✊`
+    
+    const blob = new Blob([fullContent], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'oracle-questions.txt'
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.success('📥 Questions exported!')
   }
 
   const generateQuestions = async () => {
@@ -198,18 +168,12 @@ export default function App() {
     setQuestions([])
     setCurrentQuestionIndex(0)
 
-    const toneDescription = tone[0] < 30 ? 'whimsical, playful, and lighthearted while still meaningful' : 
-                           tone[0] < 50 ? 'warm, curious, and approachable with gentle humor' :
-                           tone[0] < 70 ? 'balanced between casual conversation and thoughtful exploration' :
-                           'deep, reflective, and philosophically engaging'
-
     const prompt = spark.llmPrompt`Generate 8 simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
 
 Context:
 - Topics: ${topics.length > 0 ? topics.join(', ') : 'accessibility, inclusion, disability in tech, universal design, assistive technology'}
 - Guest's work area: ${focusArea || 'accessibility and inclusion in technology'}
 - Experience: ${experience || 'not specified'}
-- Tone: ${toneDescription}
 - Extra notes: ${additionalNotes || 'none'}
 
 Rules:
@@ -221,17 +185,19 @@ Rules:
 - Mix personal story questions with big picture questions
 - Center the disability community voice
 - Keep each question to 1-2 sentences max
+- IMPORTANT: Generate a MIX of vibes - 2 whimsical/playful, 2 warm/curious, 2 thoughtful, 2 deep/reflective
 
-Return a JSON object with a "questions" array containing exactly 8 question strings.`
+Return a JSON object with a "questions" array containing exactly 8 objects, each with "text" (the question) and "vibe" (one of: "😜 Whimsical", "🤗 Warm", "🤔 Thoughtful", "🧘 Deep").`
 
     try {
       const result = await spark.llm(prompt, 'gpt-4o', true)
       const parsed = JSON.parse(result)
-      const generatedQuestions: Question[] = parsed.questions.map((q: string, i: number) => ({
+      const generatedQuestions: Question[] = parsed.questions.map((q: { text: string; vibe: string }, i: number) => ({
         id: `q-${Date.now()}-${i}`,
-        text: q,
+        text: q.text,
         wisdom: getRandomWisdom(),
-        isFavorite: false
+        isFavorite: false,
+        vibe: q.vibe || getRandomVibe()
       }))
       setQuestions(generatedQuestions)
       toast.success('🔮 The oracle has spoken!')
@@ -246,26 +212,21 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
     if (questions.length === 0) return
     
     setIsGenerating(true)
-    
-    const toneDescription = tone[0] < 30 ? 'whimsical and playful' : 
-                           tone[0] < 50 ? 'warm and curious' :
-                           tone[0] < 70 ? 'balanced and conversational' :
-                           'deep and reflective'
 
     const prompt = spark.llmPrompt`Generate 1 new simple question for a fireside chat about accessibility and inclusion.
 
 Context:
 - Topics: ${topics.length > 0 ? topics.join(', ') : 'accessibility, inclusion, disability in tech'}
 - Guest's work area: ${focusArea || 'accessibility and inclusion'}
-- Tone: ${toneDescription}
 
 Rules:
 - Write at a 9th grade reading level
 - Under 20 words
 - Open-ended question
 - Simple everyday words
+- Pick a random vibe: whimsical, warm, thoughtful, or deep
 
-Return a JSON object with a "question" string property.`
+Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsical", "🤗 Warm", "🤔 Thoughtful", "🧘 Deep").`
 
     try {
       const result = await spark.llm(prompt, 'gpt-4o', true)
@@ -274,7 +235,8 @@ Return a JSON object with a "question" string property.`
         id: `q-${Date.now()}-regen`,
         text: parsed.question,
         wisdom: getRandomWisdom(),
-        isFavorite: false
+        isFavorite: false,
+        vibe: parsed.vibe || getRandomVibe()
       }
       
       const updatedQuestions = [...questions]
@@ -303,7 +265,7 @@ Return a JSON object with a "question" string property.`
   const currentQuestion = questions[currentQuestionIndex]
 
   const copyQuestion = async (question: Question) => {
-    const textToCopy = `${question.text}\n\n✨ "${question.wisdom}"`
+    const textToCopy = `${question.text}\n\n${question.vibe} | ✨ "${question.wisdom}"`
     await navigator.clipboard.writeText(textToCopy)
     setCopiedId(question.id)
     toast.success('📋 Copied to clipboard!')
@@ -442,15 +404,8 @@ Return a JSON object with a "question" string property.`
                       <SelectValue placeholder="Select their work area..." />
                     </SelectTrigger>
                     <SelectContent className="bg-card border-2 border-border max-h-[400px]">
-                      {FOCUS_AREA_CATEGORIES.map(category => (
-                        <div key={category.label}>
-                          <div className="px-3 py-2 text-sm font-bold text-muted-foreground bg-muted/50 sticky top-0">
-                            {category.label}
-                          </div>
-                          {category.options.map(area => (
-                            <SelectItem key={area} value={area} className="text-lg py-3 pl-6">{area}</SelectItem>
-                          ))}
-                        </div>
+                      {FOCUS_AREAS.map(area => (
+                        <SelectItem key={area} value={area} className="text-lg py-3">{area}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -472,26 +427,6 @@ Return a JSON object with a "question" string property.`
                       <SelectItem value="15+" className="text-lg py-3">⭐ Veteran (15+ years)</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-
-                <div>
-                  <Label className="text-foreground mb-4 block text-lg font-semibold">
-                    🎭 Question Vibe: <span className="text-primary">{getToneLabel(tone[0])}</span>
-                  </Label>
-                  <div className="px-2">
-                    <Slider
-                      value={tone}
-                      onValueChange={setTone}
-                      max={100}
-                      step={1}
-                      className="w-full"
-                      aria-label="Question tone"
-                    />
-                    <div className="flex justify-between text-base text-muted-foreground mt-3 font-medium">
-                      <span>😜 Silly</span>
-                      <span>🧘 Serious</span>
-                    </div>
-                  </div>
                 </div>
 
                 <div>
@@ -588,9 +523,12 @@ Return a JSON object with a "question" string property.`
                     transition={{ duration: 0.4 }}
                     className="space-y-6"
                   >
-                    <div className="text-center mb-4">
+                    <div className="text-center mb-4 flex items-center justify-center gap-3 flex-wrap">
                       <span className="text-lg font-bold text-muted-foreground bg-muted/50 px-4 py-2 rounded-full">
                         Question {currentQuestionIndex + 1} of {questions.length} 🎯
+                      </span>
+                      <span className="text-lg font-bold text-primary bg-primary/20 px-4 py-2 rounded-full">
+                        {currentQuestion.vibe}
                       </span>
                     </div>
                     
@@ -690,10 +628,21 @@ Return a JSON object with a "question" string property.`
               <Card className="p-6 md:p-8 bg-card border-2 border-border relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-500 via-accent to-pink-500" />
                 
-                <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6 flex items-center gap-3">
-                  <span className="text-3xl">💖</span>
-                  Saved Questions ({(savedQuestions ?? []).length})
-                </h2>
+                <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
+                  <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
+                    <span className="text-3xl">💖</span>
+                    Saved Questions ({(savedQuestions ?? []).length})
+                  </h2>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={exportSavedQuestions}
+                    className="text-lg py-5 px-6 border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                  >
+                    <Export size={22} className="mr-2" />
+                    Export
+                  </Button>
+                </div>
                 <div className="space-y-3">
                   {(savedQuestions ?? []).map((question) => (
                     <div
@@ -701,6 +650,11 @@ Return a JSON object with a "question" string property.`
                       className="flex items-start gap-4 p-5 rounded-xl bg-muted/40 border-2 border-border group"
                     >
                       <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          <span className="text-sm font-bold text-primary bg-primary/20 px-3 py-1 rounded-full">
+                            {question.vibe || '🎯 Mixed'}
+                          </span>
+                        </div>
                         <p className="text-foreground text-lg leading-relaxed font-medium">{question.text}</p>
                         {question.wisdom && (
                           <div className="mt-3 flex items-center gap-2">
