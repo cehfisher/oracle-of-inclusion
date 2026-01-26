@@ -773,7 +773,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                       <Label htmlFor="question-count-slider" className="text-foreground mb-3 block text-lg font-semibold">
-                        🔢 How Many Questions? <span className="text-primary font-bold">{questionCount}</span>
+                        🔢 How Many Questions? <span className="text-accent font-bold text-xl">{questionCount}</span>
                       </Label>
                       <div className="px-2 py-4">
                         <Slider
@@ -783,13 +783,13 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                           min={5}
                           max={10}
                           step={1}
-                          className="w-full"
+                          className="w-full [&_[data-radix-slider-track]]:bg-muted [&_[data-radix-slider-range]]:bg-accent [&_[data-radix-slider-thumb]]:bg-accent [&_[data-radix-slider-thumb]]:border-2 [&_[data-radix-slider-thumb]]:border-foreground"
                           aria-valuemin={5}
                           aria-valuemax={10}
                           aria-valuenow={questionCount}
                           aria-valuetext={`${questionCount} questions`}
                         />
-                        <div className="flex justify-between mt-2 text-sm text-muted-foreground font-medium" aria-hidden="true">
+                        <div className="flex justify-between mt-2 text-base text-foreground font-bold" aria-hidden="true">
                           <span>5</span>
                           <span>10</span>
                         </div>
@@ -819,7 +819,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     <Button 
                       onClick={generateQuestions}
                       disabled={isGenerating}
-                      className="flex-1 bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90 font-bold py-7 text-xl tracking-wide focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                      className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-bold py-7 text-xl tracking-wide focus:ring-4 focus:ring-ring focus:ring-offset-2"
                     >
                       {isGenerating ? (
                         <motion.div
@@ -831,7 +831,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         </motion.div>
                       ) : (
                         <>
-                          <span className="text-2xl mr-3" aria-hidden="true">✨</span>
+                          <span className="text-2xl mr-3" aria-hidden="true">🔮</span>
                           Reveal My Questions!
                         </>
                       )}
@@ -839,7 +839,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     <Button 
                       onClick={resetForm}
                       variant="outline"
-                      className="py-7 px-6 border-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                      className="py-7 px-6 border-2 border-muted-foreground text-muted-foreground hover:bg-muted hover:text-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
                       aria-label="Reset form"
                     >
                       <ArrowCounterClockwise size={24} aria-hidden="true" />
@@ -1046,7 +1046,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     variant="outline"
                     size="lg"
                     onClick={resetForm}
-                    className="text-lg py-6 px-8 border-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                    className="text-lg py-6 px-8 border-2 border-muted-foreground text-muted-foreground hover:bg-muted hover:text-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
                     aria-label="Start over and reset the form"
                   >
                     <ArrowCounterClockwise size={22} className="mr-2" aria-hidden="true" />
