@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkle, Copy, Heart, ArrowClockwise, Check, Plus, X, Star, Eye } from '@phosphor-icons/react'
+import { Sparkle, Copy, Heart, ArrowClockwise, Check, Plus, X, Star, Eye, ArrowRight, Shuffle } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -25,31 +25,31 @@ interface Question {
 }
 
 const WISDOM_QUOTES = [
-  "The path to inclusion begins with a single accessible step.",
-  "What is designed for one, often benefits all.",
-  "True innovation removes barriers, not people.",
-  "The curb cut of today becomes the ramp of tomorrow.",
-  "Listen first to those with lived experience.",
-  "Accessibility is not a feature—it is a foundation.",
-  "The most powerful technology is that which empowers.",
-  "Design for the margins, and the center will follow.",
-  "Every barrier removed opens a thousand doors.",
-  "Nothing about us without us—this is the oracle's first truth.",
-  "The keyboard speaks louder than the mouse.",
-  "Alt text is poetry for the unseen.",
-  "Patience with technology teaches patience with oneself.",
-  "The screen reader sees what the eye cannot.",
-  "Contrast is not just visual—it is essential.",
-  "A focus ring is a beacon of navigation.",
-  "Captions carry voices across silent waters.",
-  "The best designs anticipate, not accommodate.",
-  "Speed is privilege; patience is power.",
-  "Disability is not inability—it is diversity.",
-  "The semantic web speaks truth to all machines.",
-  "What slows one may stop another—design for all.",
-  "Empathy without action is merely sympathy.",
-  "The strongest bridges are built with ARIA.",
-  "Neurodiversity is humanity's creative edge."
+  "The path to inclusion begins with a single accessible step. 🌟",
+  "What is designed for one, often benefits all. ✨",
+  "True innovation removes barriers, not people. 💫",
+  "The curb cut of today becomes the ramp of tomorrow. 🛤️",
+  "Listen first to those with lived experience. 👂",
+  "Accessibility is not a feature—it is a foundation. 🏗️",
+  "The most powerful technology is that which empowers. ⚡",
+  "Design for the margins, and the center will follow. 🎯",
+  "Every barrier removed opens a thousand doors. 🚪",
+  "Nothing about us without us—this is the oracle's first truth. 🔮",
+  "The keyboard speaks louder than the mouse. ⌨️",
+  "Alt text is poetry for the unseen. 📝",
+  "Patience with technology teaches patience with oneself. 🧘",
+  "The screen reader sees what the eye cannot. 👁️",
+  "Contrast is not just visual—it is essential. 🎨",
+  "A focus ring is a beacon of navigation. 💡",
+  "Captions carry voices across silent waters. 🌊",
+  "The best designs anticipate, not accommodate. 🔮",
+  "Speed is privilege; patience is power. ⏳",
+  "Disability is not inability—it is diversity. 🌈",
+  "The semantic web speaks truth to all machines. 🤖",
+  "What slows one may stop another—design for all. 🤝",
+  "Empathy without action is merely sympathy. 💪",
+  "The strongest bridges are built with ARIA. 🌉",
+  "Neurodiversity is humanity's creative edge. 🧠"
 ]
 
 const getRandomWisdom = (): string => {
@@ -57,80 +57,47 @@ const getRandomWisdom = (): string => {
 }
 
 const TOPIC_SUGGESTIONS = [
-  'Accessible Design',
-  'Assistive Technology',
-  'Neurodiversity',
-  'Screen Readers',
-  'Inclusive Hiring',
-  'WCAG Standards',
-  'Disability Advocacy',
-  'Universal Design',
-  'Mental Health',
-  'Workplace Accommodations',
-  'Chronic Illness',
-  'Deaf Culture',
-  'Blind & Low Vision',
-  'Mobility & Physical',
-  'Learning Differences',
-  'Autism & ADHD',
-  'Invisible Disabilities',
-  'Accessible Gaming',
-  'Alt Text & Captions',
-  'Keyboard Navigation',
-  'Color Blindness',
-  'Cognitive Load',
-  'Plain Language',
-  'Voice Control',
-  'AI & Disability',
-  'Remote Work Access',
-  'Accessible Events',
-  'Self-Advocacy',
-  'Disability Pride',
-  'Accessible Transit'
+  '♿ Accessible Design',
+  '🦾 Assistive Technology',
+  '🧠 Neurodiversity',
+  '🔊 Screen Readers',
+  '💼 Inclusive Hiring',
+  '📋 WCAG Standards',
+  '📣 Disability Advocacy',
+  '🌍 Universal Design',
+  '💚 Mental Health',
+  '🏢 Workplace Accommodations',
+  '🩺 Chronic Illness',
+  '🤟 Deaf Culture',
+  '👁️ Blind & Low Vision',
+  '🦽 Mobility & Physical',
+  '📚 Learning Differences',
+  '🎯 Autism & ADHD',
+  '🙈 Invisible Disabilities',
+  '🎮 Accessible Gaming',
+  '🖼️ Alt Text & Captions',
+  '⌨️ Keyboard Navigation',
+  '🎨 Color Blindness',
+  '🧩 Cognitive Load',
+  '✍️ Plain Language',
+  '🎤 Voice Control',
+  '🤖 AI & Disability',
+  '🏠 Remote Work Access',
+  '🎪 Accessible Events',
+  '💪 Self-Advocacy',
+  '🏳️‍🌈 Disability Pride',
+  '🚌 Accessible Transit'
 ]
 
 const FOCUS_AREAS = [
-  'Engineering & Development',
-  'Product Design',
-  'Content & UX Writing',
-  'Research & Strategy',
-  'Leadership & Management',
-  'Advocacy & Policy',
-  'Education & Training',
-  'Consulting'
-]
-
-const SAMPLE_QUESTIONS: Question[] = [
-  {
-    id: 'sample-1',
-    text: 'What moment made you realize accessibility matters?',
-    wisdom: 'The path to inclusion begins with a single accessible step.',
-    isFavorite: false
-  },
-  {
-    id: 'sample-2',
-    text: 'How do you explain your work to someone outside tech?',
-    wisdom: 'What is designed for one, often benefits all.',
-    isFavorite: false
-  },
-  {
-    id: 'sample-3',
-    text: 'What advice would you give your younger self about disability?',
-    wisdom: 'Disability is not inability—it is diversity.',
-    isFavorite: false
-  },
-  {
-    id: 'sample-4',
-    text: "What's one small change that made a big difference for you?",
-    wisdom: 'Every barrier removed opens a thousand doors.',
-    isFavorite: false
-  },
-  {
-    id: 'sample-5',
-    text: 'How do you handle pushback when advocating for access?',
-    wisdom: "Nothing about us without us—this is the oracle's first truth.",
-    isFavorite: false
-  }
+  '💻 Engineering & Development',
+  '🎨 Product Design',
+  '✍️ Content & UX Writing',
+  '🔬 Research & Strategy',
+  '👔 Leadership & Management',
+  '📢 Advocacy & Policy',
+  '📖 Education & Training',
+  '🤝 Consulting'
 ]
 
 export default function App() {
@@ -141,6 +108,7 @@ export default function App() {
   const [tone, setTone] = useState([50])
   const [additionalNotes, setAdditionalNotes] = useState('')
   const [questions, setQuestions] = useState<Question[]>([])
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [isGenerating, setIsGenerating] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [savedQuestions, setSavedQuestions] = useKV<Question[]>('oracle-saved-questions', [])
@@ -165,16 +133,17 @@ export default function App() {
   }
 
   const getToneLabel = (value: number) => {
-    if (value < 25) return 'Whimsical & Light'
-    if (value < 45) return 'Warm & Curious'
-    if (value < 55) return 'Balanced'
-    if (value < 75) return 'Thoughtful'
-    return 'Deep & Profound'
+    if (value < 25) return '😜 Whimsical & Light'
+    if (value < 45) return '🤗 Warm & Curious'
+    if (value < 55) return '⚖️ Balanced'
+    if (value < 75) return '🤔 Thoughtful'
+    return '🧘 Deep & Profound'
   }
 
   const generateQuestions = async () => {
     setIsGenerating(true)
     setQuestions([])
+    setCurrentQuestionIndex(0)
 
     const toneDescription = tone[0] < 30 ? 'whimsical, playful, and lighthearted while still meaningful' : 
                            tone[0] < 50 ? 'warm, curious, and approachable with gentle humor' :
@@ -212,18 +181,79 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
         isFavorite: false
       }))
       setQuestions(generatedQuestions)
+      toast.success('🔮 The oracle has spoken!')
     } catch {
-      toast.error('The oracle needs a moment... Please try again.')
+      toast.error('🌙 The oracle needs a moment... Please try again.')
     } finally {
       setIsGenerating(false)
     }
   }
 
+  const regenerateCurrentQuestion = async () => {
+    if (questions.length === 0) return
+    
+    setIsGenerating(true)
+    
+    const toneDescription = tone[0] < 30 ? 'whimsical and playful' : 
+                           tone[0] < 50 ? 'warm and curious' :
+                           tone[0] < 70 ? 'balanced and conversational' :
+                           'deep and reflective'
+
+    const prompt = spark.llmPrompt`Generate 1 new simple question for a fireside chat about accessibility and inclusion.
+
+Context:
+- Topics: ${topics.length > 0 ? topics.join(', ') : 'accessibility, inclusion, disability in tech'}
+- Guest's work area: ${focusArea || 'accessibility and inclusion'}
+- Tone: ${toneDescription}
+
+Rules:
+- Write at a 9th grade reading level
+- Under 20 words
+- Open-ended question
+- Simple everyday words
+
+Return a JSON object with a "question" string property.`
+
+    try {
+      const result = await spark.llm(prompt, 'gpt-4o', true)
+      const parsed = JSON.parse(result)
+      const newQuestion: Question = {
+        id: `q-${Date.now()}-regen`,
+        text: parsed.question,
+        wisdom: getRandomWisdom(),
+        isFavorite: false
+      }
+      
+      const updatedQuestions = [...questions]
+      updatedQuestions[currentQuestionIndex] = newQuestion
+      setQuestions(updatedQuestions)
+      toast.success('✨ Fresh wisdom revealed!')
+    } catch {
+      toast.error('🌙 Try again in a moment...')
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const nextQuestion = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1)
+    }
+  }
+
+  const prevQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1)
+    }
+  }
+
+  const currentQuestion = questions[currentQuestionIndex]
+
   const copyQuestion = async (question: Question) => {
     const textToCopy = `${question.text}\n\n✨ "${question.wisdom}"`
     await navigator.clipboard.writeText(textToCopy)
     setCopiedId(question.id)
-    toast.success('Wisdom copied to your scroll!')
+    toast.success('📋 Copied to clipboard!')
     setTimeout(() => setCopiedId(null), 2000)
   }
 
@@ -235,7 +265,7 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
     
     if (!question.isFavorite) {
       setSavedQuestions(current => [...(current || []), { ...question, isFavorite: true }])
-      toast.success('Treasured in your collection!')
+      toast.success('💖 Saved to favorites!')
     } else {
       setSavedQuestions(current => (current || []).filter(q => q.id !== question.id))
     }
@@ -243,11 +273,11 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
 
   const removeSavedQuestion = (id: string) => {
     setSavedQuestions(current => (current || []).filter(q => q.id !== id))
-    toast.success('Released from your collection')
+    toast.success('🗑️ Removed from favorites')
   }
 
   return (
-    <div className="min-h-screen bg-background stars-pattern p-4 md:p-8">
+    <div className="min-h-screen bg-background p-4 md:p-8">
       <Toaster position="top-center" theme="dark" />
       
       <div className="max-w-5xl mx-auto">
@@ -262,22 +292,21 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
             animate={{ y: [0, -8, 0] }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           >
-            <div className="w-20 h-20 mx-auto rounded-full crystal-ball mystic-glow flex items-center justify-center">
-              <Eye size={40} weight="duotone" className="text-primary" />
+            <div className="w-24 h-24 mx-auto rounded-full crystal-ball mystic-glow flex items-center justify-center">
+              <span className="text-5xl">🔮</span>
             </div>
           </motion.div>
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight mb-2">
-            The Oracle of Inclusion
+          <h1 className="text-4xl md:text-6xl font-bold text-foreground tracking-tight mb-3">
+            The Oracle of Inclusion ✨
           </h1>
-          <p className="text-muted-foreground text-xl md:text-2xl italic">
-            "Ask, and the wisdom of accessibility shall be revealed..."
+          <p className="text-muted-foreground text-xl md:text-2xl">
+            "Ask, and the wisdom shall be revealed..." 🌟
           </p>
-          <div className="flex items-center justify-center gap-2 mt-4">
-            <Star size={18} weight="fill" className="text-primary shimmer-animation" />
-            <span className="text-base text-muted-foreground tracking-widest uppercase">
-              Disability • Tech • Design • Life
-            </span>
-            <Star size={18} weight="fill" className="text-accent shimmer-animation" />
+          <div className="flex items-center justify-center gap-3 mt-5 flex-wrap">
+            <span className="text-lg px-4 py-2 rounded-full bg-primary/20 text-primary font-medium">♿ Disability</span>
+            <span className="text-lg px-4 py-2 rounded-full bg-accent/20 text-accent font-medium">💻 Tech</span>
+            <span className="text-lg px-4 py-2 rounded-full bg-secondary/30 text-secondary-foreground font-medium">🎨 Design</span>
+            <span className="text-lg px-4 py-2 rounded-full bg-primary/20 text-primary font-medium">🌈 Life</span>
           </div>
         </motion.header>
 
@@ -287,18 +316,18 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <Card className="p-6 bg-card border-2 border-border mystic-glow relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-accent to-primary" />
+            <Card className="p-6 md:p-8 bg-card border-2 border-border mystic-glow relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" />
               
-              <h2 className="text-2xl font-semibold text-foreground mb-6 flex items-center gap-2">
-                <Sparkle size={28} weight="fill" className="text-primary" />
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6 flex items-center gap-3">
+                <span className="text-3xl">🎱</span>
                 Consult the Oracle
               </h2>
 
               <div className="space-y-6">
                 <div>
-                  <Label htmlFor="topics" className="text-foreground mb-2 block text-base">
-                    Realms to Explore
+                  <Label htmlFor="topics" className="text-foreground mb-3 block text-lg font-semibold">
+                    🎯 Topics to Explore
                   </Label>
                   <div className="flex gap-2 mb-3">
                     <Input
@@ -306,8 +335,8 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
                       value={topicInput}
                       onChange={(e) => setTopicInput(e.target.value)}
                       onKeyDown={handleKeyDown}
-                      placeholder="Enter a topic of inquiry..."
-                      className="bg-input border-border text-foreground placeholder:text-muted-foreground"
+                      placeholder="Type a topic..."
+                      className="bg-input border-2 border-border text-foreground placeholder:text-muted-foreground text-lg py-6"
                     />
                     <Button 
                       variant="secondary" 
@@ -315,80 +344,81 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
                       onClick={() => addTopic(topicInput)}
                       disabled={!topicInput.trim()}
                       aria-label="Add topic"
+                      className="h-12 w-12"
                     >
-                      <Plus size={18} />
+                      <Plus size={24} />
                     </Button>
                   </div>
-                  <div className="flex flex-wrap gap-2 mb-3">
+                  <div className="flex flex-wrap gap-2 mb-4">
                     {topics.map(topic => (
                       <Badge 
                         key={topic} 
                         variant="secondary"
-                        className="pl-3 pr-1 py-1.5 flex items-center gap-1 bg-secondary/80 text-secondary-foreground border border-accent/30"
+                        className="pl-4 pr-2 py-2 flex items-center gap-2 bg-primary/20 text-primary border-2 border-primary/30 text-base font-medium"
                       >
                         {topic}
                         <button 
                           onClick={() => removeTopic(topic)}
-                          className="ml-1 hover:bg-muted rounded-full p-0.5"
+                          className="ml-1 hover:bg-primary/20 rounded-full p-1"
                           aria-label={`Remove ${topic}`}
                         >
-                          <X size={14} />
+                          <X size={16} />
                         </button>
                       </Badge>
                     ))}
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {TOPIC_SUGGESTIONS.filter(s => !topics.includes(s)).slice(0, 10).map(suggestion => (
+                    {TOPIC_SUGGESTIONS.filter(s => !topics.includes(s)).slice(0, 8).map(suggestion => (
                       <button
                         key={suggestion}
                         onClick={() => addTopic(suggestion)}
-                        className="text-sm px-3 py-2 rounded-full border border-border text-muted-foreground hover:border-primary hover:text-primary transition-all hover:bg-primary/5"
+                        className="text-base px-4 py-2.5 rounded-full border-2 border-border text-muted-foreground hover:border-primary hover:text-primary transition-all hover:bg-primary/10 font-medium"
                       >
-                        + {suggestion}
+                        {suggestion}
                       </button>
                     ))}
                   </div>
                 </div>
 
                 <div>
-                  <Label htmlFor="focus-area" className="text-foreground mb-2 block text-base">
-                    Seeker's Domain
+                  <Label htmlFor="focus-area" className="text-foreground mb-3 block text-lg font-semibold">
+                    👤 Guest's Focus Area
                   </Label>
                   <Select value={focusArea} onValueChange={setFocusArea}>
-                    <SelectTrigger id="focus-area" className="bg-input border-border text-foreground">
-                      <SelectValue placeholder="Select their area of focus..." />
+                    <SelectTrigger id="focus-area" className="bg-input border-2 border-border text-foreground text-lg py-6">
+                      <SelectValue placeholder="Select their work area..." />
                     </SelectTrigger>
-                    <SelectContent className="bg-card border-border">
+                    <SelectContent className="bg-card border-2 border-border">
                       {FOCUS_AREAS.map(area => (
-                        <SelectItem key={area} value={area}>{area}</SelectItem>
+                        <SelectItem key={area} value={area} className="text-lg py-3">{area}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <Label htmlFor="experience" className="text-foreground mb-2 block text-base">
-                    Years of Journey
+                  <Label htmlFor="experience" className="text-foreground mb-3 block text-lg font-semibold">
+                    ⏳ Years of Experience
                   </Label>
                   <Select value={experience} onValueChange={setExperience}>
-                    <SelectTrigger id="experience" className="bg-input border-border text-foreground">
+                    <SelectTrigger id="experience" className="bg-input border-2 border-border text-foreground text-lg py-6">
                       <SelectValue placeholder="Select experience level..." />
                     </SelectTrigger>
-                    <SelectContent className="bg-card border-border">
-                      <SelectItem value="0-2">Apprentice (0-2 years)</SelectItem>
-                      <SelectItem value="3-5">Practitioner (3-5 years)</SelectItem>
-                      <SelectItem value="6-10">Adept (6-10 years)</SelectItem>
-                      <SelectItem value="11-15">Master (11-15 years)</SelectItem>
-                      <SelectItem value="15+">Sage (15+ years)</SelectItem>
+                    <SelectContent className="bg-card border-2 border-border">
+                      <SelectItem value="0-2" className="text-lg py-3">🌱 Beginner (0-2 years)</SelectItem>
+                      <SelectItem value="3-5" className="text-lg py-3">🌿 Growing (3-5 years)</SelectItem>
+                      <SelectItem value="6-10" className="text-lg py-3">🌳 Experienced (6-10 years)</SelectItem>
+                      <SelectItem value="11-15" className="text-lg py-3">🏆 Expert (11-15 years)</SelectItem>
+                      <SelectItem value="15+" className="text-lg py-3">⭐ Veteran (15+ years)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <Label className="text-foreground mb-3 block text-base">
-                    Oracle's Voice: <span className="text-primary font-medium">{getToneLabel(tone[0])}</span>
+                  <Label className="text-foreground mb-4 block text-lg font-semibold">
+                    🎭 Question Vibe: <span className="text-primary">{getToneLabel(tone[0])}</span>
                   </Label>
-                  <div className="px-1">
+                  <div className="px-2">
                     <Slider
                       value={tone}
                       onValueChange={setTone}
@@ -397,42 +427,42 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
                       className="w-full"
                       aria-label="Question tone"
                     />
-                    <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                      <span>✨ Whimsical</span>
-                      <span>🔮 Profound</span>
+                    <div className="flex justify-between text-base text-muted-foreground mt-3 font-medium">
+                      <span>😜 Silly</span>
+                      <span>🧘 Serious</span>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <Label htmlFor="notes" className="text-foreground mb-2 block text-base">
-                    Additional Whispers (optional)
+                  <Label htmlFor="notes" className="text-foreground mb-3 block text-lg font-semibold">
+                    📝 Extra Notes (optional)
                   </Label>
                   <Textarea
                     id="notes"
                     value={additionalNotes}
                     onChange={(e) => setAdditionalNotes(e.target.value)}
-                    placeholder="Any specific mysteries to uncover, achievements to celebrate, or paths to avoid..."
-                    className="bg-input border-border text-foreground placeholder:text-muted-foreground min-h-[80px]"
+                    placeholder="Any specific topics to cover or avoid..."
+                    className="bg-input border-2 border-border text-foreground placeholder:text-muted-foreground min-h-[100px] text-lg"
                   />
                 </div>
 
                 <Button 
                   onClick={generateQuestions}
                   disabled={isGenerating}
-                  className="w-full bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90 font-semibold py-6 text-lg tracking-wide"
+                  className="w-full bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90 font-bold py-7 text-xl tracking-wide"
                 >
                   {isGenerating ? (
                     <motion.div
                       animate={{ rotate: 360 }}
                       transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
                     >
-                      <ArrowClockwise size={22} />
+                      <ArrowClockwise size={28} />
                     </motion.div>
                   ) : (
                     <>
-                      <Eye size={22} weight="duotone" className="mr-2" />
-                      Reveal the Questions
+                      <span className="text-2xl mr-3">🔮</span>
+                      Reveal My Questions!
                     </>
                   )}
                 </Button>
@@ -446,44 +476,29 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
             transition={{ duration: 0.5, delay: 0.2 }}
             className="space-y-6"
           >
-            <Card className="p-6 bg-card border-2 border-border relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent via-primary to-accent" />
+            <Card className="p-6 md:p-8 bg-card border-2 border-border relative overflow-hidden min-h-[400px]">
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-accent via-primary to-accent" />
               
-              <h2 className="text-2xl font-semibold text-foreground mb-4 flex items-center gap-2">
-                <Star size={28} weight="fill" className="text-accent" />
-                Revealed Wisdom
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6 flex items-center gap-3">
+                <span className="text-3xl">✨</span>
+                {questions.length > 0 ? 'Your Question' : 'The Oracle Awaits'}
               </h2>
 
               {questions.length === 0 && !isGenerating && (
-                <div className="space-y-4">
-                  <div className="text-center pb-4 text-muted-foreground border-b border-border/50">
-                    <p className="italic text-lg">Sample questions to inspire your consultation...</p>
-                  </div>
-                  <div className="space-y-3">
-                    {SAMPLE_QUESTIONS.map((question, index) => (
-                      <div
-                        key={question.id}
-                        className="group p-4 rounded-lg bg-muted/20 border border-border/50"
-                      >
-                        <div className="flex items-start gap-3">
-                          <span className="text-muted-foreground font-semibold text-base mt-0.5">{index + 1}.</span>
-                          <div className="flex-1">
-                            <p className="text-muted-foreground leading-relaxed text-lg">{question.text}</p>
-                            <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-md bg-primary/5 border border-primary/10">
-                              <Sparkle size={16} weight="fill" className="text-primary/50 shrink-0" />
-                              <p className="text-base italic text-primary/70 leading-snug">"{question.wisdom}"</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="text-center pt-4 border-t border-border/50">
-                    <p className="text-muted-foreground text-base">
-                      <Eye size={18} weight="duotone" className="inline mr-2 text-primary" />
-                      Fill in the seeker's details and generate your own custom questions
-                    </p>
-                  </div>
+                <div className="text-center py-8">
+                  <motion.div
+                    animate={{ scale: [1, 1.05, 1] }}
+                    transition={{ duration: 3, repeat: Infinity }}
+                    className="text-8xl mb-6"
+                  >
+                    🎱
+                  </motion.div>
+                  <p className="text-xl text-muted-foreground mb-4">
+                    Fill in your details on the left
+                  </p>
+                  <p className="text-xl text-muted-foreground">
+                    Then click <span className="text-primary font-bold">"Reveal My Questions!"</span> 🔮
+                  </p>
                 </div>
               )}
 
@@ -492,105 +507,141 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
                   <motion.div
                     animate={{ 
                       scale: [1, 1.2, 1],
-                      boxShadow: [
-                        '0 0 20px oklch(0.80 0.16 55 / 0.3)',
-                        '0 0 40px oklch(0.72 0.18 320 / 0.5)',
-                        '0 0 20px oklch(0.80 0.16 55 / 0.3)'
-                      ]
+                      rotate: [0, 10, -10, 0]
                     }}
                     transition={{ duration: 2, repeat: Infinity }}
-                    className="w-24 h-24 mx-auto rounded-full crystal-ball flex items-center justify-center"
+                    className="text-8xl mb-6"
                   >
-                    <Eye size={48} weight="duotone" className="text-primary" />
+                    🔮
                   </motion.div>
-                  <p className="text-muted-foreground mt-6 italic text-xl">The oracle peers into the mists...</p>
+                  <p className="text-xl text-muted-foreground">The oracle is thinking... ✨</p>
                 </div>
               )}
 
-              <AnimatePresence mode="popLayout">
-                <div className="space-y-3">
-                  {questions.map((question, index) => (
-                    <motion.div
-                      key={question.id}
-                      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.4, delay: index * 0.08 }}
-                      className="group p-4 rounded-lg bg-muted/40 border border-border hover:border-primary/50 transition-all hover:bg-muted/60"
-                    >
-                      <div className="flex items-start gap-3">
-                        <span className="text-primary font-semibold text-base mt-0.5">{index + 1}.</span>
-                        <div className="flex-1">
-                          <p className="text-foreground leading-relaxed text-lg">{question.text}</p>
-                          <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-md bg-gradient-to-r from-primary/10 via-accent/5 to-secondary/10 border border-primary/20">
-                            <Sparkle size={16} weight="fill" className="text-primary shrink-0" />
-                            <p className="text-base italic text-primary leading-snug">"{question.wisdom}"</p>
-                          </div>
-                        </div>
+              <AnimatePresence mode="wait">
+                {currentQuestion && !isGenerating && (
+                  <motion.div
+                    key={currentQuestion.id}
+                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                    transition={{ duration: 0.4 }}
+                    className="space-y-6"
+                  >
+                    <div className="text-center mb-4">
+                      <span className="text-lg font-bold text-muted-foreground bg-muted/50 px-4 py-2 rounded-full">
+                        Question {currentQuestionIndex + 1} of {questions.length} 🎯
+                      </span>
+                    </div>
+                    
+                    <div className="p-6 rounded-xl bg-gradient-to-br from-primary/15 via-accent/10 to-secondary/15 border-2 border-primary/30">
+                      <p className="text-2xl md:text-3xl text-foreground leading-relaxed font-medium text-center">
+                        "{currentQuestion.text}"
+                      </p>
+                    </div>
+
+                    <div className="p-4 rounded-lg bg-accent/10 border-2 border-accent/30">
+                      <div className="flex items-center justify-center gap-3">
+                        <Sparkle size={24} weight="fill" className="text-accent shrink-0" />
+                        <p className="text-lg md:text-xl text-accent font-medium text-center">
+                          {currentQuestion.wisdom}
+                        </p>
                       </div>
-                      <div className="flex gap-2 mt-3 ml-6">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => copyQuestion(question)}
-                          className="text-muted-foreground hover:text-foreground hover:bg-primary/10"
-                        >
-                          {copiedId === question.id ? (
-                            <Check size={18} className="text-green-400" />
-                          ) : (
-                            <Copy size={18} />
-                          )}
-                          <span className="ml-1.5 text-sm">Copy</span>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleFavorite(question)}
-                          className="text-muted-foreground hover:text-foreground hover:bg-accent/10"
-                        >
-                          <Heart 
-                            size={18} 
-                            weight={question.isFavorite ? 'fill' : 'regular'}
-                            className={question.isFavorite ? 'text-accent' : ''}
-                          />
-                          <span className="ml-1.5 text-sm">Treasure</span>
-                        </Button>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3 justify-center">
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={() => copyQuestion(currentQuestion)}
+                        className="text-lg py-6 px-6 border-2"
+                      >
+                        {copiedId === currentQuestion.id ? (
+                          <Check size={22} className="text-green-500 mr-2" />
+                        ) : (
+                          <Copy size={22} className="mr-2" />
+                        )}
+                        Copy
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={() => toggleFavorite(currentQuestion)}
+                        className="text-lg py-6 px-6 border-2"
+                      >
+                        <Heart 
+                          size={22} 
+                          weight={currentQuestion.isFavorite ? 'fill' : 'regular'}
+                          className={currentQuestion.isFavorite ? 'text-pink-500 mr-2' : 'mr-2'}
+                        />
+                        {currentQuestion.isFavorite ? 'Saved!' : 'Save'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={regenerateCurrentQuestion}
+                        disabled={isGenerating}
+                        className="text-lg py-6 px-6 border-2 border-primary/50 text-primary hover:bg-primary/10"
+                      >
+                        <Shuffle size={22} className="mr-2" />
+                        New Question
+                      </Button>
+                    </div>
+
+                    <div className="flex gap-3 justify-center pt-4">
+                      <Button
+                        variant="secondary"
+                        size="lg"
+                        onClick={prevQuestion}
+                        disabled={currentQuestionIndex === 0}
+                        className="text-lg py-6 px-8"
+                      >
+                        ← Previous
+                      </Button>
+                      <Button
+                        variant="default"
+                        size="lg"
+                        onClick={nextQuestion}
+                        disabled={currentQuestionIndex === questions.length - 1}
+                        className="text-lg py-6 px-8 bg-primary text-primary-foreground"
+                      >
+                        Next →
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
               </AnimatePresence>
             </Card>
 
             {(savedQuestions ?? []).length > 0 && (
-              <Card className="p-6 bg-card border-2 border-border relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-secondary to-accent" />
+              <Card className="p-6 md:p-8 bg-card border-2 border-border relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-500 via-accent to-pink-500" />
                 
-                <h2 className="text-2xl font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <Heart size={28} weight="fill" className="text-accent" />
-                  Treasured Wisdom ({(savedQuestions ?? []).length})
+                <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6 flex items-center gap-3">
+                  <span className="text-3xl">💖</span>
+                  Saved Questions ({(savedQuestions ?? []).length})
                 </h2>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {(savedQuestions ?? []).map((question) => (
                     <div
                       key={question.id}
-                      className="flex items-start gap-3 p-4 rounded-lg bg-muted/30 border border-border group"
+                      className="flex items-start gap-4 p-5 rounded-xl bg-muted/40 border-2 border-border group"
                     >
                       <div className="flex-1">
-                        <p className="text-foreground text-base leading-relaxed">{question.text}</p>
+                        <p className="text-foreground text-lg leading-relaxed font-medium">{question.text}</p>
                         {question.wisdom && (
-                          <div className="mt-2 flex items-center gap-2">
-                            <Sparkle size={14} weight="fill" className="text-primary shrink-0" />
-                            <p className="text-sm italic text-primary">"{question.wisdom}"</p>
+                          <div className="mt-3 flex items-center gap-2">
+                            <Sparkle size={18} weight="fill" className="text-accent shrink-0" />
+                            <p className="text-base text-accent">{question.wisdom}</p>
                           </div>
                         )}
                       </div>
                       <button
                         onClick={() => removeSavedQuestion(question.id)}
-                        className="text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
-                        aria-label="Remove from treasured"
+                        className="text-muted-foreground hover:text-destructive transition-colors p-2"
+                        aria-label="Remove from saved"
                       >
-                        <X size={18} />
+                        <X size={24} />
                       </button>
                     </div>
                   ))}
@@ -601,12 +652,12 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
         </div>
 
         <motion.footer 
-          className="text-center mt-12 text-muted-foreground text-base"
+          className="text-center mt-12 text-muted-foreground text-lg"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
         >
-          <p className="italic">"Nothing about us without us" — Disability Rights Movement</p>
+          <p className="font-medium">"Nothing about us without us" ✊ — Disability Rights Movement</p>
         </motion.footer>
       </div>
     </div>
