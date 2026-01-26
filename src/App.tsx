@@ -52,6 +52,20 @@ const WISDOM_QUOTES = [
   "Neurodiversity is humanity's creative edge. 🧠"
 ]
 
+const MYSTICAL_LOADING_PHRASES = [
+  "Consulting the accessibility spirits... 👻",
+  "Reading the WCAG tea leaves... 🍵",
+  "Channeling the wisdom of the ancients... 📜",
+  "The crystal ball is warming up... 🔥",
+  "Summoning inclusive insights... ✨",
+  "Decoding the cosmic keyboard shortcuts... ⌨️",
+  "The oracle stirs from its slumber... 💤",
+]
+
+const getRandomLoadingPhrase = (): string => {
+  return MYSTICAL_LOADING_PHRASES[Math.floor(Math.random() * MYSTICAL_LOADING_PHRASES.length)]
+}
+
 const getRandomWisdom = (): string => {
   return WISDOM_QUOTES[Math.floor(Math.random() * WISDOM_QUOTES.length)]
 }
@@ -92,17 +106,31 @@ const TOPIC_SUGGESTIONS = [
 const VIBE_LABELS = ['😜 Whimsical', '🤗 Warm', '🤔 Thoughtful', '🧘 Deep']
 
 const FOCUS_AREAS = [
-  '💻 Engineering & Development',
-  '🎨 Design & Creative',
-  '🧩 Accessibility Specialist',
-  '👔 Leadership & Management',
-  '📖 Education & Advocacy',
-  '🏥 Healthcare & Public Sector',
-  '📣 Marketing & Communications',
-  '🧑‍💼 HR & Recruiting',
-  '🎮 Gaming & Media',
-  '🤝 Consulting & Strategy',
+  '💻 Engineering & Dev',
+  '🎨 Design & UX',
+  '🧩 Accessibility',
+  '👔 Leadership',
+  '📖 Education',
+  '📣 Advocacy & Community',
 ]
+
+const MYSTICAL_RESPONSES = [
+  { text: "The spirits say... YES! ✨", type: "yes" },
+  { text: "Absolutely, the path is clear! 🌟", type: "yes" },
+  { text: "The oracle nods wisely... YES! 💫", type: "yes" },
+  { text: "Signs point to YES! 🔮", type: "yes" },
+  { text: "The cosmic forces agree! ⭐", type: "yes" },
+  { text: "Hmm... the oracle says NO 🌙", type: "no" },
+  { text: "The spirits shake their heads... 👻", type: "no" },
+  { text: "Not this time, seeker... 🌒", type: "no" },
+  { text: "The answer is unclear... ask again! 🎭", type: "maybe" },
+  { text: "Perhaps... the future is unwritten 📜", type: "maybe" },
+  { text: "The oracle is cryptic on this one... 🤔", type: "maybe" },
+]
+
+const getRandomResponse = () => {
+  return MYSTICAL_RESPONSES[Math.floor(Math.random() * MYSTICAL_RESPONSES.length)]
+}
 
 export default function App() {
   const [topics, setTopics] = useState<string[]>([])
@@ -114,6 +142,9 @@ export default function App() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [isGenerating, setIsGenerating] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [loadingPhrase, setLoadingPhrase] = useState('')
+  const [quickAnswer, setQuickAnswer] = useState<{text: string, type: string} | null>(null)
+  const [isShakingOrb, setIsShakingOrb] = useState(false)
   const [savedQuestions, setSavedQuestions] = useKV<Question[]>('oracle-saved-questions', [])
 
   const addTopic = (topic: string) => {
@@ -167,6 +198,7 @@ export default function App() {
     setIsGenerating(true)
     setQuestions([])
     setCurrentQuestionIndex(0)
+    setLoadingPhrase(getRandomLoadingPhrase())
 
     const prompt = spark.llmPrompt`Generate 8 simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
 
@@ -291,6 +323,15 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
     toast.success('🗑️ Removed from favorites')
   }
 
+  const shakeTheOrb = () => {
+    setIsShakingOrb(true)
+    setQuickAnswer(null)
+    setTimeout(() => {
+      setQuickAnswer(getRandomResponse())
+      setIsShakingOrb(false)
+    }, 1500)
+  }
+
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <Toaster position="top-center" theme="dark" />
@@ -335,7 +376,7 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" />
               
               <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6 flex items-center gap-3">
-                <span className="text-3xl">🎱</span>
+                <span className="text-3xl">🔮</span>
                 Consult the Oracle
               </h2>
 
@@ -482,17 +523,17 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
               {questions.length === 0 && !isGenerating && (
                 <div className="text-center py-8">
                   <motion.div
-                    animate={{ scale: [1, 1.05, 1] }}
-                    transition={{ duration: 3, repeat: Infinity }}
+                    animate={{ scale: [1, 1.05, 1], rotate: [0, 5, -5, 0] }}
+                    transition={{ duration: 4, repeat: Infinity }}
                     className="text-8xl mb-6"
                   >
-                    🎱
+                    🔮
                   </motion.div>
                   <p className="text-xl text-muted-foreground mb-4">
-                    Fill in your details on the left
+                    The spirits await your inquiry...
                   </p>
                   <p className="text-xl text-muted-foreground">
-                    Then click <span className="text-primary font-bold">"Reveal My Questions!"</span> 🔮
+                    Fill in your details, then click <span className="text-primary font-bold">"Reveal My Questions!"</span> ✨
                   </p>
                 </div>
               )}
@@ -509,7 +550,13 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
                   >
                     🔮
                   </motion.div>
-                  <p className="text-xl text-muted-foreground">The oracle is thinking... ✨</p>
+                  <motion.p 
+                    className="text-xl text-primary font-medium"
+                    animate={{ opacity: [0.7, 1, 0.7] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >
+                    {loadingPhrase}
+                  </motion.p>
                 </div>
               )}
 
@@ -678,8 +725,53 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
           </motion.div>
         </div>
 
+        <motion.div 
+          className="mt-12 mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <Card className="p-6 bg-card/50 border-2 border-border max-w-md mx-auto text-center">
+            <h3 className="text-xl font-bold text-foreground mb-4 flex items-center justify-center gap-2">
+              <span>🎱</span> Quick Oracle <span className="text-sm font-normal text-muted-foreground">(just for fun!)</span>
+            </h3>
+            <p className="text-muted-foreground mb-4 text-base">Think of a yes/no question, then shake the orb!</p>
+            
+            <motion.button
+              onClick={shakeTheOrb}
+              disabled={isShakingOrb}
+              className="w-20 h-20 mx-auto rounded-full crystal-ball mystic-glow flex items-center justify-center text-4xl cursor-pointer hover:scale-110 transition-transform disabled:cursor-wait"
+              animate={isShakingOrb ? { 
+                x: [0, -10, 10, -10, 10, 0],
+                rotate: [0, -5, 5, -5, 5, 0]
+              } : {}}
+              transition={{ duration: 0.5, repeat: isShakingOrb ? Infinity : 0 }}
+              aria-label="Shake the oracle orb for a yes/no answer"
+            >
+              🔮
+            </motion.button>
+            
+            <AnimatePresence>
+              {quickAnswer && !isShakingOrb && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className={`mt-4 p-3 rounded-lg text-lg font-bold ${
+                    quickAnswer.type === 'yes' ? 'bg-green-500/20 text-green-400' :
+                    quickAnswer.type === 'no' ? 'bg-red-500/20 text-red-400' :
+                    'bg-primary/20 text-primary'
+                  }`}
+                >
+                  {quickAnswer.text}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </Card>
+        </motion.div>
+
         <motion.footer 
-          className="text-center mt-12 text-muted-foreground text-lg"
+          className="text-center mt-8 text-muted-foreground text-lg"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
