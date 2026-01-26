@@ -89,35 +89,68 @@ const TOPIC_SUGGESTIONS = [
   '🚌 Accessible Transit'
 ]
 
-const FOCUS_AREAS = [
-  '💻 Engineering & Development',
-  '🎨 Product Design',
-  '✍️ Content & UX Writing',
-  '🔬 Research & Strategy',
-  '👔 Leadership & Management',
-  '📢 Advocacy & Policy',
-  '📖 Education & Training',
-  '🤝 Consulting',
-  '🧪 Quality Assurance & Testing',
-  '📊 Data Science & Analytics',
-  '🛡️ Security & Privacy',
-  '☁️ DevOps & Infrastructure',
-  '📱 Mobile Development',
-  '🎮 Gaming & Interactive Media',
-  '🤖 AI & Machine Learning',
-  '🎬 Video & Multimedia',
-  '📣 Marketing & Communications',
-  '🧑‍💼 Human Resources & Recruiting',
-  '⚖️ Legal & Compliance',
-  '💰 Product Management',
-  '🎧 Customer Support & Success',
-  '🏥 Healthcare Technology',
-  '🎓 Academia & Research',
-  '🌐 Localization & Internationalization',
-  '🧩 Accessibility Specialist',
-  '🎤 Public Speaking & Thought Leadership',
-  '📝 Technical Writing & Documentation',
-  '🛠️ Hardware & Assistive Technology'
+const FOCUS_AREA_CATEGORIES = [
+  {
+    label: '🛠️ Engineering & Technical',
+    options: [
+      '💻 Software Engineering',
+      '📱 Mobile Development',
+      '☁️ DevOps & Infrastructure',
+      '🛡️ Security & Privacy',
+      '🤖 AI & Machine Learning',
+      '📊 Data Science & Analytics',
+      '🧪 Quality Assurance & Testing',
+      '🛠️ Hardware & Assistive Tech',
+    ]
+  },
+  {
+    label: '🎨 Design & Creative',
+    options: [
+      '🎨 Product Design',
+      '✍️ Content & UX Writing',
+      '🎬 Video & Multimedia',
+      '🎮 Gaming & Interactive Media',
+      '📝 Technical Writing & Docs',
+    ]
+  },
+  {
+    label: '🧩 Accessibility & Inclusion',
+    options: [
+      '🧩 Accessibility Specialist',
+      '🌐 Localization & i18n',
+      '🔬 A11y Research & Strategy',
+      '📢 Disability Advocacy',
+    ]
+  },
+  {
+    label: '👔 Leadership & Business',
+    options: [
+      '👔 Leadership & Management',
+      '💰 Product Management',
+      '📣 Marketing & Communications',
+      '🧑‍💼 Human Resources & Recruiting',
+      '⚖️ Legal & Compliance',
+      '🤝 Consulting',
+    ]
+  },
+  {
+    label: '📖 Education & Community',
+    options: [
+      '📖 Education & Training',
+      '🎓 Academia & Research',
+      '🎤 Public Speaking',
+      '🎧 Customer Support & Success',
+    ]
+  },
+  {
+    label: '🏥 Specialized Industries',
+    options: [
+      '🏥 Healthcare Technology',
+      '🏛️ Government & Public Sector',
+      '🎓 EdTech',
+      '💳 FinTech',
+    ]
+  }
 ]
 
 export default function App() {
@@ -408,9 +441,16 @@ Return a JSON object with a "question" string property.`
                     <SelectTrigger id="focus-area" className="bg-input border-2 border-border text-foreground text-lg py-6">
                       <SelectValue placeholder="Select their work area..." />
                     </SelectTrigger>
-                    <SelectContent className="bg-card border-2 border-border">
-                      {FOCUS_AREAS.map(area => (
-                        <SelectItem key={area} value={area} className="text-lg py-3">{area}</SelectItem>
+                    <SelectContent className="bg-card border-2 border-border max-h-[400px]">
+                      {FOCUS_AREA_CATEGORIES.map(category => (
+                        <div key={category.label}>
+                          <div className="px-3 py-2 text-sm font-bold text-muted-foreground bg-muted/50 sticky top-0">
+                            {category.label}
+                          </div>
+                          {category.options.map(area => (
+                            <SelectItem key={area} value={area} className="text-lg py-3 pl-6">{area}</SelectItem>
+                          ))}
+                        </div>
                       ))}
                     </SelectContent>
                   </Select>
