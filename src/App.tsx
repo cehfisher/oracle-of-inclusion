@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Copy, Heart, ArrowClockwise, Check, Plus, X, Shuffle, Export, SpeakerHigh, SpeakerSlash, Sparkle } from '@phosphor-icons/react'
+import { Copy, Heart, ArrowClockwise, Check, Plus, X, Shuffle, Export, SpeakerHigh, SpeakerSlash, Sparkle, ArrowCounterClockwise } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { Checkbox } from '@/components/ui/checkbox'
 import { useKV } from '@github/spark/hooks'
 import { toast, Toaster } from 'sonner'
 
@@ -155,16 +156,28 @@ const TOPIC_SUGGESTIONS = [
   '🚌 Accessible Transit'
 ]
 
-const VIBE_LABELS = ['😜 Whimsical', '🤗 Warm', '🤔 Thoughtful', '🧘 Deep']
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const shuffled = [...array]
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  }
+  return shuffled
+}
+
+const VIBE_TYPES = ['😜 Whimsical', '🤗 Warm', '🤔 Thoughtful', '🧘 Deep']
 
 const FOCUS_AREAS = [
-  '💻 Engineering & Dev',
-  '🎨 Design & UX',
-  '🧩 Accessibility',
-  '👔 Leadership',
-  '📖 Education',
-  '📣 Advocacy & Community',
+  { id: 'frontend', label: '🖥️ Front-End Dev' },
+  { id: 'backend', label: '⚙️ Back-End Dev' },
+  { id: 'design', label: '🎨 Design & UX' },
+  { id: 'accessibility', label: '🧩 Accessibility' },
+  { id: 'leadership', label: '👔 Leadership' },
+  { id: 'education', label: '📖 Education' },
+  { id: 'advocacy', label: '📣 Advocacy & Community' },
 ]
+
+const QUESTION_COUNTS = [4, 6, 8, 10, 12]
 
 const MYSTICAL_RESPONSES = [
   { text: "The spirits say... YES! ✨", type: "yes" },
@@ -187,9 +200,10 @@ const getRandomResponse = () => {
 export default function App() {
   const [topics, setTopics] = useState<string[]>([])
   const [topicInput, setTopicInput] = useState('')
-  const [focusArea, setFocusArea] = useState('')
+  const [focusAreas, setFocusAreas] = useState<string[]>([])
   const [experience, setExperience] = useState('')
   const [additionalNotes, setAdditionalNotes] = useState('')
+  const [questionCount, setQuestionCount] = useState(8)
   const [questions, setQuestions] = useState<Question[]>([])
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -201,6 +215,8 @@ export default function App() {
   const [savedQuestions, setSavedQuestions] = useKV<Question[]>('oracle-saved-questions', [])
   const [soundEnabled, setSoundEnabled] = useKV<boolean>('oracle-sound-enabled', true)
   const [animationsEnabled, setAnimationsEnabled] = useKV<boolean>('oracle-animations-enabled', true)
+  
+  const shuffledTopicSuggestions = useMemo(() => shuffleArray(TOPIC_SUGGESTIONS), [])
   
   const sounds = useSound()
   
@@ -244,8 +260,29 @@ export default function App() {
     }
   }
 
+  const toggleFocusArea = (areaId: string) => {
+    setFocusAreas(current => 
+      current.includes(areaId) 
+        ? current.filter(id => id !== areaId)
+        : [...current, areaId]
+    )
+  }
+
+  const resetForm = () => {
+    setTopics([])
+    setTopicInput('')
+    setFocusAreas([])
+    setExperience('')
+    setAdditionalNotes('')
+    setQuestionCount(8)
+    setQuestions([])
+    setCurrentQuestionIndex(0)
+    setQuickAnswer(null)
+    toast.success('🔄 Form reset!')
+  }
+
   const getRandomVibe = (): string => {
-    return VIBE_LABELS[Math.floor(Math.random() * VIBE_LABELS.length)]
+    return VIBE_TYPES[Math.floor(Math.random() * VIBE_TYPES.length)]
   }
 
   const exportSavedQuestions = () => {
@@ -279,11 +316,20 @@ export default function App() {
     setLoadingPhrase(getRandomLoadingPhrase())
     playSound(sounds.playMysticChime)
 
-    const prompt = spark.llmPrompt`Generate 8 simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
+    const focusAreasText = focusAreas.length > 0 
+      ? FOCUS_AREAS.filter(a => focusAreas.includes(a.id)).map(a => a.label).join(', ')
+      : 'accessibility and inclusion in technology'
+
+    const vibeDistribution = VIBE_TYPES.map((vibe, idx) => {
+      const count = Math.floor(questionCount / 4) + (idx < questionCount % 4 ? 1 : 0)
+      return `${count} ${vibe.split(' ')[1]}`
+    }).join(', ')
+
+    const prompt = spark.llmPrompt`Generate ${questionCount} simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
 
 Context:
 - Topics: ${topics.length > 0 ? topics.join(', ') : 'accessibility, inclusion, disability in tech, universal design, assistive technology'}
-- Guest's work area: ${focusArea || 'accessibility and inclusion in technology'}
+- Guest's work area: ${focusAreasText}
 - Experience: ${experience || 'not specified'}
 - Extra notes: ${additionalNotes || 'none'}
 
@@ -296,19 +342,20 @@ Rules:
 - Mix personal story questions with big picture questions
 - Center the disability community voice
 - Keep each question to 1-2 sentences max
-- IMPORTANT: Generate a MIX of vibes - 2 whimsical/playful, 2 warm/curious, 2 thoughtful, 2 deep/reflective
+- CRITICAL: Generate an even mix of vibes: ${vibeDistribution}. Each vibe type MUST be represented.
+- Randomize the order of vibes - do NOT group same vibes together
 
-Return a JSON object with a "questions" array containing exactly 8 objects, each with "text" (the question) and "vibe" (one of: "😜 Whimsical", "🤗 Warm", "🤔 Thoughtful", "🧘 Deep").`
+Return a JSON object with a "questions" array containing exactly ${questionCount} objects, each with "text" (the question) and "vibe" (one of: "😜 Whimsical", "🤗 Warm", "🤔 Thoughtful", "🧘 Deep").`
 
     try {
       const result = await spark.llm(prompt, 'gpt-4o', true)
       const parsed = JSON.parse(result)
-      const generatedQuestions: Question[] = parsed.questions.map((q: { text: string; vibe: string }, i: number) => ({
+      const generatedQuestions: Question[] = shuffleArray(parsed.questions.map((q: { text: string; vibe: string }, i: number) => ({
         id: `q-${Date.now()}-${i}`,
         text: q.text,
         isFavorite: false,
         vibe: q.vibe || getRandomVibe()
-      }))
+      })))
       setQuestions(generatedQuestions)
       playSound(sounds.playSuccess)
       toast.success('🔮 The oracle has spoken!')
@@ -325,11 +372,15 @@ Return a JSON object with a "questions" array containing exactly 8 objects, each
     setIsGenerating(true)
     playSound(sounds.playMysticChime)
 
+    const focusAreasText = focusAreas.length > 0 
+      ? FOCUS_AREAS.filter(a => focusAreas.includes(a.id)).map(a => a.label).join(', ')
+      : 'accessibility and inclusion'
+
     const prompt = spark.llmPrompt`Generate 1 new simple question for a fireside chat about accessibility and inclusion.
 
 Context:
 - Topics: ${topics.length > 0 ? topics.join(', ') : 'accessibility, inclusion, disability in tech'}
-- Guest's work area: ${focusArea || 'accessibility and inclusion'}
+- Guest's work area: ${focusAreasText}
 
 Rules:
 - Write at a 9th grade reading level
@@ -526,7 +577,7 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
                     ))}
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {TOPIC_SUGGESTIONS.filter(s => !topics.includes(s)).slice(0, 8).map(suggestion => (
+                    {shuffledTopicSuggestions.filter(s => !topics.includes(s)).slice(0, 8).map(suggestion => (
                       <button
                         key={suggestion}
                         onClick={() => addTopic(suggestion)}
@@ -539,37 +590,73 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
                 </div>
 
                 <div>
-                  <Label htmlFor="focus-area" className="text-foreground mb-3 block text-lg font-semibold">
-                    👤 Guest's Focus Area
+                  <Label className="text-foreground mb-3 block text-lg font-semibold">
+                    👤 Guest's Focus Areas (select all that apply)
                   </Label>
-                  <Select value={focusArea} onValueChange={setFocusArea}>
-                    <SelectTrigger id="focus-area" className="bg-input border-2 border-border text-foreground text-lg py-6">
-                      <SelectValue placeholder="Select their work area..." />
-                    </SelectTrigger>
-                    <SelectContent className="bg-card border-2 border-border max-h-[400px]">
-                      {FOCUS_AREAS.map(area => (
-                        <SelectItem key={area} value={area} className="text-lg py-3">{area}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {FOCUS_AREAS.map(area => (
+                      <div 
+                        key={area.id}
+                        className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                          focusAreas.includes(area.id) 
+                            ? 'border-primary bg-primary/15' 
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                        onClick={() => toggleFocusArea(area.id)}
+                      >
+                        <Checkbox 
+                          id={`focus-${area.id}`}
+                          checked={focusAreas.includes(area.id)}
+                          onCheckedChange={() => toggleFocusArea(area.id)}
+                          className="border-2"
+                        />
+                        <Label 
+                          htmlFor={`focus-${area.id}`} 
+                          className="text-lg font-medium cursor-pointer flex-1"
+                        >
+                          {area.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="experience" className="text-foreground mb-3 block text-lg font-semibold">
-                    ⏳ Years of Experience
-                  </Label>
-                  <Select value={experience} onValueChange={setExperience}>
-                    <SelectTrigger id="experience" className="bg-input border-2 border-border text-foreground text-lg py-6">
-                      <SelectValue placeholder="Select experience level..." />
-                    </SelectTrigger>
-                    <SelectContent className="bg-card border-2 border-border">
-                      <SelectItem value="0-2" className="text-lg py-3">🌱 Beginner (0-2 years)</SelectItem>
-                      <SelectItem value="3-5" className="text-lg py-3">🌿 Growing (3-5 years)</SelectItem>
-                      <SelectItem value="6-10" className="text-lg py-3">🌳 Experienced (6-10 years)</SelectItem>
-                      <SelectItem value="11-15" className="text-lg py-3">🏆 Expert (11-15 years)</SelectItem>
-                      <SelectItem value="15+" className="text-lg py-3">⭐ Veteran (15+ years)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="question-count" className="text-foreground mb-3 block text-lg font-semibold">
+                      🔢 How Many Questions?
+                    </Label>
+                    <Select value={questionCount.toString()} onValueChange={(v) => setQuestionCount(parseInt(v))}>
+                      <SelectTrigger id="question-count" className="bg-input border-2 border-border text-foreground text-lg py-6">
+                        <SelectValue placeholder="Select count..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card border-2 border-border">
+                        {QUESTION_COUNTS.map(count => (
+                          <SelectItem key={count} value={count.toString()} className="text-lg py-3">
+                            {count} questions
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="experience" className="text-foreground mb-3 block text-lg font-semibold">
+                      ⏳ Years of Experience
+                    </Label>
+                    <Select value={experience} onValueChange={setExperience}>
+                      <SelectTrigger id="experience" className="bg-input border-2 border-border text-foreground text-lg py-6">
+                        <SelectValue placeholder="Select level..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card border-2 border-border">
+                        <SelectItem value="0-2" className="text-lg py-3">🌱 Beginner (0-2 years)</SelectItem>
+                        <SelectItem value="3-5" className="text-lg py-3">🌿 Growing (3-5 years)</SelectItem>
+                        <SelectItem value="6-10" className="text-lg py-3">🌳 Experienced (6-10 years)</SelectItem>
+                        <SelectItem value="11-15" className="text-lg py-3">🏆 Expert (11-15 years)</SelectItem>
+                        <SelectItem value="15+" className="text-lg py-3">⭐ Veteran (15+ years)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <div>
@@ -585,25 +672,35 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
                   />
                 </div>
 
-                <Button 
-                  onClick={generateQuestions}
-                  disabled={isGenerating}
-                  className="w-full bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90 font-bold py-7 text-xl tracking-wide"
-                >
-                  {isGenerating ? (
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-                    >
-                      <ArrowClockwise size={28} />
-                    </motion.div>
-                  ) : (
-                    <>
-                      <span className="text-2xl mr-3">✨</span>
-                      Reveal My Questions!
-                    </>
-                  )}
-                </Button>
+                <div className="flex gap-3">
+                  <Button 
+                    onClick={generateQuestions}
+                    disabled={isGenerating}
+                    className="flex-1 bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90 font-bold py-7 text-xl tracking-wide"
+                  >
+                    {isGenerating ? (
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+                      >
+                        <ArrowClockwise size={28} />
+                      </motion.div>
+                    ) : (
+                      <>
+                        <span className="text-2xl mr-3">✨</span>
+                        Reveal My Questions!
+                      </>
+                    )}
+                  </Button>
+                  <Button 
+                    onClick={resetForm}
+                    variant="outline"
+                    className="py-7 px-6 border-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                    title="Reset form"
+                  >
+                    <ArrowCounterClockwise size={24} />
+                  </Button>
+                </div>
               </div>
             </Card>
           </motion.div>
@@ -695,7 +792,28 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
                       </p>
                     </div>
 
-                    <div className="flex flex-wrap gap-3 justify-center">
+                    <div className="flex gap-3 justify-center">
+                      <Button
+                        variant="secondary"
+                        size="lg"
+                        onClick={prevQuestion}
+                        disabled={currentQuestionIndex === 0}
+                        className="text-lg py-6 px-8"
+                      >
+                        ← Previous
+                      </Button>
+                      <Button
+                        variant="default"
+                        size="lg"
+                        onClick={nextQuestion}
+                        disabled={currentQuestionIndex === questions.length - 1}
+                        className="text-lg py-6 px-8 bg-primary text-primary-foreground"
+                      >
+                        Next →
+                      </Button>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3 justify-center pt-2">
                       <Button
                         variant="outline"
                         size="lg"
@@ -744,27 +862,6 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
                       >
                         <ArrowClockwise size={22} className="mr-2" />
                         🎲 Shuffle All Questions
-                      </Button>
-                    </div>
-
-                    <div className="flex gap-3 justify-center pt-4">
-                      <Button
-                        variant="secondary"
-                        size="lg"
-                        onClick={prevQuestion}
-                        disabled={currentQuestionIndex === 0}
-                        className="text-lg py-6 px-8"
-                      >
-                        ← Previous
-                      </Button>
-                      <Button
-                        variant="default"
-                        size="lg"
-                        onClick={nextQuestion}
-                        disabled={currentQuestionIndex === questions.length - 1}
-                        className="text-lg py-6 px-8 bg-primary text-primary-foreground"
-                      >
-                        Next →
                       </Button>
                     </div>
                   </motion.div>
