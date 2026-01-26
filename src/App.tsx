@@ -10,7 +10,7 @@ import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { useKV } from '@github/spark/hooks'
 import { toast, Toaster } from 'sonner'
 
@@ -227,6 +227,7 @@ export default function App() {
   const [soundEnabled, setSoundEnabled] = useKV<boolean>('oracle-sound-enabled', true)
   const [animationsEnabled, setAnimationsEnabled] = useKV<boolean>('oracle-animations-enabled', true)
   const [showShortcuts, setShowShortcuts] = useState(false)
+  const [showSingleQuestionConfirm, setShowSingleQuestionConfirm] = useState(false)
   
   const shuffledTopicSuggestions = useMemo(() => shuffleArray(TOPIC_SUGGESTIONS), [])
   
@@ -382,6 +383,19 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
       setIsGenerating(false)
     }
   }, [focusAreas, otherFocusArea, questionCount, topics, experience, soundEnabled, sounds])
+
+  const handleGenerateClick = () => {
+    if (questionCount === 1) {
+      setShowSingleQuestionConfirm(true)
+    } else {
+      generateQuestions()
+    }
+  }
+
+  const confirmSingleQuestion = () => {
+    setShowSingleQuestionConfirm(false)
+    generateQuestions()
+  }
 
   const nextQuestion = useCallback(() => {
     if (currentQuestionIndex < questions.length - 1) {
@@ -819,7 +833,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
 
                   <div className="flex gap-3">
                     <Button 
-                      onClick={generateQuestions}
+                      onClick={handleGenerateClick}
                       disabled={isGenerating}
                       className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-bold py-7 text-xl tracking-wide focus:ring-4 focus:ring-ring focus:ring-offset-2"
                     >
@@ -847,6 +861,38 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                       <ArrowCounterClockwise size={24} aria-hidden="true" />
                     </Button>
                   </div>
+
+                  <Dialog open={showSingleQuestionConfirm} onOpenChange={setShowSingleQuestionConfirm}>
+                    <DialogContent className="bg-card border-2 border-border">
+                      <DialogHeader>
+                        <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+                          <span className="text-3xl" aria-hidden="true">🤔</span>
+                          Just One Question?
+                        </DialogTitle>
+                        <DialogDescription className="text-lg text-muted-foreground pt-2">
+                          You've selected only 1 question. Are you sure you want to continue with a single question?
+                        </DialogDescription>
+                      </DialogHeader>
+                      <DialogFooter className="flex gap-3 pt-4">
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          onClick={() => setShowSingleQuestionConfirm(false)}
+                          className="text-lg py-5 border-2"
+                        >
+                          Go Back
+                        </Button>
+                        <Button
+                          size="lg"
+                          onClick={confirmSingleQuestion}
+                          className="text-lg py-5 bg-primary text-primary-foreground"
+                        >
+                          <span className="mr-2" aria-hidden="true">✨</span>
+                          Yes, Just One!
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </Card>
             </motion.div>
