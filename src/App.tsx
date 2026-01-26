@@ -581,7 +581,7 @@ Return a JSON object with a "question" string property.`
                         size="lg"
                         onClick={regenerateCurrentQuestion}
                         disabled={isGenerating}
-                        className="text-lg py-6 px-6 border-2 border-primary/50 text-primary hover:bg-primary/10"
+                        className="text-lg py-6 px-6 border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
                       >
                         <Shuffle size={22} className="mr-2" />
                         New Question
@@ -594,7 +594,7 @@ Return a JSON object with a "question" string property.`
                         size="lg"
                         onClick={generateQuestions}
                         disabled={isGenerating}
-                        className="text-lg py-6 px-8 border-2 border-accent/50 text-accent hover:bg-accent/10"
+                        className="text-lg py-6 px-8 border-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground"
                       >
                         <ArrowClockwise size={22} className="mr-2" />
                         🎲 Shuffle All Questions
