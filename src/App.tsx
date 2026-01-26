@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Fire, Sparkle, Copy, Heart, ArrowClockwise, Check, Plus, X } from '@phosphor-icons/react'
+import { Sparkle, Copy, Heart, ArrowClockwise, Check, Plus, X, Star, Eye } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -24,29 +24,40 @@ interface Question {
 }
 
 const TOPIC_SUGGESTIONS = [
-  'Career Journey',
-  'Leadership',
-  'Work-Life Balance',
-  'Failures & Lessons',
-  'Industry Trends',
-  'Personal Growth',
-  'Team Building',
-  'Innovation',
-  'Mentorship',
-  'Future Vision'
+  'Accessible Design',
+  'Assistive Technology',
+  'Neurodiversity',
+  'Screen Readers',
+  'Inclusive Hiring',
+  'WCAG Standards',
+  'Disability Advocacy',
+  'Universal Design',
+  'Mental Health',
+  'Workplace Accommodations'
+]
+
+const FOCUS_AREAS = [
+  'Engineering & Development',
+  'Product Design',
+  'Content & UX Writing',
+  'Research & Strategy',
+  'Leadership & Management',
+  'Advocacy & Policy',
+  'Education & Training',
+  'Consulting'
 ]
 
 export default function App() {
   const [topics, setTopics] = useState<string[]>([])
   const [topicInput, setTopicInput] = useState('')
-  const [jobFocus, setJobFocus] = useState('')
+  const [focusArea, setFocusArea] = useState('')
   const [experience, setExperience] = useState('')
   const [tone, setTone] = useState([50])
   const [additionalNotes, setAdditionalNotes] = useState('')
   const [questions, setQuestions] = useState<Question[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
-  const [savedQuestions, setSavedQuestions] = useKV<Question[]>('fireside-saved-questions', [])
+  const [savedQuestions, setSavedQuestions] = useKV<Question[]>('oracle-saved-questions', [])
 
   const addTopic = (topic: string) => {
     const trimmed = topic.trim()
@@ -68,36 +79,39 @@ export default function App() {
   }
 
   const getToneLabel = (value: number) => {
-    if (value < 25) return 'Very Playful'
-    if (value < 45) return 'Light & Fun'
+    if (value < 25) return 'Whimsical & Light'
+    if (value < 45) return 'Warm & Curious'
     if (value < 55) return 'Balanced'
-    if (value < 75) return 'Professional'
-    return 'Very Serious'
+    if (value < 75) return 'Thoughtful'
+    return 'Deep & Profound'
   }
 
   const generateQuestions = async () => {
     setIsGenerating(true)
     setQuestions([])
 
-    const toneDescription = tone[0] < 30 ? 'humorous and playful' : 
-                           tone[0] < 50 ? 'light-hearted but insightful' :
-                           tone[0] < 70 ? 'balanced between casual and professional' :
-                           'thoughtful and serious'
+    const toneDescription = tone[0] < 30 ? 'whimsical, playful, and lighthearted while still meaningful' : 
+                           tone[0] < 50 ? 'warm, curious, and approachable with gentle humor' :
+                           tone[0] < 70 ? 'balanced between casual conversation and thoughtful exploration' :
+                           'deep, reflective, and philosophically engaging'
 
-    const prompt = spark.llmPrompt`Generate 8 engaging questions for an informal fireside chat interview.
+    const prompt = spark.llmPrompt`Generate 8 engaging questions for an informal fireside chat focused on accessibility, inclusion, disability, and technology.
 
 Context:
-- Topics to cover: ${topics.length > 0 ? topics.join(', ') : 'general career and life experiences'}
-- Guest's job focus/role: ${jobFocus || 'not specified'}
-- Years of experience: ${experience || 'not specified'}
+- Topics to explore: ${topics.length > 0 ? topics.join(', ') : 'accessibility, inclusion, disability in tech, universal design, assistive technology'}
+- Guest's focus area: ${focusArea || 'accessibility and inclusion in technology'}
+- Experience level: ${experience || 'not specified'}
 - Tone should be: ${toneDescription}
 - Additional context: ${additionalNotes || 'none'}
 
 Requirements:
-- Questions should feel conversational, not like a formal interview
-- Mix of reflective, forward-looking, and personal questions
+- Questions should feel like a mystical oracle revealing wisdom - conversational but profound
+- Focus on accessibility, inclusion, disability rights, universal design, assistive technology, neurodiversity, or related themes
+- Mix personal journey questions with broader impact questions
+- Include questions about challenges, victories, and future visions
 - Avoid yes/no questions - aim for open-ended discussion starters
-- Include at least one unexpected or creative question
+- Include at least one unexpected or creative question that reveals deeper truths
+- Questions should empower and center the disability community perspective
 - Keep questions concise but thought-provoking
 
 Return a JSON object with a "questions" array containing exactly 8 question strings.`
@@ -112,7 +126,7 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
       }))
       setQuestions(generatedQuestions)
     } catch {
-      toast.error('Failed to generate questions. Please try again.')
+      toast.error('The oracle needs a moment... Please try again.')
     } finally {
       setIsGenerating(false)
     }
@@ -121,7 +135,7 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
   const copyQuestion = async (question: Question) => {
     await navigator.clipboard.writeText(question.text)
     setCopiedId(question.id)
-    toast.success('Question copied!')
+    toast.success('Wisdom copied to your scroll!')
     setTimeout(() => setCopiedId(null), 2000)
   }
 
@@ -133,7 +147,7 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
     
     if (!question.isFavorite) {
       setSavedQuestions(current => [...(current || []), { ...question, isFavorite: true }])
-      toast.success('Saved to favorites!')
+      toast.success('Treasured in your collection!')
     } else {
       setSavedQuestions(current => (current || []).filter(q => q.id !== question.id))
     }
@@ -141,11 +155,11 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
 
   const removeSavedQuestion = (id: string) => {
     setSavedQuestions(current => (current || []).filter(q => q.id !== id))
-    toast.success('Removed from favorites')
+    toast.success('Released from your collection')
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
+    <div className="min-h-screen bg-background stars-pattern p-4 md:p-8">
       <Toaster position="top-center" theme="dark" />
       
       <div className="max-w-5xl mx-auto">
@@ -153,17 +167,30 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
           className="text-center mb-10"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.6 }}
         >
-          <div className="flex items-center justify-center gap-3 mb-3">
-            <Fire size={40} weight="fill" className="text-primary" />
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight">
-              Fireside Chat Questions
-            </h1>
-          </div>
-          <p className="text-muted-foreground text-lg">
-            Generate thoughtful questions for your next informal interview
+          <motion.div 
+            className="inline-block mb-4"
+            animate={{ y: [0, -8, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <div className="w-20 h-20 mx-auto rounded-full crystal-ball mystic-glow flex items-center justify-center">
+              <Eye size={40} weight="duotone" className="text-primary" />
+            </div>
+          </motion.div>
+          <h1 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight mb-2">
+            The Oracle of Inclusion
+          </h1>
+          <p className="text-muted-foreground text-lg md:text-xl italic">
+            "Ask, and the wisdom of accessibility shall be revealed..."
           </p>
+          <div className="flex items-center justify-center gap-2 mt-4">
+            <Star size={16} weight="fill" className="text-primary shimmer-animation" />
+            <span className="text-sm text-muted-foreground tracking-widest uppercase">
+              Disability • Tech • Design • Life
+            </span>
+            <Star size={16} weight="fill" className="text-accent shimmer-animation" />
+          </div>
         </motion.header>
 
         <div className="grid lg:grid-cols-2 gap-6">
@@ -172,16 +199,18 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <Card className="p-6 bg-card border-border noise-overlay fire-glow">
+            <Card className="p-6 bg-card border-2 border-border mystic-glow relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-accent to-primary" />
+              
               <h2 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
-                <Sparkle size={24} weight="fill" className="text-accent" />
-                Guest Details
+                <Sparkle size={24} weight="fill" className="text-primary" />
+                Consult the Oracle
               </h2>
 
               <div className="space-y-6">
                 <div>
-                  <Label htmlFor="topics" className="text-foreground mb-2 block">
-                    Topics to Explore
+                  <Label htmlFor="topics" className="text-foreground mb-2 block text-base">
+                    Realms to Explore
                   </Label>
                   <div className="flex gap-2 mb-3">
                     <Input
@@ -189,7 +218,7 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
                       value={topicInput}
                       onChange={(e) => setTopicInput(e.target.value)}
                       onKeyDown={handleKeyDown}
-                      placeholder="Add a topic..."
+                      placeholder="Enter a topic of inquiry..."
                       className="bg-input border-border text-foreground placeholder:text-muted-foreground"
                     />
                     <Button 
@@ -197,6 +226,7 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
                       size="icon"
                       onClick={() => addTopic(topicInput)}
                       disabled={!topicInput.trim()}
+                      aria-label="Add topic"
                     >
                       <Plus size={18} />
                     </Button>
@@ -206,12 +236,13 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
                       <Badge 
                         key={topic} 
                         variant="secondary"
-                        className="pl-3 pr-1 py-1 flex items-center gap-1 bg-secondary text-secondary-foreground"
+                        className="pl-3 pr-1 py-1.5 flex items-center gap-1 bg-secondary/80 text-secondary-foreground border border-accent/30"
                       >
                         {topic}
                         <button 
                           onClick={() => removeTopic(topic)}
                           className="ml-1 hover:bg-muted rounded-full p-0.5"
+                          aria-label={`Remove ${topic}`}
                         >
                           <X size={14} />
                         </button>
@@ -223,7 +254,7 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
                       <button
                         key={suggestion}
                         onClick={() => addTopic(suggestion)}
-                        className="text-xs px-2 py-1 rounded-full border border-border text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+                        className="text-xs px-2.5 py-1.5 rounded-full border border-border text-muted-foreground hover:border-primary hover:text-primary transition-all hover:bg-primary/5"
                       >
                         + {suggestion}
                       </button>
@@ -232,39 +263,42 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
                 </div>
 
                 <div>
-                  <Label htmlFor="job-focus" className="text-foreground mb-2 block">
-                    Job Focus / Role
+                  <Label htmlFor="focus-area" className="text-foreground mb-2 block text-base">
+                    Seeker's Domain
                   </Label>
-                  <Input
-                    id="job-focus"
-                    value={jobFocus}
-                    onChange={(e) => setJobFocus(e.target.value)}
-                    placeholder="e.g., Engineering Manager, Startup Founder..."
-                    className="bg-input border-border text-foreground placeholder:text-muted-foreground"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="experience" className="text-foreground mb-2 block">
-                    Years of Experience
-                  </Label>
-                  <Select value={experience} onValueChange={setExperience}>
-                    <SelectTrigger id="experience" className="bg-input border-border text-foreground">
-                      <SelectValue placeholder="Select experience level" />
+                  <Select value={focusArea} onValueChange={setFocusArea}>
+                    <SelectTrigger id="focus-area" className="bg-input border-border text-foreground">
+                      <SelectValue placeholder="Select their area of focus..." />
                     </SelectTrigger>
                     <SelectContent className="bg-card border-border">
-                      <SelectItem value="0-2">Early Career (0-2 years)</SelectItem>
-                      <SelectItem value="3-5">Rising (3-5 years)</SelectItem>
-                      <SelectItem value="6-10">Experienced (6-10 years)</SelectItem>
-                      <SelectItem value="11-15">Senior (11-15 years)</SelectItem>
-                      <SelectItem value="15+">Veteran (15+ years)</SelectItem>
+                      {FOCUS_AREAS.map(area => (
+                        <SelectItem key={area} value={area}>{area}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <Label className="text-foreground mb-3 block">
-                    Tone: <span className="text-primary font-medium">{getToneLabel(tone[0])}</span>
+                  <Label htmlFor="experience" className="text-foreground mb-2 block text-base">
+                    Years of Journey
+                  </Label>
+                  <Select value={experience} onValueChange={setExperience}>
+                    <SelectTrigger id="experience" className="bg-input border-border text-foreground">
+                      <SelectValue placeholder="Select experience level..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-border">
+                      <SelectItem value="0-2">Apprentice (0-2 years)</SelectItem>
+                      <SelectItem value="3-5">Practitioner (3-5 years)</SelectItem>
+                      <SelectItem value="6-10">Adept (6-10 years)</SelectItem>
+                      <SelectItem value="11-15">Master (11-15 years)</SelectItem>
+                      <SelectItem value="15+">Sage (15+ years)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label className="text-foreground mb-3 block text-base">
+                    Oracle's Voice: <span className="text-primary font-medium">{getToneLabel(tone[0])}</span>
                   </Label>
                   <div className="px-1">
                     <Slider
@@ -273,23 +307,24 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
                       max={100}
                       step={1}
                       className="w-full"
+                      aria-label="Question tone"
                     />
                     <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                      <span>😄 Playful</span>
-                      <span>🎯 Serious</span>
+                      <span>✨ Whimsical</span>
+                      <span>🔮 Profound</span>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <Label htmlFor="notes" className="text-foreground mb-2 block">
-                    Additional Context (optional)
+                  <Label htmlFor="notes" className="text-foreground mb-2 block text-base">
+                    Additional Whispers (optional)
                   </Label>
                   <Textarea
                     id="notes"
                     value={additionalNotes}
                     onChange={(e) => setAdditionalNotes(e.target.value)}
-                    placeholder="Any specific angles, recent achievements, or topics to avoid..."
+                    placeholder="Any specific mysteries to uncover, achievements to celebrate, or paths to avoid..."
                     className="bg-input border-border text-foreground placeholder:text-muted-foreground min-h-[80px]"
                   />
                 </div>
@@ -297,19 +332,19 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
                 <Button 
                   onClick={generateQuestions}
                   disabled={isGenerating}
-                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold py-6 text-lg"
+                  className="w-full bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90 font-semibold py-6 text-lg tracking-wide"
                 >
                   {isGenerating ? (
                     <motion.div
                       animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
                     >
                       <ArrowClockwise size={22} />
                     </motion.div>
                   ) : (
                     <>
-                      <Sparkle size={22} weight="fill" className="mr-2" />
-                      Generate Questions
+                      <Eye size={22} weight="duotone" className="mr-2" />
+                      Reveal the Questions
                     </>
                   )}
                 </Button>
@@ -323,29 +358,44 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
             transition={{ duration: 0.5, delay: 0.2 }}
             className="space-y-6"
           >
-            <Card className="p-6 bg-card border-border noise-overlay">
+            <Card className="p-6 bg-card border-2 border-border relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent via-primary to-accent" />
+              
               <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-                <Fire size={24} weight="fill" className="text-primary" />
-                Generated Questions
+                <Star size={24} weight="fill" className="text-accent" />
+                Revealed Wisdom
               </h2>
 
               {questions.length === 0 && !isGenerating && (
                 <div className="text-center py-12 text-muted-foreground">
-                  <Fire size={48} className="mx-auto mb-4 opacity-30" />
-                  <p>Fill in the details and generate questions</p>
-                  <p className="text-sm mt-1">Your questions will appear here</p>
+                  <motion.div
+                    animate={{ scale: [1, 1.05, 1], opacity: [0.3, 0.5, 0.3] }}
+                    transition={{ duration: 3, repeat: Infinity }}
+                  >
+                    <Eye size={56} weight="duotone" className="mx-auto mb-4 text-muted-foreground/40" />
+                  </motion.div>
+                  <p className="italic text-lg">The crystal awaits your inquiry...</p>
+                  <p className="text-sm mt-2">Share the seeker's details to receive wisdom</p>
                 </div>
               )}
 
               {isGenerating && (
                 <div className="text-center py-12">
                   <motion.div
-                    animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
+                    animate={{ 
+                      scale: [1, 1.2, 1],
+                      boxShadow: [
+                        '0 0 20px oklch(0.75 0.18 55 / 0.3)',
+                        '0 0 40px oklch(0.65 0.20 320 / 0.5)',
+                        '0 0 20px oklch(0.75 0.18 55 / 0.3)'
+                      ]
+                    }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="w-24 h-24 mx-auto rounded-full crystal-ball flex items-center justify-center"
                   >
-                    <Fire size={48} weight="fill" className="mx-auto text-primary" />
+                    <Eye size={48} weight="duotone" className="text-primary" />
                   </motion.div>
-                  <p className="text-muted-foreground mt-4">Crafting thoughtful questions...</p>
+                  <p className="text-muted-foreground mt-6 italic text-lg">The oracle peers into the mists...</p>
                 </div>
               )}
 
@@ -354,22 +404,25 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
                   {questions.map((question, index) => (
                     <motion.div
                       key={question.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
+                      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.3, delay: index * 0.05 }}
-                      className="group p-4 rounded-lg bg-muted/50 border border-border hover:border-primary/50 transition-colors"
+                      transition={{ duration: 0.4, delay: index * 0.08 }}
+                      className="group p-4 rounded-lg bg-muted/40 border border-border hover:border-primary/50 transition-all hover:bg-muted/60"
                     >
-                      <p className="text-foreground pr-16 leading-relaxed">{question.text}</p>
-                      <div className="flex gap-1 mt-3">
+                      <div className="flex items-start gap-3">
+                        <span className="text-primary font-semibold text-sm mt-0.5">{index + 1}.</span>
+                        <p className="text-foreground leading-relaxed flex-1 text-[17px]">{question.text}</p>
+                      </div>
+                      <div className="flex gap-1 mt-3 ml-6">
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => copyQuestion(question)}
-                          className="text-muted-foreground hover:text-foreground"
+                          className="text-muted-foreground hover:text-foreground hover:bg-primary/10"
                         >
                           {copiedId === question.id ? (
-                            <Check size={16} className="text-green-500" />
+                            <Check size={16} className="text-green-400" />
                           ) : (
                             <Copy size={16} />
                           )}
@@ -379,14 +432,14 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
                           variant="ghost"
                           size="sm"
                           onClick={() => toggleFavorite(question)}
-                          className="text-muted-foreground hover:text-foreground"
+                          className="text-muted-foreground hover:text-foreground hover:bg-accent/10"
                         >
                           <Heart 
                             size={16} 
                             weight={question.isFavorite ? 'fill' : 'regular'}
-                            className={question.isFavorite ? 'text-red-400' : ''}
+                            className={question.isFavorite ? 'text-accent' : ''}
                           />
-                          <span className="ml-1.5 text-xs">Save</span>
+                          <span className="ml-1.5 text-xs">Treasure</span>
                         </Button>
                       </div>
                     </motion.div>
@@ -396,21 +449,24 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
             </Card>
 
             {(savedQuestions ?? []).length > 0 && (
-              <Card className="p-6 bg-card border-border noise-overlay">
+              <Card className="p-6 bg-card border-2 border-border relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-secondary to-accent" />
+                
                 <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <Heart size={24} weight="fill" className="text-red-400" />
-                  Saved Questions ({(savedQuestions ?? []).length})
+                  <Heart size={24} weight="fill" className="text-accent" />
+                  Treasured Wisdom ({(savedQuestions ?? []).length})
                 </h2>
                 <div className="space-y-2">
                   {(savedQuestions ?? []).map((question) => (
                     <div
                       key={question.id}
-                      className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border"
+                      className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 border border-border group"
                     >
-                      <p className="text-foreground text-sm flex-1">{question.text}</p>
+                      <p className="text-foreground text-sm flex-1 leading-relaxed">{question.text}</p>
                       <button
                         onClick={() => removeSavedQuestion(question.id)}
-                        className="text-muted-foreground hover:text-destructive transition-colors"
+                        className="text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
+                        aria-label="Remove from treasured"
                       >
                         <X size={16} />
                       </button>
@@ -421,6 +477,15 @@ Return a JSON object with a "questions" array containing exactly 8 question stri
             )}
           </motion.div>
         </div>
+
+        <motion.footer 
+          className="text-center mt-12 text-muted-foreground text-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+        >
+          <p className="italic">"Nothing about us without us" — Disability Rights Movement</p>
+        </motion.footer>
       </div>
     </div>
   )
