@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkle, Copy, Heart, ArrowClockwise, Check, Plus, X, Shuffle, Export } from '@phosphor-icons/react'
+import { Copy, Heart, ArrowClockwise, Check, Plus, X, Shuffle, Export } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -19,38 +19,9 @@ declare const spark: {
 interface Question {
   id: string
   text: string
-  wisdom: string
   isFavorite: boolean
   vibe: string
 }
-
-const WISDOM_QUOTES = [
-  "The path to inclusion begins with a single accessible step. 🌟",
-  "What is designed for one, often benefits all. ✨",
-  "True innovation removes barriers, not people. 💫",
-  "The curb cut of today becomes the ramp of tomorrow. 🛤️",
-  "Listen first to those with lived experience. 👂",
-  "Accessibility is not a feature—it is a foundation. 🏗️",
-  "The most powerful technology is that which empowers. ⚡",
-  "Design for the margins, and the center will follow. 🎯",
-  "Every barrier removed opens a thousand doors. 🚪",
-  "Nothing about us without us—this is the oracle's first truth. 🔮",
-  "The keyboard speaks louder than the mouse. ⌨️",
-  "Alt text is poetry for the unseen. 📝",
-  "Patience with technology teaches patience with oneself. 🧘",
-  "The screen reader sees what the eye cannot. 👁️",
-  "Contrast is not just visual—it is essential. 🎨",
-  "A focus ring is a beacon of navigation. 💡",
-  "Captions carry voices across silent waters. 🌊",
-  "The best designs anticipate, not accommodate. 🔮",
-  "Speed is privilege; patience is power. ⏳",
-  "Disability is not inability—it is diversity. 🌈",
-  "The semantic web speaks truth to all machines. 🤖",
-  "What slows one may stop another—design for all. 🤝",
-  "Empathy without action is merely sympathy. 💪",
-  "The strongest bridges are built with ARIA. 🌉",
-  "Neurodiversity is humanity's creative edge. 🧠"
-]
 
 const MYSTICAL_LOADING_PHRASES = [
   "Consulting the accessibility spirits... 👻",
@@ -64,10 +35,6 @@ const MYSTICAL_LOADING_PHRASES = [
 
 const getRandomLoadingPhrase = (): string => {
   return MYSTICAL_LOADING_PHRASES[Math.floor(Math.random() * MYSTICAL_LOADING_PHRASES.length)]
-}
-
-const getRandomWisdom = (): string => {
-  return WISDOM_QUOTES[Math.floor(Math.random() * WISDOM_QUOTES.length)]
 }
 
 const TOPIC_SUGGESTIONS = [
@@ -178,7 +145,7 @@ export default function App() {
     }
     
     const content = saved.map((q, i) => 
-      `${i + 1}. ${q.text}\n   ${q.vibe} | ✨ "${q.wisdom}"`
+      `${i + 1}. ${q.text}\n   ${q.vibe}`
     ).join('\n\n')
     
     const header = `🔮 Oracle of Inclusion - Saved Questions\n${'='.repeat(45)}\n\n`
@@ -227,7 +194,6 @@ Return a JSON object with a "questions" array containing exactly 8 objects, each
       const generatedQuestions: Question[] = parsed.questions.map((q: { text: string; vibe: string }, i: number) => ({
         id: `q-${Date.now()}-${i}`,
         text: q.text,
-        wisdom: getRandomWisdom(),
         isFavorite: false,
         vibe: q.vibe || getRandomVibe()
       }))
@@ -266,7 +232,6 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
       const newQuestion: Question = {
         id: `q-${Date.now()}-regen`,
         text: parsed.question,
-        wisdom: getRandomWisdom(),
         isFavorite: false,
         vibe: parsed.vibe || getRandomVibe()
       }
@@ -297,7 +262,7 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
   const currentQuestion = questions[currentQuestionIndex]
 
   const copyQuestion = async (question: Question) => {
-    const textToCopy = `${question.text}\n\n${question.vibe} | ✨ "${question.wisdom}"`
+    const textToCopy = `${question.text}\n\n${question.vibe}`
     await navigator.clipboard.writeText(textToCopy)
     setCopiedId(question.id)
     toast.success('📋 Copied to clipboard!')
@@ -349,13 +314,13 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           >
             <div className="w-24 h-24 mx-auto rounded-full crystal-ball mystic-glow flex items-center justify-center">
-              <span className="text-5xl">🌟</span>
+              <span className="text-5xl">🔮</span>
             </div>
           </motion.div>
           <h1 className="text-4xl md:text-6xl font-bold text-foreground tracking-tight mb-3">
-            The Oracle of Inclusion 🔮</h1>
+            The Oracle of Inclusion</h1>
           <p className="text-muted-foreground text-xl md:text-2xl">
-            "Ask, and the wisdom shall be revealed..." 🌟
+            "Ask, and the wisdom shall be revealed..."
           </p>
           <div className="flex items-center justify-center gap-3 mt-5 flex-wrap">
             <span className="text-lg px-4 py-2 rounded-full bg-primary/20 text-primary font-medium">♿ Disability</span>
@@ -584,15 +549,6 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
                       </p>
                     </div>
 
-                    <div className="p-4 rounded-lg bg-accent/10 border-2 border-accent/30">
-                      <div className="flex items-center justify-center gap-3">
-                        <Sparkle size={24} weight="fill" className="text-accent shrink-0" />
-                        <p className="text-lg md:text-xl text-accent font-medium text-center">
-                          {currentQuestion.wisdom}
-                        </p>
-                      </div>
-                    </div>
-
                     <div className="flex flex-wrap gap-3 justify-center">
                       <Button
                         variant="outline"
@@ -702,12 +658,6 @@ Return a JSON object with "question" (string) and "vibe" (one of: "😜 Whimsica
                           </span>
                         </div>
                         <p className="text-foreground text-lg leading-relaxed font-medium">{question.text}</p>
-                        {question.wisdom && (
-                          <div className="mt-3 flex items-center gap-2">
-                            <Sparkle size={18} weight="fill" className="text-accent shrink-0" />
-                            <p className="text-base text-accent">{question.wisdom}</p>
-                          </div>
-                        )}
                       </div>
                       <button
                         onClick={() => removeSavedQuestion(question.id)}
