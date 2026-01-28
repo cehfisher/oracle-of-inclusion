@@ -124,11 +124,11 @@ const MYSTICAL_LOADING_PHRASES = [
 ]
 
 const MYSTICAL_GREETINGS = [
-  "The spirits sense your curiosity... 🌟",
-  "Welcome, seeker of inclusive wisdom! ✨",
-  "The oracle has been expecting you... 🔮",
-  "Your journey toward insight begins here... 🌙",
-  "The cosmos aligns in your favor today... ⭐",
+  "I know just what to ask... 🌟",
+  "The right questions await... ✨",
+  "Let me find the perfect questions... 🔮",
+  "I sense the questions you need... 🌙",
+  "The questions are forming... ⭐",
 ]
 
 const getRandomGreeting = (): string => {
@@ -1255,7 +1255,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
         >
           <p className="font-medium">"Nothing about us without us" — Disability Rights Movement</p>
           <p className="text-sm text-muted-foreground/70 border-t border-border/50 pt-3 mt-3">
-            ⚗️ This is an experiment. Questions are AI-generated and may not be perfect. This app may not be fully accessible as it is being developed.
+            This is an experiment. Questions are AI-generated. This app may not be fully accessible.
           </p>
         </motion.footer>
       </div>
