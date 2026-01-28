@@ -10,7 +10,7 @@ import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { useKV } from '@github/spark/hooks'
 import { toast, Toaster } from 'sonner'
 
@@ -227,7 +227,6 @@ export default function App() {
   const [soundEnabled, setSoundEnabled] = useKV<boolean>('oracle-sound-enabled', true)
   const [animationsEnabled, setAnimationsEnabled] = useKV<boolean>('oracle-animations-enabled', true)
   const [showShortcuts, setShowShortcuts] = useState(false)
-  const [showSingleQuestionConfirm, setShowSingleQuestionConfirm] = useState(false)
   
   const shuffledTopicSuggestions = useMemo(() => shuffleArray(TOPIC_SUGGESTIONS), [])
   
@@ -385,15 +384,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
   }, [focusAreas, otherFocusArea, questionCount, topics, experience, soundEnabled, sounds])
 
   const handleGenerateClick = () => {
-    if (questionCount === 1) {
-      setShowSingleQuestionConfirm(true)
-    } else {
-      generateQuestions()
-    }
-  }
-
-  const confirmSingleQuestion = () => {
-    setShowSingleQuestionConfirm(false)
     generateQuestions()
   }
 
@@ -796,17 +786,17 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                           id="question-count-slider"
                           value={[questionCount]}
                           onValueChange={(value) => setQuestionCount(value[0])}
-                          min={1}
+                          min={3}
                           max={10}
                           step={1}
                           className="w-full [&_[data-radix-slider-track]]:bg-muted [&_[data-radix-slider-range]]:bg-accent [&_[data-radix-slider-thumb]]:bg-accent [&_[data-radix-slider-thumb]]:border-2 [&_[data-radix-slider-thumb]]:border-foreground"
-                          aria-valuemin={1}
+                          aria-valuemin={3}
                           aria-valuemax={10}
                           aria-valuenow={questionCount}
-                          aria-valuetext={`${questionCount} question${questionCount === 1 ? '' : 's'}`}
+                          aria-valuetext={`${questionCount} questions`}
                         />
                         <div className="flex justify-between mt-2 text-base text-foreground font-bold" aria-hidden="true">
-                          <span>1</span>
+                          <span>3</span>
                           <span>10</span>
                         </div>
                       </div>
@@ -861,38 +851,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                       <ArrowCounterClockwise size={24} aria-hidden="true" />
                     </Button>
                   </div>
-
-                  <Dialog open={showSingleQuestionConfirm} onOpenChange={setShowSingleQuestionConfirm}>
-                    <DialogContent className="bg-card border-2 border-border">
-                      <DialogHeader>
-                        <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-                          <span className="text-3xl" aria-hidden="true">🤔</span>
-                          Just One Question?
-                        </DialogTitle>
-                        <DialogDescription className="text-lg text-muted-foreground pt-2">
-                          You've selected only 1 question. Are you sure you want to continue with a single question?
-                        </DialogDescription>
-                      </DialogHeader>
-                      <DialogFooter className="flex gap-3 pt-4">
-                        <Button
-                          variant="outline"
-                          size="lg"
-                          onClick={() => setShowSingleQuestionConfirm(false)}
-                          className="text-lg py-5 border-2"
-                        >
-                          Go Back
-                        </Button>
-                        <Button
-                          size="lg"
-                          onClick={confirmSingleQuestion}
-                          className="text-lg py-5 bg-primary text-primary-foreground"
-                        >
-                          <span className="mr-2" aria-hidden="true">✨</span>
-                          Yes, Just One!
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
                 </div>
               </Card>
             </motion.div>
@@ -1108,13 +1066,16 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
         </main>
 
         <motion.footer 
-          className="text-center mt-8 text-muted-foreground text-lg"
+          className="text-center mt-8 text-muted-foreground text-lg space-y-3"
           initial={animationsEnabled ? { opacity: 0 } : {}}
           animate={{ opacity: 1 }}
           transition={animationsEnabled ? { delay: 0.8 } : { duration: 0 }}
           role="contentinfo"
         >
           <p className="font-medium">"Nothing about us without us" — Disability Rights Movement</p>
+          <p className="text-sm text-muted-foreground/70 border-t border-border/50 pt-3 mt-3">
+            ⚗️ This is an experiment. Questions are AI-generated and may not be perfect.
+          </p>
         </motion.footer>
       </div>
     </div>
