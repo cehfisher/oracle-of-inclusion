@@ -830,7 +830,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         onChange={(e) => setTopicInput(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder="Type a topic..."
-                        className="bg-input border-2 border-border text-foreground placeholder:text-muted-foreground text-lg py-6"
+                        className="bg-input border-2 border-border text-foreground placeholder:text-foreground/50 text-lg py-6"
                         aria-describedby="topics-hint"
                       />
                       <Button 
@@ -911,7 +911,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                           value={otherFocusArea}
                           onChange={(e) => setOtherFocusArea(e.target.value)}
                           placeholder="Describe your focus area..."
-                          className="bg-input border-2 border-border text-foreground placeholder:text-muted-foreground text-lg py-6"
+                          className="bg-input border-2 border-border text-foreground placeholder:text-foreground/50 text-lg py-6"
                         />
                         <p id="other-focus-hint" className="sr-only">When selected, you can describe your custom focus area</p>
                       </div>
