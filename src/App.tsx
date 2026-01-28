@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Copy, ArrowClockwise, Check, Plus, X, SpeakerHigh, SpeakerSlash, Sparkle, ArrowCounterClockwise, Keyboard, Clover } from '@phosphor-icons/react'
+import { Copy, ArrowClockwise, Check, Plus, X, SpeakerHigh, SpeakerSlash, Sparkle, ArrowCounterClockwise, Keyboard } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -135,7 +135,60 @@ const useSound = () => {
     })
   }
   
-  return { playTwinkle, playSparkle, playShimmer, playMagic, play8BallReveal }
+  const playClick = () => {
+    const ctx = getContext()
+    const now = ctx.currentTime
+    
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.frequency.value = 800
+    osc.type = 'sine'
+    gain.gain.setValueAtTime(0.08, now)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1)
+    osc.start(now)
+    osc.stop(now + 0.1)
+  }
+  
+  const playNav = () => {
+    const ctx = getContext()
+    const now = ctx.currentTime
+    
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.frequency.value = 600
+    osc.type = 'sine'
+    gain.gain.setValueAtTime(0.06, now)
+    gain.gain.linearRampToValueAtTime(0.08, now + 0.05)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15)
+    osc.start(now)
+    osc.stop(now + 0.15)
+  }
+  
+  const playReset = () => {
+    const ctx = getContext()
+    const now = ctx.currentTime
+    
+    const notes = [500, 400, 300]
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.frequency.value = freq
+      osc.type = 'sine'
+      gain.gain.setValueAtTime(0, now + i * 0.08)
+      gain.gain.linearRampToValueAtTime(0.07, now + i * 0.08 + 0.02)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.2)
+      osc.start(now + i * 0.08)
+      osc.stop(now + i * 0.08 + 0.2)
+    })
+  }
+  
+  return { playTwinkle, playSparkle, playShimmer, playMagic, play8BallReveal, playClick, playNav, playReset }
 }
 
 interface Question {
@@ -270,7 +323,7 @@ export default function App() {
   const [experience, setExperience] = useState('')
   const [audience, setAudience] = useState('')
 
-  const [questionCount, setQuestionCount] = useState(5)
+  const [questionCount, setQuestionCount] = useState(3)
   const [questions, setQuestions] = useState<Question[]>([])
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -350,36 +403,13 @@ export default function App() {
     setExperience('')
     setAudience('')
 
-    setQuestionCount(5)
+    setQuestionCount(3)
     setQuestions([])
     setCurrentQuestionIndex(0)
     setQuickAnswer(null)
-    toast.success('🔄 Form reset!')
-  }, [])
-
-  const feelingLucky = useCallback(() => {
-    const randomTopics = shuffleArray(TOPIC_SUGGESTIONS).slice(0, Math.floor(Math.random() * 3) + 2)
-    setTopics(randomTopics)
-    
-    const nonOtherAreas = FOCUS_AREAS.filter(a => a.id !== 'other')
-    const randomFocusCount = Math.floor(Math.random() * 2) + 1
-    const randomFocus = shuffleArray(nonOtherAreas).slice(0, randomFocusCount).map(a => a.id)
-    setFocusAreas(randomFocus)
-    
-    const experiences = ['0-2', '3-5', '6-10', '11-15', '15+']
-    setExperience(experiences[Math.floor(Math.random() * experiences.length)])
-    
-    const audiences = ['general', 'developers', 'designers', 'leaders', 'advocates', 'students']
-    setAudience(audiences[Math.floor(Math.random() * audiences.length)])
-    
-    const randomCount = Math.floor(Math.random() * 10) + 1
-    setQuestionCount(randomCount)
-    
-    if (soundEnabled) {
-      sounds.playMagic()
-    }
-    toast.success('🍀 The oracle has chosen for you!')
-  }, [sounds, soundEnabled])
+    playSound(sounds.playReset)
+    toast.success('Form reset!')
+  }, [soundEnabled, sounds])
 
   const getRandomVibe = (): string => {
     return VIBE_TYPES[Math.floor(Math.random() * VIBE_TYPES.length)]
@@ -482,14 +512,16 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
   const nextQuestion = useCallback(() => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1)
+      playSound(sounds.playNav)
     }
-  }, [currentQuestionIndex, questions.length])
+  }, [currentQuestionIndex, questions.length, soundEnabled, sounds])
 
   const prevQuestion = useCallback(() => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1)
+      playSound(sounds.playNav)
     }
-  }, [currentQuestionIndex])
+  }, [currentQuestionIndex, soundEnabled, sounds])
 
   const currentQuestion = questions[currentQuestionIndex]
 
@@ -665,7 +697,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                 </DialogContent>
               </Dialog>
               
-              <div className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border">
+              <div className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border text-foreground">
                 <Sparkle size={20} className="text-primary" aria-hidden="true" />
                 <Label htmlFor="animations-toggle" className="text-sm font-medium cursor-pointer">Animations</Label>
                 <Switch 
@@ -676,7 +708,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                 />
                 <span id="animations-desc" className="sr-only">Toggle animations on or off</span>
               </div>
-              <div className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border">
+              <div className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border text-foreground">
                 {soundEnabled ? <SpeakerHigh size={20} className="text-primary" aria-hidden="true" /> : <SpeakerSlash size={20} className="text-muted-foreground" aria-hidden="true" />}
                 <Label htmlFor="sound-toggle" className="text-sm font-medium cursor-pointer">Sound</Label>
                 <Switch 
@@ -762,10 +794,10 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           </motion.div>
           
           <h1 className="text-4xl md:text-6xl font-bold text-foreground tracking-tight mb-3">
-            The Oracle of Inclusion
+            Oracle of Inclusion
           </h1>
           <p className="text-muted-foreground text-xl md:text-2xl mb-2">
-            "Ask, and the wisdom shall be revealed..."
+            "Ask and the wisdom shall be revealed..."
           </p>
           <motion.p 
             className="text-primary text-lg font-medium"
@@ -952,16 +984,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                   </div>
 
                   <div className="flex gap-3 flex-wrap">
-                    <Button 
-                      onClick={feelingLucky}
-                      disabled={isGenerating}
-                      variant="outline"
-                      className="py-7 px-6 border-2 border-green-500/50 text-green-400 hover:bg-green-500/20 hover:text-green-300 hover:border-green-400 focus:ring-4 focus:ring-ring focus:ring-offset-2 font-bold"
-                      aria-label="Feeling Lucky - let the oracle choose all options for you"
-                    >
-                      <Clover size={24} weight="fill" className="mr-2" aria-hidden="true" />
-                      Feeling Lucky
-                    </Button>
                     <Button 
                       onClick={handleGenerateClick}
                       disabled={isGenerating}
@@ -1151,10 +1173,10 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
             href="https://www.linkedin.com/in/cariefisher/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-lg font-medium text-primary bg-primary/15 hover:bg-primary/25 px-5 py-3 rounded-full border-2 border-primary/30 hover:border-primary/50 transition-all focus:outline-none focus:ring-4 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+            className="inline-block text-xl text-muted-foreground hover:text-primary transition-colors focus:outline-none focus:ring-4 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background italic"
             aria-label="Send comments, questions, or suggestions (opens LinkedIn in new tab)"
           >
-            💬 Comments? Questions? Suggestions?
+            Comments? Questions? Suggestions?
           </a>
         </motion.footer>
       </div>
