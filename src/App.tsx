@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Copy, ArrowClockwise, Check, Plus, X, SpeakerHigh, SpeakerSlash, Sparkle, ArrowCounterClockwise, Keyboard, Star } from '@phosphor-icons/react'
+import { Copy, ArrowClockwise, Check, Plus, X, SpeakerHigh, SpeakerSlash, Sparkle, ArrowCounterClockwise, Keyboard, Clover } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -70,18 +70,51 @@ const useSound = () => {
   const playShimmer = () => {
     const ctx = getContext()
     const now = ctx.currentTime
-    for (let i = 0; i < 4; i++) {
+    
+    const osc1 = ctx.createOscillator()
+    const gain1 = ctx.createGain()
+    osc1.connect(gain1)
+    gain1.connect(ctx.destination)
+    osc1.frequency.value = 180
+    osc1.type = 'sine'
+    gain1.gain.setValueAtTime(0.15, now)
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.8)
+    osc1.start(now)
+    osc1.stop(now + 0.8)
+    
+    const frequencies = [400, 500, 600, 700, 800]
+    frequencies.forEach((freq, i) => {
       const osc = ctx.createOscillator()
       const gain = ctx.createGain()
       osc.connect(gain)
       gain.connect(ctx.destination)
-      osc.frequency.value = 1400 + i * 200
+      osc.frequency.value = freq
       osc.type = 'sine'
-      gain.gain.setValueAtTime(0.04, now + i * 0.06)
-      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.06 + 0.2)
-      osc.start(now + i * 0.06)
-      osc.stop(now + i * 0.06 + 0.2)
-    }
+      gain.gain.setValueAtTime(0.06, now + i * 0.1)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.3)
+      osc.start(now + i * 0.1)
+      osc.stop(now + i * 0.1 + 0.3)
+    })
+  }
+  
+  const play8BallReveal = () => {
+    const ctx = getContext()
+    const now = ctx.currentTime
+    
+    const notes = [220, 330, 440, 550, 660, 880]
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.frequency.value = freq
+      osc.type = 'triangle'
+      gain.gain.setValueAtTime(0, now + i * 0.08)
+      gain.gain.linearRampToValueAtTime(0.12, now + i * 0.08 + 0.03)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.5)
+      osc.start(now + i * 0.08)
+      osc.stop(now + i * 0.08 + 0.5)
+    })
   }
   
   const playMagic = () => {
@@ -101,26 +134,8 @@ const useSound = () => {
       osc.stop(now + i * 0.12 + 0.5)
     })
   }
-
-  const playFavorite = () => {
-    const ctx = getContext()
-    const now = ctx.currentTime
-    const notes = [880, 1100, 1320]
-    notes.forEach((freq, i) => {
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      osc.frequency.value = freq
-      osc.type = 'sine'
-      gain.gain.setValueAtTime(0.08, now + i * 0.1)
-      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.3)
-      osc.start(now + i * 0.1)
-      osc.stop(now + i * 0.1 + 0.3)
-    })
-  }
   
-  return { playTwinkle, playSparkle, playShimmer, playMagic, playFavorite }
+  return { playTwinkle, playSparkle, playShimmer, playMagic, play8BallReveal }
 }
 
 interface Question {
@@ -242,7 +257,6 @@ const KEYBOARD_SHORTCUTS = [
   { key: '←', action: 'Previous question' },
   { key: '→', action: 'Next question' },
   { key: 'C', action: 'Copy current question' },
-  { key: 'F', action: 'Toggle favorite' },
   { key: 'R', action: 'Shuffle all questions' },
   { key: 'Escape', action: 'Start over / Reset' },
   { key: '?', action: 'Show keyboard shortcuts' },
@@ -269,8 +283,6 @@ export default function App() {
   const [soundEnabled, setSoundEnabled] = useKV<boolean>('oracle-sound-enabled', true)
   const [animationsEnabled, setAnimationsEnabled] = useKV<boolean>('oracle-animations-enabled', true)
   const [showShortcuts, setShowShortcuts] = useState(false)
-  const [showCelebration, setShowCelebration] = useState(false)
-  const [favorites, setFavorites] = useKV<string[]>('oracle-favorites', [])
   const [previousQuestions, setPreviousQuestions] = useKV<string[]>('oracle-previous-questions', [])
   
   const [shuffledTopicSuggestions, setShuffledTopicSuggestions] = useState(() => shuffleArray(TOPIC_SUGGESTIONS))
@@ -330,19 +342,6 @@ export default function App() {
     )
   }
 
-  const toggleFavorite = useCallback((questionId: string) => {
-    const currentFavorites = favorites ?? []
-    const isFavorite = currentFavorites.includes(questionId)
-    if (isFavorite) {
-      setFavorites(currentFavorites.filter(id => id !== questionId))
-      toast.success('⭐ Removed from favorites')
-    } else {
-      setFavorites([...currentFavorites, questionId])
-      playSound(sounds.playFavorite)
-      toast.success('⭐ Added to favorites!')
-    }
-  }, [favorites, setFavorites, soundEnabled, sounds])
-
   const resetForm = useCallback(() => {
     setTopics([])
     setTopicInput('')
@@ -357,6 +356,30 @@ export default function App() {
     setQuickAnswer(null)
     toast.success('🔄 Form reset!')
   }, [])
+
+  const feelingLucky = useCallback(() => {
+    const randomTopics = shuffleArray(TOPIC_SUGGESTIONS).slice(0, Math.floor(Math.random() * 3) + 2)
+    setTopics(randomTopics)
+    
+    const nonOtherAreas = FOCUS_AREAS.filter(a => a.id !== 'other')
+    const randomFocusCount = Math.floor(Math.random() * 2) + 1
+    const randomFocus = shuffleArray(nonOtherAreas).slice(0, randomFocusCount).map(a => a.id)
+    setFocusAreas(randomFocus)
+    
+    const experiences = ['0-2', '3-5', '6-10', '11-15', '15+']
+    setExperience(experiences[Math.floor(Math.random() * experiences.length)])
+    
+    const audiences = ['general', 'developers', 'designers', 'leaders', 'advocates', 'students']
+    setAudience(audiences[Math.floor(Math.random() * audiences.length)])
+    
+    const randomCount = Math.floor(Math.random() * 10) + 1
+    setQuestionCount(randomCount)
+    
+    if (soundEnabled) {
+      sounds.playMagic()
+    }
+    toast.success('🍀 The oracle has chosen for you!')
+  }, [sounds, soundEnabled])
 
   const getRandomVibe = (): string => {
     return VIBE_TYPES[Math.floor(Math.random() * VIBE_TYPES.length)]
@@ -443,8 +466,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
       const newQuestionTexts = generatedQuestions.map(q => q.text)
       setPreviousQuestions((prev) => [...(prev ?? []).slice(-100), ...newQuestionTexts])
       
-      setShowCelebration(true)
-      setTimeout(() => setShowCelebration(false), 2000)
       playSound(sounds.playMagic)
       toast.success('🔮 The oracle has spoken!')
     } catch {
@@ -471,7 +492,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
   }, [currentQuestionIndex])
 
   const currentQuestion = questions[currentQuestionIndex]
-  const isCurrentFavorite = currentQuestion && (favorites ?? []).includes(currentQuestion.id)
 
   const copyQuestion = useCallback(async (question: Question) => {
     const textToCopy = `${question.text}\n\n${question.vibe}`
@@ -488,7 +508,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
     setTimeout(() => {
       setQuickAnswer(getRandomResponse())
       setIsShakingOrb(false)
-      playSound(sounds.playSparkle)
+      playSound(sounds.play8BallReveal)
     }, 1500)
   }
 
@@ -522,13 +542,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
             copyQuestion(currentQuestion)
           }
           break
-        case 'f':
-        case 'F':
-          e.preventDefault()
-          if (currentQuestion) {
-            toggleFavorite(currentQuestion.id)
-          }
-          break
         case 'r':
         case 'R':
           e.preventDefault()
@@ -545,7 +558,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
 
     window.addEventListener('keydown', handleGlobalKeyDown)
     return () => window.removeEventListener('keydown', handleGlobalKeyDown)
-  }, [questions, currentQuestion, prevQuestion, nextQuestion, copyQuestion, generateQuestions, resetForm, isGenerating, toggleFavorite])
+  }, [questions, currentQuestion, prevQuestion, nextQuestion, copyQuestion, generateQuestions, resetForm, isGenerating])
 
   const animationProps = animationsEnabled 
     ? { initial: { opacity: 0, y: -20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.6 } }
@@ -938,7 +951,17 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     </div>
                   </div>
 
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 flex-wrap">
+                    <Button 
+                      onClick={feelingLucky}
+                      disabled={isGenerating}
+                      variant="outline"
+                      className="py-7 px-6 border-2 border-green-500/50 text-green-400 hover:bg-green-500/20 hover:text-green-300 hover:border-green-400 focus:ring-4 focus:ring-ring focus:ring-offset-2 font-bold"
+                      aria-label="Feeling Lucky - let the oracle choose all options for you"
+                    >
+                      <Clover size={24} weight="fill" className="mr-2" aria-hidden="true" />
+                      Feeling Lucky
+                    </Button>
                     <Button 
                       onClick={handleGenerateClick}
                       disabled={isGenerating}
@@ -978,34 +1001,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
               transition={animationsEnabled ? { duration: 0.5 } : { duration: 0 }}
               className="space-y-6"
             >
-              {showCelebration && animationsEnabled && (
-                <div className="fixed inset-0 pointer-events-none z-50" aria-hidden="true">
-                  {Array.from({ length: 20 }).map((_, i) => (
-                    <motion.span
-                      key={i}
-                      className="absolute text-2xl"
-                      style={{
-                        left: '50%',
-                        top: '40%',
-                      }}
-                      initial={{ opacity: 1, scale: 0 }}
-                      animate={{
-                        opacity: [1, 1, 0],
-                        scale: [0, 1.5, 1],
-                        x: (Math.random() - 0.5) * 400,
-                        y: (Math.random() - 0.5) * 400,
-                      }}
-                      transition={{
-                        duration: 1.5,
-                        delay: i * 0.05,
-                        ease: "easeOut",
-                      }}
-                    >
-                      {['✨', '🌟', '💫', '⭐', '🔮', '💎'][i % 6]}
-                    </motion.span>
-                  ))}
-                </div>
-              )}
               <Card className="p-6 md:p-8 bg-card border-2 border-border relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-accent via-primary to-accent" aria-hidden="true" />
 
@@ -1058,11 +1053,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         <span className="text-lg font-bold text-primary bg-primary/20 px-4 py-2 rounded-full">
                           {currentQuestion.vibe}
                         </span>
-                        {isCurrentFavorite && (
-                          <span className="text-lg font-bold text-yellow-400 bg-yellow-400/20 px-4 py-2 rounded-full">
-                            ⭐ Favorite
-                          </span>
-                        )}
                       </div>
                       
                       <div className="p-6 rounded-xl bg-gradient-to-br from-primary/15 via-accent/10 to-secondary/15 border-2 border-primary/30">
@@ -1102,28 +1092,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
 
               <Card className="p-6 bg-card border-2 border-border">
                 <div className="flex flex-wrap gap-3 justify-center">
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={() => currentQuestion && toggleFavorite(currentQuestion.id)}
-                    disabled={!currentQuestion}
-                    className={`text-lg py-6 px-6 border-2 focus:ring-4 focus:ring-ring focus:ring-offset-2 ${
-                      isCurrentFavorite 
-                        ? 'border-yellow-400 text-yellow-400 bg-yellow-400/10 hover:bg-yellow-400/20' 
-                        : ''
-                    }`}
-                    aria-label={isCurrentFavorite ? 'Remove from favorites' : 'Add to favorites'}
-                    aria-pressed={isCurrentFavorite}
-                  >
-                    <Star 
-                      size={22} 
-                      className={`mr-2 ${isCurrentFavorite ? 'text-yellow-400' : ''}`} 
-                      weight={isCurrentFavorite ? 'fill' : 'regular'}
-                      aria-hidden="true" 
-                    />
-                    {isCurrentFavorite ? 'Favorited' : 'Favorite'}
-                    <kbd className="ml-2 px-1.5 py-0.5 bg-muted rounded text-sm font-mono hidden sm:inline" aria-hidden="true">F</kbd>
-                  </Button>
                   <Button
                     variant="outline"
                     size="lg"
@@ -1170,23 +1138,23 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
         </main>
 
         <motion.footer 
-          className="text-center mt-8 text-muted-foreground text-lg space-y-3"
+          className="text-center mt-8 text-muted-foreground text-lg space-y-4"
           initial={animationsEnabled ? { opacity: 0 } : {}}
           animate={{ opacity: 1 }}
           transition={animationsEnabled ? { delay: 0.8 } : { duration: 0 }}
           role="contentinfo"
         >
-          <p className="text-sm text-muted-foreground/70 border-t border-border/50 pt-3">
+          <p className="text-sm text-muted-foreground/70 border-t border-border/50 pt-4">
             This is an experiment. Questions are AI-generated. This app may not be fully accessible.
           </p>
           <a
             href="https://www.linkedin.com/in/cariefisher/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground/70 hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded px-2 py-1"
-            aria-label="Reach out on LinkedIn (opens in new tab)"
+            className="inline-flex items-center gap-2 text-lg font-medium text-primary bg-primary/15 hover:bg-primary/25 px-5 py-3 rounded-full border-2 border-primary/30 hover:border-primary/50 transition-all focus:outline-none focus:ring-4 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+            aria-label="Send comments, questions, or suggestions (opens LinkedIn in new tab)"
           >
-            Suggestions? Reach out
+            💬 Comments? Questions? Suggestions?
           </a>
         </motion.footer>
       </div>
