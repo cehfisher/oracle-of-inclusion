@@ -435,7 +435,6 @@ export default function App() {
   }
 
   const generateQuestions = useCallback(async (isShuffle = false) => {
-    setIsGenerating(true)
     if (isShuffle) {
       setIsShuffling(true)
       toast.custom(
@@ -471,6 +470,7 @@ export default function App() {
         { duration: 3000 }
       )
     } else {
+      setIsGenerating(true)
       setQuestions([])
     }
     setCurrentQuestionIndex(0)
@@ -566,7 +566,9 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
     } catch {
       toast.error('The oracle needs a moment... Please try again.')
     } finally {
-      setIsGenerating(false)
+      if (!isShuffle) {
+        setIsGenerating(false)
+      }
       setIsShuffling(false)
     }
   }, [focusAreas, otherFocusArea, questionCount, topics, experience, audience, soundEnabled, sounds, reshuffleTopics, previousQuestions, setPreviousQuestions])
