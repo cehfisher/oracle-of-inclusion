@@ -100,19 +100,43 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @keyframes twinkle {
-  0% { opacity: 0; transform: scale(0.8); }
-  20% { opacity: 0.3; transform: scale(0.9); }
-  50% { opacity: 0.6; transform: scale(1); }
-  80% { opacity: 0.3; transform: scale(0.9); }
-  100% { opacity: 0; transform: scale(0.8); }
+  0% { opacity: 0; transform: scale(0.6); }
+  15% { opacity: 0.15; transform: scale(0.8); }
+  50% { opacity: 0.3; transform: scale(1); }
+  85% { opacity: 0.15; transform: scale(0.8); }
+  100% { opacity: 0; transform: scale(0.6); }
 }
 
 @keyframes twinkle-glow {
-  0% { opacity: 0; transform: scale(0.8); filter: drop-shadow(0 0 0px currentColor); }
-  20% { opacity: 0.4; transform: scale(0.9); filter: drop-shadow(0 0 3px currentColor); }
-  50% { opacity: 0.7; transform: scale(1); filter: drop-shadow(0 0 8px currentColor); }
-  80% { opacity: 0.4; transform: scale(0.9); filter: drop-shadow(0 0 3px currentColor); }
-  100% { opacity: 0; transform: scale(0.8); filter: drop-shadow(0 0 0px currentColor); }
+  0% { opacity: 0; transform: scale(0.6); filter: drop-shadow(0 0 0px currentColor); }
+  15% { opacity: 0.2; transform: scale(0.8); filter: drop-shadow(0 0 2px currentColor); }
+  50% { opacity: 0.35; transform: scale(1); filter: drop-shadow(0 0 4px currentColor); }
+  85% { opacity: 0.2; transform: scale(0.8); filter: drop-shadow(0 0 2px currentColor); }
+  100% { opacity: 0; transform: scale(0.6); filter: drop-shadow(0 0 0px currentColor); }
+}
+
+.dark .sparkle-particle {
+  animation-name: twinkle-dark;
+}
+
+.dark .sparkle-particle-glow {
+  animation-name: twinkle-glow-dark;
+}
+
+@keyframes twinkle-dark {
+  0% { opacity: 0; transform: scale(0.6); }
+  15% { opacity: 0.4; transform: scale(0.8); }
+  50% { opacity: 0.7; transform: scale(1); }
+  85% { opacity: 0.4; transform: scale(0.8); }
+  100% { opacity: 0; transform: scale(0.6); }
+}
+
+@keyframes twinkle-glow-dark {
+  0% { opacity: 0; transform: scale(0.6); filter: drop-shadow(0 0 0px currentColor); }
+  15% { opacity: 0.5; transform: scale(0.8); filter: drop-shadow(0 0 4px currentColor); }
+  50% { opacity: 0.85; transform: scale(1); filter: drop-shadow(0 0 10px currentColor); }
+  85% { opacity: 0.5; transform: scale(0.8); filter: drop-shadow(0 0 4px currentColor); }
+  100% { opacity: 0; transform: scale(0.6); filter: drop-shadow(0 0 0px currentColor); }
 }
 
 

@@ -511,15 +511,15 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
     : {}
 
   const sparklePositions = useMemo(() => 
-    Array.from({ length: 20 }, (_, i) => ({
+    Array.from({ length: 40 }, (_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,
       top: `${Math.random() * 100}%`,
-      duration: 20 + Math.random() * 25,
-      delay: Math.random() * 30,
-      size: 0.15 + Math.random() * 1.2,
-      symbol: Math.random() > 0.7 ? '★' : '✦',
-      hasGlow: Math.random() > 0.6,
+      duration: 12 + Math.random() * 20,
+      delay: Math.random() * 25,
+      size: 0.12 + Math.random() * 0.9,
+      symbol: Math.random() > 0.65 ? '★' : '✦',
+      hasGlow: Math.random() > 0.5,
     })), []
   )
 
@@ -532,11 +532,11 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           {sparklePositions.map((sparkle) => (
             <motion.span
               key={sparkle.id}
-              className={`${sparkle.hasGlow ? 'sparkle-particle-glow' : 'sparkle-particle'} text-primary/50`}
+              className={`${sparkle.hasGlow ? 'sparkle-particle-glow' : 'sparkle-particle'} text-primary/30 dark:text-primary/70`}
               style={{ 
                 left: sparkle.left, 
                 top: sparkle.top,
-                fontSize: `${sparkle.size * 20}px`,
+                fontSize: `${sparkle.size * 18}px`,
                 animationDuration: `${sparkle.duration}s`,
                 animationDelay: `${sparkle.delay}s`,
               }}
