@@ -634,20 +634,22 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" aria-hidden="true" />
 
                 <div className="space-y-6">
-                  <div>
+                  <div className="pt-6">
                     <motion.p 
                       key={greetingKey}
-                      className="text-primary text-2xl md:text-3xl font-semibold mb-4 text-center"
+                      className="text-primary text-2xl md:text-3xl font-semibold mb-4 text-center drop-shadow-[0_0_12px_oklch(0.48_0.15_280_/_0.4)] dark:drop-shadow-[0_0_16px_oklch(0.78_0.15_75_/_0.5)]"
                       initial={animationsEnabled ? { opacity: 0, scale: 0.9 } : {}}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.4, type: "spring" }}
                     >
                       {mysticalGreeting}
                     </motion.p>
-                    <div className="flex items-center justify-center gap-3 mb-6" aria-hidden="true">
-                      <span className="h-px w-16 bg-gradient-to-r from-transparent via-primary/40 to-primary/60"></span>
-                      <span className="text-primary/50 text-lg">✦</span>
-                      <span className="h-px w-16 bg-gradient-to-l from-transparent via-primary/40 to-primary/60"></span>
+                    <div className="flex items-center justify-center gap-4 mb-6" aria-hidden="true">
+                      <span className="h-px w-20 bg-gradient-to-r from-transparent via-primary/30 to-primary/60"></span>
+                      <span className="text-primary/60 text-xl drop-shadow-[0_0_8px_oklch(0.48_0.15_280_/_0.3)]">✧</span>
+                      <span className="text-accent/50 text-sm">✦</span>
+                      <span className="text-primary/60 text-xl drop-shadow-[0_0_8px_oklch(0.48_0.15_280_/_0.3)]">✧</span>
+                      <span className="h-px w-20 bg-gradient-to-l from-transparent via-primary/30 to-primary/60"></span>
                     </div>
                     <Label htmlFor="topics" className="text-foreground mb-3 block text-lg font-semibold">
                       🌟 Topics to explore
