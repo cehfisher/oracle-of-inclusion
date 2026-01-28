@@ -582,7 +582,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
             <span className="text-7xl md:text-8xl">🔮</span>
           </motion.div>
           
-          <h1 className="text-4xl md:text-6xl font-bold text-foreground tracking-tight mb-3" style={{ fontFamily: "'Pacifico', cursive" }}>
+          <h1 className="text-4xl md:text-6xl font-bold text-foreground tracking-tight mb-3" style={{ fontFamily: "'Bricolage Grotesque', sans-serif" }}>
             Oracle of Inclusion
           </h1>
           <p className="text-muted-foreground text-xl md:text-2xl mb-2">

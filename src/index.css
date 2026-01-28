@@ -24,7 +24,7 @@
   --chart-3: oklch(0.52 0.12 200);
   --chart-4: oklch(0.48 0.10 280);
   --chart-5: oklch(0.42 0.07 275);
-  --font-sans: Open Sans;
+  --font-sans: 'Atkinson Hyperlegible';
   --spacing: 0.25rem;
 }
 
@@ -62,7 +62,7 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Atkinson Hyperlegible', system-ui, -apple-system, sans-serif;
+  font-family: 'Bricolage Grotesque', system-ui, -apple-system, sans-serif;
   font-weight: 700;
 }
 
