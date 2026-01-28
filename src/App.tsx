@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Copy, ArrowsClockwise, Check, Plus, X, SpeakerHigh, SpeakerSlash, Sparkle, Keyboard, ArrowCounterClockwise, Moon, Sun } from '@phosphor-icons/react'
+import { Copy, ArrowsClockwise, Check, Plus, X, SpeakerHigh, SpeakerSlash, Sparkle, ArrowCounterClockwise, Moon, Sun } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+
 import { useKV } from '@github/spark/hooks'
 import { toast, Toaster } from 'sonner'
 
@@ -211,14 +211,7 @@ const FOCUS_AREAS = [
   { id: 'other', label: '✏️ Other' },
 ]
 
-const KEYBOARD_SHORTCUTS = [
-  { key: '←', action: 'Previous question' },
-  { key: '→', action: 'Next question' },
-  { key: 'C', action: 'Copy current question' },
-  { key: 'R', action: 'Shuffle all questions' },
-  { key: 'Escape', action: 'Start over / Reset' },
-  { key: '?', action: 'Show keyboard shortcuts' },
-]
+
 
 export default function App() {
   const [topics, setTopics] = useState<string[]>([])
@@ -239,7 +232,7 @@ export default function App() {
   const [soundEnabled, setSoundEnabled] = useKV<boolean>('oracle-sound-enabled-v2', true)
   const [animationsEnabled, setAnimationsEnabled] = useKV<boolean>('oracle-animations-enabled-v2', true)
   const [darkMode, setDarkMode] = useKV<boolean>('oracle-dark-mode-v2', true)
-  const [showShortcuts, setShowShortcuts] = useState(false)
+
   const [previousQuestions, setPreviousQuestions] = useKV<string[]>('oracle-previous-questions', [])
   
   const [shuffledTopicSuggestions, setShuffledTopicSuggestions] = useState(() => shuffleArray(TOPIC_SUGGESTIONS))
@@ -469,12 +462,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
         return
       }
 
-      if (e.key === '?' || (e.shiftKey && e.key === '/')) {
-        e.preventDefault()
-        setShowShortcuts(true)
-        return
-      }
-
       if (questions.length === 0) return
 
       switch (e.key) {
@@ -593,40 +580,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           </motion.p>
 
           <div className="flex justify-center items-center gap-3 flex-wrap mb-6">
-            <Dialog open={showShortcuts} onOpenChange={setShowShortcuts}>
-              <DialogTrigger asChild>
-                <button
-                  className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
-                  aria-label="View keyboard shortcuts"
-                >
-                  <Keyboard size={18} className="text-primary" aria-hidden="true" />
-                  <span className="text-sm font-medium">Keys</span>
-                </button>
-              </DialogTrigger>
-              <DialogContent className="bg-card border-2 border-border">
-                <DialogHeader>
-                  <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-                    <Keyboard size={28} className="text-primary" aria-hidden="true" />
-                    Keyboard Shortcuts
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="mt-4 space-y-3" role="list" aria-label="Available keyboard shortcuts">
-                  {KEYBOARD_SHORTCUTS.map(shortcut => (
-                    <div 
-                      key={shortcut.key} 
-                      className="flex items-center justify-between p-3 rounded-lg bg-muted/40"
-                      role="listitem"
-                    >
-                      <span className="text-lg font-medium text-foreground">{shortcut.action}</span>
-                      <kbd className="px-3 py-1.5 bg-primary/20 text-primary rounded-lg font-mono text-lg font-bold border border-primary/30">
-                        {shortcut.key}
-                      </kbd>
-                    </div>
-                  ))}
-                </div>
-              </DialogContent>
-            </Dialog>
-            
             <button
               onClick={() => setDarkMode(prev => !prev)}
               className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
@@ -977,7 +930,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                       <Copy size={22} className="mr-2" aria-hidden="true" />
                     )}
                     {copiedId === currentQuestion?.id ? 'Copied!' : 'Copy'}
-                    <kbd className="ml-2 px-1.5 py-0.5 bg-muted rounded text-sm font-mono hidden sm:inline" aria-hidden="true">C</kbd>
                   </Button>
                   <Button
                     variant="outline"
@@ -989,7 +941,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                   >
                     <ArrowsClockwise size={22} className="mr-2" aria-hidden="true" />
                     Shuffle
-                    <kbd className="ml-2 px-1.5 py-0.5 bg-muted rounded text-sm font-mono hidden sm:inline" aria-hidden="true">R</kbd>
                   </Button>
                   <Button
                     variant="outline"
@@ -1000,7 +951,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                   >
                     <ArrowCounterClockwise size={22} className="mr-2" aria-hidden="true" />
                     Restart
-                    <kbd className="ml-2 px-1.5 py-0.5 bg-muted rounded text-sm font-mono hidden sm:inline" aria-hidden="true">Esc</kbd>
                   </Button>
                 </div>
               </Card>
