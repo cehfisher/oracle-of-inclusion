@@ -524,10 +524,11 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
       id: i,
       left: `${Math.random() * 100}%`,
       top: `${Math.random() * 100}%`,
-      duration: 12 + Math.random() * 18,
-      delay: Math.random() * 25,
+      duration: 20 + Math.random() * 25,
+      delay: Math.random() * 30,
       size: 0.15 + Math.random() * 1.2,
       symbol: Math.random() > 0.7 ? '★' : '✦',
+      hasGlow: Math.random() > 0.6,
     })), []
   )
 
@@ -540,7 +541,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           {sparklePositions.map((sparkle) => (
             <motion.span
               key={sparkle.id}
-              className="sparkle-particle text-primary/50"
+              className={`${sparkle.hasGlow ? 'sparkle-particle-glow' : 'sparkle-particle'} text-primary/50`}
               style={{ 
                 left: sparkle.left, 
                 top: sparkle.top,
