@@ -478,6 +478,18 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
     }
   }, [focusAreas, otherFocusArea, questionCount, topics, experience, audience, soundEnabled, sounds, reshuffleTopics, previousQuestions, setPreviousQuestions])
 
+  const popupSparkles = useMemo(() => 
+    Array.from({ length: 12 }, (_, i) => ({
+      id: i,
+      left: `${10 + Math.random() * 80}%`,
+      top: `${10 + Math.random() * 80}%`,
+      delay: Math.random() * 0.5,
+      duration: 1.5 + Math.random() * 1,
+      size: 8 + Math.random() * 10,
+      symbol: ['✦', '✧', '★', '⋆', '✵'][Math.floor(Math.random() * 5)],
+    })), []
+  )
+
   const handleGenerateClick = () => {
     toast.custom(
       (t) => (
@@ -496,6 +508,32 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-accent/60 blur-sm" />
           <div className="absolute -bottom-1 -left-2 w-2 h-2 rounded-full bg-secondary/60 blur-sm" />
           <div className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-primary/40 blur-sm" />
+          
+          {popupSparkles.map((sparkle) => (
+            <motion.span
+              key={sparkle.id}
+              className="absolute pointer-events-none text-primary/80"
+              style={{
+                left: sparkle.left,
+                top: sparkle.top,
+                fontSize: `${sparkle.size}px`,
+              }}
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ 
+                opacity: [0, 1, 0.8, 0],
+                scale: [0.3, 1.2, 1, 0.5],
+                y: [0, -10, -15, -25],
+              }}
+              transition={{ 
+                duration: sparkle.duration,
+                delay: sparkle.delay,
+                repeat: Infinity,
+                repeatDelay: 0.3,
+              }}
+            >
+              {sparkle.symbol}
+            </motion.span>
+          ))}
           
           <div className="relative flex items-center gap-4">
             <motion.span 
