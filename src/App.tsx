@@ -180,17 +180,24 @@ const FOCUS_AREAS = [
 ]
 
 const MYSTICAL_RESPONSES = [
-  { text: "The spirits say... YES! ✨", type: "yes" },
-  { text: "Absolutely, the path is clear! 🌟", type: "yes" },
-  { text: "The oracle nods wisely... YES! 💫", type: "yes" },
-  { text: "Signs point to YES! 🔮", type: "yes" },
-  { text: "The cosmic forces agree! ⭐", type: "yes" },
-  { text: "Hmm... the oracle says NO 🌙", type: "no" },
-  { text: "The spirits shake their heads... 👻", type: "no" },
-  { text: "Not this time, seeker... 🌒", type: "no" },
-  { text: "The answer is unclear... ask again! 🎭", type: "maybe" },
-  { text: "Perhaps... the future is unwritten 📜", type: "maybe" },
-  { text: "The oracle is cryptic on this one... 🤔", type: "maybe" },
+  { text: "It is certain! ✨", type: "yes" },
+  { text: "Without a doubt! 🌟", type: "yes" },
+  { text: "You may rely on it! 💫", type: "yes" },
+  { text: "Yes, definitely! ⭐", type: "yes" },
+  { text: "As I see it, yes! 🔮", type: "yes" },
+  { text: "Most likely! ✨", type: "yes" },
+  { text: "Outlook good! 🌈", type: "yes" },
+  { text: "Signs point to yes! 💖", type: "yes" },
+  { text: "Don't count on it... 🌙", type: "no" },
+  { text: "My reply is no 🌒", type: "no" },
+  { text: "My sources say no 👻", type: "no" },
+  { text: "Outlook not so good 🌑", type: "no" },
+  { text: "Very doubtful... 😬", type: "no" },
+  { text: "Reply hazy, try again 🎭", type: "maybe" },
+  { text: "Ask again later 🤔", type: "maybe" },
+  { text: "Better not tell you now 🙊", type: "maybe" },
+  { text: "Cannot predict now 🌀", type: "maybe" },
+  { text: "Concentrate and ask again 🧘", type: "maybe" },
 ]
 
 const getRandomResponse = () => {
@@ -545,11 +552,11 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
             <button
               onClick={() => setShowQuickOracle(!showQuickOracle)}
               className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
-              aria-label="Toggle Quick Answer Oracle"
+              aria-label="Toggle Magic 8-Ball for yes/no/maybe answers"
               aria-expanded={showQuickOracle}
             >
               <span className="text-2xl" aria-hidden="true">🎱</span>
-              <span className="text-sm font-medium">Quick Oracle</span>
+              <span className="text-sm font-medium">Magic 8-Ball</span>
             </button>
             
             <div className="flex gap-4 flex-wrap">
@@ -622,23 +629,33 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
               >
                 <Card className="p-6 bg-card border-2 border-border">
                   <div className="flex flex-col items-center gap-4">
-                    <p className="text-muted-foreground text-lg">Need a quick yes/no/maybe? Shake the 8-ball!</p>
+                    <p className="text-muted-foreground text-lg">🎱 Ask a yes/no question, then shake the ball!</p>
                     <motion.button
                       onClick={shakeTheOrb}
                       disabled={isShakingOrb}
-                      className="w-20 h-20 rounded-full crystal-ball mystic-glow flex items-center justify-center text-4xl cursor-pointer hover:scale-110 transition-transform disabled:cursor-wait focus:outline-none focus:ring-4 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+                      className="w-20 h-20 rounded-full bg-gradient-to-br from-gray-900 via-gray-800 to-black mystic-glow flex items-center justify-center text-4xl cursor-pointer hover:scale-110 transition-transform disabled:cursor-wait focus:outline-none focus:ring-4 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
                       animate={isShakingOrb && animationsEnabled ? { 
                         x: [0, -10, 10, -10, 10, 0],
                         rotate: [0, -5, 5, -5, 5, 0]
                       } : {}}
                       transition={{ duration: 0.5, repeat: isShakingOrb ? Infinity : 0 }}
-                      aria-label="Shake the oracle orb for a yes/no answer"
+                      aria-label="Shake the Magic 8-Ball for a yes/no answer"
                       aria-live="polite"
                     >
                       <span aria-hidden="true">🎱</span>
                     </motion.button>
                     
                     <AnimatePresence>
+                      {isShakingOrb && (
+                        <motion.p
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="text-primary text-lg font-medium italic"
+                        >
+                          ✨ The spirits are stirring... ✨
+                        </motion.p>
+                      )}
                       {quickAnswer && !isShakingOrb && (
                         <motion.div
                           initial={animationsEnabled ? { opacity: 0, scale: 0.8 } : {}}
@@ -1118,7 +1135,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
         >
           <p className="font-medium">"Nothing about us without us" — Disability Rights Movement</p>
           <p className="text-sm text-muted-foreground/70 border-t border-border/50 pt-3 mt-3">
-            ⚗️ This is an experiment. Questions are AI-generated and may not be perfect. This site may not be fully accessible as it is being developed.
+            ⚗️ This is an experiment. Questions are AI-generated and may not be perfect. This app may not be fully accessible as it is being developed.
           </p>
         </motion.footer>
       </div>
