@@ -213,7 +213,7 @@ export default function App() {
   const [focusAreas, setFocusAreas] = useState<string[]>([])
   const [otherFocusArea, setOtherFocusArea] = useState('')
   const [experience, setExperience] = useState('')
-  const [questionCount, setQuestionCount] = useState(5)
+  const [questionCount, setQuestionCount] = useState(3)
   const [questions, setQuestions] = useState<Question[]>([])
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -801,18 +801,18 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                           id="question-count-slider"
                           value={[questionCount]}
                           onValueChange={(value) => setQuestionCount(value[0])}
-                          min={3}
-                          max={10}
+                          min={1}
+                          max={5}
                           step={1}
                           className="w-full [&_[data-radix-slider-track]]:bg-muted [&_[data-radix-slider-range]]:bg-accent [&_[data-radix-slider-thumb]]:bg-accent [&_[data-radix-slider-thumb]]:border-2 [&_[data-radix-slider-thumb]]:border-foreground"
-                          aria-valuemin={3}
-                          aria-valuemax={10}
+                          aria-valuemin={1}
+                          aria-valuemax={5}
                           aria-valuenow={questionCount}
-                          aria-valuetext={`${questionCount} questions`}
+                          aria-valuetext={`${questionCount} question${questionCount === 1 ? '' : 's'}`}
                         />
                         <div className="flex justify-between mt-2 text-base text-foreground font-bold" aria-hidden="true">
-                          <span>3</span>
-                          <span>10</span>
+                          <span>1</span>
+                          <span>5</span>
                         </div>
                       </div>
                     </div>
