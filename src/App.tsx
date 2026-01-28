@@ -644,6 +644,11 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     >
                       {mysticalGreeting}
                     </motion.p>
+                    <div className="flex items-center justify-center gap-3 mb-6" aria-hidden="true">
+                      <span className="h-px w-16 bg-gradient-to-r from-transparent via-primary/40 to-primary/60"></span>
+                      <span className="text-primary/50 text-lg">✦</span>
+                      <span className="h-px w-16 bg-gradient-to-l from-transparent via-primary/40 to-primary/60"></span>
+                    </div>
                     <Label htmlFor="topics" className="text-foreground mb-3 block text-lg font-semibold">
                       🌟 Topics to explore
                     </Label>
