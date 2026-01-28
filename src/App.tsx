@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Copy, ArrowClockwise, Check, Plus, X, SpeakerHigh, SpeakerSlash, Sparkle, ArrowCounterClockwise, Keyboard, ShareNetwork } from '@phosphor-icons/react'
+import { Copy, ArrowsClockwise, Check, Plus, X, SpeakerHigh, SpeakerSlash, Sparkle, House, Keyboard, ShareNetwork } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -212,11 +212,11 @@ const MYSTICAL_LOADING_PHRASES = [
 ]
 
 const MYSTICAL_GREETINGS = [
-  "The oracle senses your need... 🌟",
-  "Your questions await revelation... ✨",
-  "The cosmos whispers your queries... 🔮",
-  "Destiny stirs within the crystal... 🌙",
-  "The ancient spirits are listening... ⭐",
+  "The oracle senses your need 🌟",
+  "Your questions await revelation ✨",
+  "The cosmos whispers your queries 🔮",
+  "Destiny stirs within the crystal 🌙",
+  "The ancient spirits are listening ⭐",
 ]
 
 const getRandomGreeting = (): string => {
@@ -340,10 +340,11 @@ export default function App() {
   const [previousQuestions, setPreviousQuestions] = useKV<string[]>('oracle-previous-questions', [])
   
   const [shuffledTopicSuggestions, setShuffledTopicSuggestions] = useState(() => shuffleArray(TOPIC_SUGGESTIONS))
-  const [mysticalGreeting] = useState(() => getRandomGreeting())
+  const [mysticalGreeting, setMysticalGreeting] = useState(() => getRandomGreeting())
   
   const reshuffleTopics = useCallback(() => {
     setShuffledTopicSuggestions(shuffleArray(TOPIC_SUGGESTIONS))
+    setMysticalGreeting(getRandomGreeting())
   }, [])
   
   const sounds = useSound()
@@ -1011,7 +1012,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                           transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
                           aria-hidden="true"
                         >
-                          <ArrowClockwise size={28} />
+                          <ArrowsClockwise size={28} />
                         </motion.div>
                       ) : (
                         <>
@@ -1026,7 +1027,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                       className="py-7 px-6 border-2 border-border text-muted-foreground hover:bg-muted hover:text-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
                       aria-label="Reset form"
                     >
-                      <ArrowCounterClockwise size={24} aria-hidden="true" />
+                      <House size={24} aria-hidden="true" />
                     </Button>
                   </div>
                 </div>
@@ -1143,7 +1144,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     ) : (
                       <Copy size={22} className="mr-2" aria-hidden="true" />
                     )}
-                    {copiedId === currentQuestion?.id ? 'Copied!' : 'Copy Question'}
+                    {copiedId === currentQuestion?.id ? 'Copied!' : 'Copy'}
                     <kbd className="ml-2 px-1.5 py-0.5 bg-muted rounded text-sm font-mono hidden sm:inline" aria-hidden="true">C</kbd>
                   </Button>
                   <DropdownMenu>
@@ -1152,7 +1153,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         variant="outline"
                         size="lg"
                         disabled={!currentQuestion}
-                        className="text-lg py-6 px-6 border-2 border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                        className="text-lg py-6 px-6 border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
                         aria-label="Share question on social media"
                       >
                         <ShareNetwork size={22} className="mr-2" aria-hidden="true" />
@@ -1188,8 +1189,8 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     className="text-lg py-6 px-8 border-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
                     aria-label="Shuffle all questions and generate new ones"
                   >
-                    <ArrowClockwise size={22} className="mr-2" aria-hidden="true" />
-                    Shuffle All
+                    <ArrowsClockwise size={22} className="mr-2" aria-hidden="true" />
+                    Shuffle
                     <kbd className="ml-2 px-1.5 py-0.5 bg-muted rounded text-sm font-mono hidden sm:inline" aria-hidden="true">R</kbd>
                   </Button>
                   <Button
@@ -1199,7 +1200,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     className="text-lg py-6 px-8 border-2 border-muted-foreground text-muted-foreground hover:bg-muted hover:text-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
                     aria-label="Start over and reset the form"
                   >
-                    <ArrowCounterClockwise size={22} className="mr-2" aria-hidden="true" />
+                    <House size={22} className="mr-2" aria-hidden="true" />
                     Start Over
                     <kbd className="ml-2 px-1.5 py-0.5 bg-muted rounded text-sm font-mono hidden sm:inline" aria-hidden="true">Esc</kbd>
                   </Button>
@@ -1223,7 +1224,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
             href="https://www.linkedin.com/in/cariefisher/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block text-xl text-muted-foreground hover:text-primary transition-colors focus:outline-none focus:ring-4 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background italic"
+            className="inline-block text-primary text-lg font-medium hover:text-primary/80 transition-colors focus:outline-none focus:ring-4 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
             aria-label="Send comments, questions, or suggestions (opens LinkedIn in new tab)"
           >
             Comments? Questions? Suggestions?
