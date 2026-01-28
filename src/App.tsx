@@ -1100,7 +1100,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     size="lg"
                     onClick={() => currentQuestion && copyQuestion(currentQuestion)}
                     disabled={!currentQuestion}
-                    className="text-lg py-6 px-6 border-2 border-primary/60 text-foreground bg-card hover:bg-primary hover:text-primary-foreground hover:border-primary focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                    className="text-lg py-6 px-6 border-2 border-border text-foreground bg-card hover:bg-primary hover:text-primary-foreground hover:border-primary focus:ring-4 focus:ring-ring focus:ring-offset-2"
                     aria-label={copiedId === currentQuestion?.id ? 'Copied to clipboard' : 'Copy question to clipboard'}
                   >
                     {copiedId === currentQuestion?.id ? (
@@ -1116,7 +1116,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     size="lg"
                     onClick={generateQuestions}
                     disabled={isGenerating}
-                    className="text-lg py-6 px-8 border-2 border-accent/60 text-foreground bg-card hover:bg-accent hover:text-accent-foreground hover:border-accent focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                    className="text-lg py-6 px-8 border-2 border-border text-foreground bg-card hover:bg-accent hover:text-accent-foreground hover:border-accent focus:ring-4 focus:ring-ring focus:ring-offset-2"
                     aria-label="Shuffle all questions and generate new ones"
                   >
                     <ArrowsClockwise size={22} className="mr-2" aria-hidden="true" />
@@ -1127,7 +1127,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     variant="outline"
                     size="lg"
                     onClick={resetForm}
-                    className="text-lg py-6 px-8 border-2 border-muted-foreground/60 text-foreground bg-card hover:bg-muted-foreground hover:text-background hover:border-muted-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                    className="text-lg py-6 px-8 border-2 border-border text-foreground bg-card hover:bg-muted-foreground hover:text-background hover:border-muted-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
                     aria-label="Restart and reset the form"
                   >
                     <ArrowCounterClockwise size={22} className="mr-2" aria-hidden="true" />
@@ -1161,15 +1161,15 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           </p>
           
           <div className="mt-4 pt-4 border-t border-border/30">
-            <button
-              onClick={() => setShowQuickOracle(!showQuickOracle)}
-              className="text-2xl hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded-lg p-2"
-              aria-label="Open Magic 8-Ball fortune teller"
-              aria-expanded={showQuickOracle}
-            >
-              🎱
-            </button>
-          </div>
+                            <button
+                              onClick={() => setShowQuickOracle(!showQuickOracle)}
+                              className="text-base opacity-40 hover:opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded-lg p-1"
+                              aria-label="Open Magic 8-Ball fortune teller"
+                              aria-expanded={showQuickOracle}
+                            >
+                              🎱
+                            </button>
+                          </div>
           
           <AnimatePresence>
             {showQuickOracle && (
