@@ -869,7 +869,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         <button
                           key={suggestion}
                           onClick={() => addTopic(suggestion)}
-                          className="text-base px-4 py-2.5 rounded-full border-2 border-border text-muted-foreground hover:border-primary hover:text-primary transition-all hover:bg-primary/10 font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+                          className="text-lg px-4 py-2.5 rounded-full border-2 border-border text-foreground hover:border-primary hover:text-primary transition-all hover:bg-primary/10 font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
                         >
                           {suggestion}
                         </button>
