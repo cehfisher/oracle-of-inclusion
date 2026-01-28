@@ -376,17 +376,17 @@ export default function App() {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: -10 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
-          className="relative px-8 py-5 rounded-2xl border-2 border-border overflow-hidden mystic-glow cursor-pointer bg-[oklch(0.99_0.006_280/0.85)] dark:bg-[oklch(0.20_0.035_278/0.85)] backdrop-blur-xl"
+          className="relative px-8 py-5 rounded-2xl border-2 border-border overflow-hidden mystic-glow cursor-pointer bg-[oklch(0.98_0.01_280)] dark:bg-[oklch(0.20_0.035_278/0.92)] backdrop-blur-xl"
           onClick={() => toast.dismiss(t)}
         >
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" aria-hidden="true" />
           
           <div className="relative flex items-center gap-4 pt-2">
-            <span className="text-4xl">🌿</span>
+            <span className="text-4xl shrink-0">🌿</span>
             <div className="flex flex-col">
               <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium mb-1">The Oracle Resets</span>
               <span className="text-xl font-bold text-foreground" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-                A fresh start awaits ✨
+                A fresh start awaits&nbsp;✨
               </span>
             </div>
           </div>
@@ -444,17 +444,17 @@ export default function App() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: -10 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
-            className="relative px-8 py-5 rounded-2xl border-2 border-border overflow-hidden mystic-glow cursor-pointer bg-[oklch(0.99_0.006_280/0.85)] dark:bg-[oklch(0.20_0.035_278/0.85)] backdrop-blur-xl"
+            className="relative px-8 py-5 rounded-2xl border-2 border-border overflow-hidden mystic-glow cursor-pointer bg-[oklch(0.98_0.01_280)] dark:bg-[oklch(0.20_0.035_278/0.92)] backdrop-blur-xl"
             onClick={() => toast.dismiss(t)}
           >
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" aria-hidden="true" />
             
             <div className="relative flex items-center gap-4 pt-2">
-              <span className="text-4xl">🔄</span>
+              <span className="text-4xl shrink-0">🔄</span>
               <div className="flex flex-col">
                 <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium mb-1">The Oracle Shuffles</span>
                 <span className="text-xl font-bold text-foreground" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-                  New wisdom emerges... ✨
+                  New wisdom emerges...&nbsp;✨
                 </span>
               </div>
             </div>
@@ -582,17 +582,17 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: -10 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
-          className="relative px-8 py-5 rounded-2xl border-2 border-border overflow-hidden mystic-glow cursor-pointer bg-[oklch(0.99_0.006_280/0.85)] dark:bg-[oklch(0.20_0.035_278/0.85)] backdrop-blur-xl"
+          className="relative px-8 py-5 rounded-2xl border-2 border-border overflow-hidden mystic-glow cursor-pointer bg-[oklch(0.98_0.01_280)] dark:bg-[oklch(0.20_0.035_278/0.92)] backdrop-blur-xl"
           onClick={() => toast.dismiss(t)}
         >
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" aria-hidden="true" />
           
           <div className="relative flex items-center gap-4 pt-2">
-            <span className="text-4xl">✨</span>
+            <span className="text-4xl shrink-0">✨</span>
             <div className="flex flex-col">
               <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium mb-1">The Oracle Speaks</span>
               <span className="text-xl font-bold text-foreground" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-                {mysticalGreeting}
+                {mysticalGreeting.replace(/\s*(✨|🌙|💎|⭐|💫|🪄)$/, '')}&nbsp;{mysticalGreeting.match(/(✨|🌙|💎|⭐|💫|🪄)$/)?.[0] || '✨'}
               </span>
             </div>
           </div>
@@ -959,7 +959,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
 
                   <div>
                     <Label htmlFor="question-count-slider" className="text-foreground mb-3 block text-xl font-bold form-heading">
-                      🔢 Number of questions <span className="text-accent font-bold text-xl">{questionCount}</span>
+                      ✨ Number of questions <span className="text-accent font-bold text-xl">{questionCount}</span>
                     </Label>
                     <div className="px-2 py-4">
                       <Slider
