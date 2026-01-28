@@ -572,14 +572,15 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           {...animationProps}
           role="banner"
         >
-          <motion.div 
-            className="inline-block mb-4"
+          <motion.button 
+            className="inline-block mb-4 cursor-pointer hover:scale-110 transition-transform focus:outline-none focus:ring-4 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded-full"
             animate={animationsEnabled ? floatAnimation : {}}
             transition={animationsEnabled ? { duration: 4, repeat: Infinity, ease: "easeInOut" } : {}}
-            aria-hidden="true"
+            onClick={resetForm}
+            aria-label="Reset form and start over"
           >
             <span className="text-7xl md:text-8xl">🔮</span>
-          </motion.div>
+          </motion.button>
           
           <h1 className="text-4xl md:text-6xl font-bold text-foreground tracking-tight mb-3" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
             Oracle of Inclusion
