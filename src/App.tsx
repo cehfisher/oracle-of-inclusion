@@ -357,7 +357,7 @@ export default function App() {
   const [showQuickOracle, setShowQuickOracle] = useState(false)
   const [soundEnabled, setSoundEnabled] = useKV<boolean>('oracle-sound-enabled', true)
   const [animationsEnabled, setAnimationsEnabled] = useKV<boolean>('oracle-animations-enabled', true)
-  const [darkMode, setDarkMode] = useKV<boolean>('oracle-dark-mode', false)
+  const [darkMode, setDarkMode] = useKV<boolean>('oracle-dark-mode', true)
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [previousQuestions, setPreviousQuestions] = useKV<string[]>('oracle-previous-questions', [])
   
@@ -722,16 +722,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           </motion.p>
 
           <div className="flex justify-center items-center gap-3 flex-wrap mb-6">
-            <button
-              onClick={() => setShowQuickOracle(!showQuickOracle)}
-              className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
-              aria-label="Toggle Magic 8-Ball for yes/no/maybe answers"
-              aria-expanded={showQuickOracle}
-            >
-              <span className="text-xl" aria-hidden="true">🎱</span>
-              <span className="text-sm font-medium">8-Ball</span>
-            </button>
-            
             <Dialog open={showShortcuts} onOpenChange={setShowShortcuts}>
               <DialogTrigger asChild>
                 <button
@@ -798,93 +788,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
               <span id="sound-desc" className="sr-only">Toggle sound effects on or off</span>
             </div>
           </div>
-
-          <AnimatePresence>
-            {showQuickOracle && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="mb-6 overflow-hidden"
-              >
-                <Card className="p-6 bg-card border-2 border-border relative overflow-hidden">
-                  <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-                    {[...Array(8)].map((_, i) => (
-                      <motion.span
-                        key={i}
-                        className="absolute text-primary/30"
-                        style={{ 
-                          left: `${10 + i * 12}%`, 
-                          top: `${20 + (i % 3) * 25}%`,
-                          fontSize: '12px'
-                        }}
-                        animate={animationsEnabled ? { 
-                          opacity: [0.2, 0.6, 0.2],
-                          scale: [0.8, 1.2, 0.8],
-                        } : {}}
-                        transition={{
-                          duration: 2,
-                          delay: i * 0.3,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                        }}
-                      >
-                        ✦
-                      </motion.span>
-                    ))}
-                  </div>
-                  <div className="flex flex-col items-center gap-4 relative z-10">
-                    <p className="text-muted-foreground text-lg">🎱 Think of a yes/no question, then shake!</p>
-                    <motion.button
-                      onClick={shakeTheOrb}
-                      disabled={isShakingOrb}
-                      className="w-24 h-24 rounded-full bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center text-5xl cursor-pointer hover:scale-110 transition-transform disabled:cursor-wait focus:outline-none focus:ring-4 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background shadow-[0_0_40px_rgba(255,200,100,0.3),0_0_80px_rgba(200,100,255,0.2)]"
-                      animate={isShakingOrb && animationsEnabled ? { 
-                        x: [0, -15, 15, -15, 15, -10, 10, 0],
-                        rotate: [0, -8, 8, -8, 8, -5, 5, 0],
-                        scale: [1, 1.05, 1, 1.05, 1, 1.02, 1, 1]
-                      } : {}}
-                      transition={{ duration: 0.8, repeat: isShakingOrb ? Infinity : 0 }}
-                      aria-label="Shake the Magic 8-Ball for a yes/no answer"
-                      aria-live="polite"
-                    >
-                      <span aria-hidden="true">🎱</span>
-                    </motion.button>
-                    
-                    <AnimatePresence>
-                      {isShakingOrb && (
-                        <motion.p
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          className="text-primary text-lg font-medium italic"
-                        >
-                          ✨ The spirits are stirring... ✨
-                        </motion.p>
-                      )}
-                      {quickAnswer && !isShakingOrb && (
-                        <motion.div
-                          initial={animationsEnabled ? { opacity: 0, scale: 0.5, rotate: -10 } : {}}
-                          animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                          exit={animationsEnabled ? { opacity: 0, scale: 0.8 } : {}}
-                          transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                          className={`px-8 py-4 rounded-2xl text-xl font-bold ${
-                            quickAnswer.type === 'yes' ? 'bg-green-500/20 text-green-400 border-2 border-green-500/40 shadow-[0_0_20px_rgba(34,197,94,0.3)]' :
-                            quickAnswer.type === 'no' ? 'bg-red-500/20 text-red-400 border-2 border-red-500/40 shadow-[0_0_20px_rgba(239,68,68,0.3)]' :
-                            'bg-primary/20 text-primary border-2 border-primary/40 shadow-[0_0_20px_rgba(200,150,50,0.3)]'
-                          }`}
-                          role="status"
-                          aria-live="polite"
-                        >
-                          {quickAnswer.text}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </Card>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </motion.header>
 
         <main id="main-content" role="main">
@@ -1197,7 +1100,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     size="lg"
                     onClick={() => currentQuestion && copyQuestion(currentQuestion)}
                     disabled={!currentQuestion}
-                    className="text-lg py-6 px-6 border-2 focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                    className="text-lg py-6 px-6 border-2 border-primary/60 text-foreground bg-card hover:bg-primary hover:text-primary-foreground hover:border-primary focus:ring-4 focus:ring-ring focus:ring-offset-2"
                     aria-label={copiedId === currentQuestion?.id ? 'Copied to clipboard' : 'Copy question to clipboard'}
                   >
                     {copiedId === currentQuestion?.id ? (
@@ -1213,7 +1116,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     size="lg"
                     onClick={generateQuestions}
                     disabled={isGenerating}
-                    className="text-lg py-6 px-8 border-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                    className="text-lg py-6 px-8 border-2 border-accent/60 text-foreground bg-card hover:bg-accent hover:text-accent-foreground hover:border-accent focus:ring-4 focus:ring-ring focus:ring-offset-2"
                     aria-label="Shuffle all questions and generate new ones"
                   >
                     <ArrowsClockwise size={22} className="mr-2" aria-hidden="true" />
@@ -1224,7 +1127,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     variant="outline"
                     size="lg"
                     onClick={resetForm}
-                    className="text-lg py-6 px-8 border-2 border-muted-foreground text-muted-foreground hover:bg-muted hover:text-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                    className="text-lg py-6 px-8 border-2 border-muted-foreground/60 text-foreground bg-card hover:bg-muted-foreground hover:text-background hover:border-muted-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
                     aria-label="Restart and reset the form"
                   >
                     <ArrowCounterClockwise size={22} className="mr-2" aria-hidden="true" />
@@ -1256,6 +1159,104 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
               Reach out with feedback
             </a>
           </p>
+          
+          <div className="mt-4 pt-4 border-t border-border/30">
+            <button
+              onClick={() => setShowQuickOracle(!showQuickOracle)}
+              className="text-2xl hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded-lg p-2"
+              aria-label="Open Magic 8-Ball fortune teller"
+              aria-expanded={showQuickOracle}
+            >
+              🎱
+            </button>
+          </div>
+          
+          <AnimatePresence>
+            {showQuickOracle && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-4 overflow-hidden"
+              >
+                <Card className="p-6 bg-card border-2 border-border relative overflow-hidden max-w-md mx-auto">
+                  <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+                    {[...Array(8)].map((_, i) => (
+                      <motion.span
+                        key={i}
+                        className="absolute text-primary/30"
+                        style={{ 
+                          left: `${10 + i * 12}%`, 
+                          top: `${20 + (i % 3) * 25}%`,
+                          fontSize: '12px'
+                        }}
+                        animate={animationsEnabled ? { 
+                          opacity: [0.2, 0.6, 0.2],
+                          scale: [0.8, 1.2, 0.8],
+                        } : {}}
+                        transition={{
+                          duration: 2,
+                          delay: i * 0.3,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      >
+                        ✦
+                      </motion.span>
+                    ))}
+                  </div>
+                  <div className="flex flex-col items-center gap-4 relative z-10">
+                    <p className="text-muted-foreground text-lg">Think of a yes/no question, then shake!</p>
+                    <motion.button
+                      onClick={shakeTheOrb}
+                      disabled={isShakingOrb}
+                      className="text-7xl cursor-pointer hover:scale-110 transition-transform disabled:cursor-wait focus:outline-none focus:ring-4 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded-lg p-2"
+                      animate={isShakingOrb && animationsEnabled ? { 
+                        x: [0, -15, 15, -15, 15, -10, 10, 0],
+                        rotate: [0, -8, 8, -8, 8, -5, 5, 0],
+                        scale: [1, 1.05, 1, 1.05, 1, 1.02, 1, 1]
+                      } : {}}
+                      transition={{ duration: 0.8, repeat: isShakingOrb ? Infinity : 0 }}
+                      aria-label="Shake the Magic 8-Ball for a yes/no answer"
+                      aria-live="polite"
+                    >
+                      <span aria-hidden="true">🎱</span>
+                    </motion.button>
+                    
+                    <AnimatePresence>
+                      {isShakingOrb && (
+                        <motion.p
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="text-primary text-lg font-medium italic"
+                        >
+                          ✨ The spirits are stirring... ✨
+                        </motion.p>
+                      )}
+                      {quickAnswer && !isShakingOrb && (
+                        <motion.div
+                          initial={animationsEnabled ? { opacity: 0, scale: 0.5, rotate: -10 } : {}}
+                          animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                          exit={animationsEnabled ? { opacity: 0, scale: 0.8 } : {}}
+                          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                          className={`px-8 py-4 rounded-2xl text-xl font-bold ${
+                            quickAnswer.type === 'yes' ? 'bg-green-500/20 text-green-300 border-2 border-green-500/40' :
+                            quickAnswer.type === 'no' ? 'bg-red-500/20 text-red-300 border-2 border-red-500/40' :
+                            'bg-primary/20 text-primary border-2 border-primary/40'
+                          }`}
+                          role="status"
+                          aria-live="polite"
+                        >
+                          {quickAnswer.text}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.footer>
       </div>
     </div>
