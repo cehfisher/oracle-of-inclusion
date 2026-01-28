@@ -355,9 +355,9 @@ export default function App() {
   const [quickAnswer, setQuickAnswer] = useState<{text: string, type: string} | null>(null)
   const [isShakingOrb, setIsShakingOrb] = useState(false)
   const [showQuickOracle, setShowQuickOracle] = useState(false)
-  const [soundEnabled, setSoundEnabled] = useKV<boolean>('oracle-sound-enabled', true)
-  const [animationsEnabled, setAnimationsEnabled] = useKV<boolean>('oracle-animations-enabled', true)
-  const [darkMode, setDarkMode] = useKV<boolean>('oracle-dark-mode', true)
+  const [soundEnabled, setSoundEnabled] = useKV<boolean>('oracle-sound-enabled-v2', true)
+  const [animationsEnabled, setAnimationsEnabled] = useKV<boolean>('oracle-animations-enabled-v2', true)
+  const [darkMode, setDarkMode] = useKV<boolean>('oracle-dark-mode-v2', true)
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [previousQuestions, setPreviousQuestions] = useKV<string[]>('oracle-previous-questions', [])
   
@@ -372,7 +372,7 @@ export default function App() {
   }, [])
   
   useEffect(() => {
-    if (darkMode) {
+    if (darkMode === undefined || darkMode === true) {
       document.documentElement.classList.add('dark')
     } else {
       document.documentElement.classList.remove('dark')
