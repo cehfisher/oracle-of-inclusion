@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Copy, Heart, ArrowClockwise, Check, Plus, X, Export, SpeakerHigh, SpeakerSlash, Sparkle, ArrowCounterClockwise, Keyboard } from '@phosphor-icons/react'
+import { Copy, ArrowClockwise, Check, Plus, X, SpeakerHigh, SpeakerSlash, Sparkle, ArrowCounterClockwise, Keyboard } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -106,7 +106,6 @@ const useSound = () => {
 interface Question {
   id: string
   text: string
-  isFavorite: boolean
   vibe: string
 }
 
@@ -219,7 +218,6 @@ const MYSTICAL_WISDOM = [
   "🌟 The best designs are those that nobody notices.",
   "✨ Inclusion is not a feature—it's a foundation.",
   "💫 Every barrier removed opens a door for someone.",
-  "🔮 True innovation serves everyone, not just the many.",
   "🌙 Accessibility is the mother of invention.",
   "⭐ Design for the edges, and the center will follow.",
   "🎭 Nothing about us without us.",
@@ -238,7 +236,6 @@ const KEYBOARD_SHORTCUTS = [
   { key: '←', action: 'Previous question' },
   { key: '→', action: 'Next question' },
   { key: 'C', action: 'Copy current question' },
-  { key: 'S', action: 'Save/unsave question' },
   { key: 'R', action: 'Shuffle all questions' },
   { key: 'Escape', action: 'Start over / Reset' },
   { key: '?', action: 'Show keyboard shortcuts' },
@@ -262,7 +259,6 @@ export default function App() {
   const [quickAnswer, setQuickAnswer] = useState<{text: string, type: string} | null>(null)
   const [isShakingOrb, setIsShakingOrb] = useState(false)
   const [showQuickOracle, setShowQuickOracle] = useState(false)
-  const [savedQuestions, setSavedQuestions] = useKV<Question[]>('oracle-saved-questions', [])
   const [soundEnabled, setSoundEnabled] = useKV<boolean>('oracle-sound-enabled', true)
   const [animationsEnabled, setAnimationsEnabled] = useKV<boolean>('oracle-animations-enabled', true)
   const [showShortcuts, setShowShortcuts] = useState(false)
@@ -345,30 +341,6 @@ export default function App() {
     return VIBE_TYPES[Math.floor(Math.random() * VIBE_TYPES.length)]
   }
 
-  const exportSavedQuestions = () => {
-    const saved = savedQuestions ?? []
-    if (saved.length === 0) {
-      toast.error('No saved questions to export!')
-      return
-    }
-    
-    const content = saved.map((q, i) => 
-      `${i + 1}. ${q.text}\n   ${q.vibe}`
-    ).join('\n\n')
-    
-    const header = `🔮 Oracle of Inclusion - Saved Questions\n${'='.repeat(45)}\n\n`
-    const fullContent = header + content + `\n\n---\n"Nothing about us without us" ✊`
-    
-    const blob = new Blob([fullContent], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'oracle-questions.txt'
-    a.click()
-    URL.revokeObjectURL(url)
-    toast.success('📥 Questions exported!')
-  }
-
   const generateQuestions = useCallback(async () => {
     setIsGenerating(true)
     setQuestions([])
@@ -435,7 +407,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
       const generatedQuestions: Question[] = shuffleArray(parsed.questions.map((q: { text: string; vibe: string }, i: number) => ({
         id: `q-${Date.now()}-${i}`,
         text: q.text,
-        isFavorite: false,
         vibe: q.vibe || getRandomVibe()
       })))
       setQuestions(generatedQuestions)
@@ -476,25 +447,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
     toast.success('📋 Copied to clipboard!')
     setTimeout(() => setCopiedId(null), 2000)
   }, [])
-
-  const toggleFavorite = useCallback((question: Question) => {
-    const updated = questions.map(q => 
-      q.id === question.id ? { ...q, isFavorite: !q.isFavorite } : q
-    )
-    setQuestions(updated)
-    
-    if (!question.isFavorite) {
-      setSavedQuestions(current => [...(current || []), { ...question, isFavorite: true }])
-      toast.success('💖 Saved to favorites!')
-    } else {
-      setSavedQuestions(current => (current || []).filter(q => q.id !== question.id))
-    }
-  }, [questions, setSavedQuestions])
-
-  const removeSavedQuestion = (id: string) => {
-    setSavedQuestions(current => (current || []).filter(q => q.id !== id))
-    toast.success('🗑️ Removed from favorites')
-  }
 
   const shakeTheOrb = () => {
     setIsShakingOrb(true)
@@ -537,13 +489,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
             copyQuestion(currentQuestion)
           }
           break
-        case 's':
-        case 'S':
-          e.preventDefault()
-          if (currentQuestion) {
-            toggleFavorite(currentQuestion)
-          }
-          break
         case 'r':
         case 'R':
           e.preventDefault()
@@ -560,7 +505,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
 
     window.addEventListener('keydown', handleGlobalKeyDown)
     return () => window.removeEventListener('keydown', handleGlobalKeyDown)
-  }, [questions, currentQuestion, prevQuestion, nextQuestion, copyQuestion, toggleFavorite, generateQuestions, resetForm, isGenerating])
+  }, [questions, currentQuestion, prevQuestion, nextQuestion, copyQuestion, generateQuestions, resetForm, isGenerating])
 
   const animationProps = animationsEnabled 
     ? { initial: { opacity: 0, y: -20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.6 } }
@@ -1129,94 +1074,30 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         </Button>
                       </div>
 
-                      <div className="flex flex-wrap gap-3 justify-center pt-2" role="group" aria-label="Question actions">
-                        <Button
-                          variant="outline"
-                          size="lg"
-                          onClick={() => copyQuestion(currentQuestion)}
-                          className="text-lg py-6 px-6 border-2 focus:ring-4 focus:ring-ring focus:ring-offset-2"
-                          aria-label={copiedId === currentQuestion.id ? 'Copied to clipboard' : 'Copy question to clipboard'}
-                        >
-                          {copiedId === currentQuestion.id ? (
-                            <Check size={22} className="text-green-500 mr-2" aria-hidden="true" />
-                          ) : (
-                            <Copy size={22} className="mr-2" aria-hidden="true" />
-                          )}
-                          {copiedId === currentQuestion.id ? 'Copied!' : 'Copy'}
-                          <kbd className="ml-2 px-1.5 py-0.5 bg-muted rounded text-sm font-mono hidden sm:inline" aria-hidden="true">C</kbd>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="lg"
-                          onClick={() => toggleFavorite(currentQuestion)}
-                          className="text-lg py-6 px-6 border-2 focus:ring-4 focus:ring-ring focus:ring-offset-2"
-                          aria-label={currentQuestion.isFavorite ? 'Remove from saved questions' : 'Save question to favorites'}
-                          aria-pressed={currentQuestion.isFavorite}
-                        >
-                          <Heart 
-                            size={22} 
-                            weight={currentQuestion.isFavorite ? 'fill' : 'regular'}
-                            className={currentQuestion.isFavorite ? 'text-pink-500 mr-2' : 'mr-2'}
-                            aria-hidden="true"
-                          />
-                          {currentQuestion.isFavorite ? 'Saved!' : 'Save'}
-                          <kbd className="ml-2 px-1.5 py-0.5 bg-muted rounded text-sm font-mono hidden sm:inline" aria-hidden="true">S</kbd>
-                        </Button>
-                      </div>
+
                     </motion.div>
                   )}
                 </AnimatePresence>
               </Card>
 
-              {(savedQuestions ?? []).length > 0 && (
-                <Card className="p-6 md:p-8 bg-card border-2 border-border relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-500 via-accent to-pink-500" aria-hidden="true" />
-                  
-                  <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
-                    <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
-                      <span className="text-3xl" aria-hidden="true">💖</span>
-                      Saved Questions ({(savedQuestions ?? []).length})
-                    </h2>
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      onClick={exportSavedQuestions}
-                      className="text-lg py-5 px-6 border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
-                    >
-                      <Export size={22} className="mr-2" aria-hidden="true" />
-                      Export
-                    </Button>
-                  </div>
-                  <div className="space-y-3" role="list" aria-label="Saved questions">
-                    {(savedQuestions ?? []).map((question) => (
-                      <div
-                        key={question.id}
-                        className="flex items-start gap-4 p-5 rounded-xl bg-muted/40 border-2 border-border group"
-                        role="listitem"
-                      >
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2 flex-wrap">
-                            <span className="text-sm font-bold text-primary bg-primary/20 px-3 py-1 rounded-full">
-                              {question.vibe || '🎯 Mixed'}
-                            </span>
-                          </div>
-                          <p className="text-foreground text-lg leading-relaxed font-medium">{question.text}</p>
-                        </div>
-                        <button
-                          onClick={() => removeSavedQuestion(question.id)}
-                          className="text-muted-foreground hover:text-destructive transition-colors p-2 focus:outline-none focus:ring-2 focus:ring-ring rounded-lg"
-                          aria-label={`Remove saved question: ${question.text.substring(0, 30)}...`}
-                        >
-                          <X size={24} aria-hidden="true" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              )}
-
               <Card className="p-6 bg-card border-2 border-border">
                 <div className="flex flex-wrap gap-3 justify-center">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() => currentQuestion && copyQuestion(currentQuestion)}
+                    disabled={!currentQuestion}
+                    className="text-lg py-6 px-6 border-2 focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                    aria-label={copiedId === currentQuestion?.id ? 'Copied to clipboard' : 'Copy question to clipboard'}
+                  >
+                    {copiedId === currentQuestion?.id ? (
+                      <Check size={22} className="text-green-500 mr-2" aria-hidden="true" />
+                    ) : (
+                      <Copy size={22} className="mr-2" aria-hidden="true" />
+                    )}
+                    {copiedId === currentQuestion?.id ? 'Copied!' : 'Copy'}
+                    <kbd className="ml-2 px-1.5 py-0.5 bg-muted rounded text-sm font-mono hidden sm:inline" aria-hidden="true">C</kbd>
+                  </Button>
                   <Button
                     variant="outline"
                     size="lg"
@@ -1226,7 +1107,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     aria-label="Shuffle all questions and generate new ones"
                   >
                     <ArrowClockwise size={22} className="mr-2" aria-hidden="true" />
-                    🎲 Shuffle All
+                    Shuffle All
                     <kbd className="ml-2 px-1.5 py-0.5 bg-muted rounded text-sm font-mono hidden sm:inline" aria-hidden="true">R</kbd>
                   </Button>
                   <Button
