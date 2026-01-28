@@ -213,6 +213,8 @@ export default function App() {
   const [focusAreas, setFocusAreas] = useState<string[]>([])
   const [otherFocusArea, setOtherFocusArea] = useState('')
   const [experience, setExperience] = useState('')
+  const [audience, setAudience] = useState('')
+  const [livedExperience, setLivedExperience] = useState('')
   const [questionCount, setQuestionCount] = useState(3)
   const [questions, setQuestions] = useState<Question[]>([])
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
@@ -290,7 +292,9 @@ export default function App() {
     setFocusAreas([])
     setOtherFocusArea('')
     setExperience('')
-    setQuestionCount(5)
+    setAudience('')
+    setLivedExperience('')
+    setQuestionCount(3)
     setQuestions([])
     setCurrentQuestionIndex(0)
     setQuickAnswer(null)
@@ -353,7 +357,9 @@ export default function App() {
 Context:
 - Topics: ${topics.length > 0 ? topics.join(', ') : 'accessibility, inclusion, disability in tech, universal design, assistive technology'}
 - Guest's work area: ${focusAreasText}
-- Experience: ${experience || 'not specified'}
+- Years in accessibility/inclusion work: ${experience || 'not specified'}
+- Audience type: ${audience || 'general / mixed'}
+- Guest has lived experience with disability: ${livedExperience || 'unknown'}
 
 Rules:
 - Write at a 9th grade reading level or lower
@@ -366,6 +372,10 @@ Rules:
 - Keep each question to 1-2 sentences max
 - CRITICAL: Generate an even mix of vibes: ${vibeDistribution}. Each vibe type MUST be represented.
 - Randomize the order of vibes - do NOT group same vibes together
+- If guest has lived experience, include questions that honor their perspective as an expert
+- If audience is technical (developers/designers), include questions about practical implementation
+- If audience is leaders, include questions about culture and organizational change
+- If guest is new to the field, ask about their journey and what drew them to this work
 
 IMPORTANT - Be respectful and inclusive:
 - NEVER use offensive, patronizing, or insensitive language about disability
@@ -396,7 +406,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
     } finally {
       setIsGenerating(false)
     }
-  }, [focusAreas, otherFocusArea, questionCount, topics, experience, soundEnabled, sounds, reshuffleTopics])
+  }, [focusAreas, otherFocusArea, questionCount, topics, experience, audience, livedExperience, soundEnabled, sounds, reshuffleTopics])
 
   const handleGenerateClick = () => {
     generateQuestions()
@@ -794,7 +804,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                       <Label htmlFor="question-count-slider" className="text-foreground mb-3 block text-lg font-semibold">
-                        🔢 How Many Questions? <span className="text-accent font-bold text-xl">{questionCount}</span>
+                        🔢 Number of Questions <span className="text-accent font-bold text-xl">{questionCount}</span>
                       </Label>
                       <div className="px-2 py-4">
                         <Slider
@@ -819,21 +829,57 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
 
                     <div>
                       <Label htmlFor="experience" className="text-foreground mb-3 block text-lg font-semibold">
-                        ⏳ Years of Experience
+                        ⏳ Years in Accessibility/Inclusion Work
                       </Label>
                       <Select value={experience} onValueChange={setExperience}>
                         <SelectTrigger id="experience" className="bg-input border-2 border-border text-foreground text-lg py-6">
                           <SelectValue placeholder="Select level..." />
                         </SelectTrigger>
                         <SelectContent className="bg-card border-2 border-border">
-                          <SelectItem value="0-2" className="text-lg py-3">🌱 Beginner (0-2 years)</SelectItem>
+                          <SelectItem value="0-2" className="text-lg py-3">🌱 New to it (0-2 years)</SelectItem>
                           <SelectItem value="3-5" className="text-lg py-3">🌿 Growing (3-5 years)</SelectItem>
-                          <SelectItem value="6-10" className="text-lg py-3">🌳 Experienced (6-10 years)</SelectItem>
+                          <SelectItem value="6-10" className="text-lg py-3">🌳 Seasoned (6-10 years)</SelectItem>
                           <SelectItem value="11-15" className="text-lg py-3">🏆 Expert (11-15 years)</SelectItem>
                           <SelectItem value="15+" className="text-lg py-3">⭐ Veteran (15+ years)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="audience" className="text-foreground mb-3 block text-lg font-semibold">
+                      🎯 Who's the Audience?
+                    </Label>
+                    <Select value={audience} onValueChange={setAudience}>
+                      <SelectTrigger id="audience" className="bg-input border-2 border-border text-foreground text-lg py-6">
+                        <SelectValue placeholder="Select audience..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card border-2 border-border">
+                        <SelectItem value="general" className="text-lg py-3">🌍 General / Mixed</SelectItem>
+                        <SelectItem value="developers" className="text-lg py-3">💻 Developers & Engineers</SelectItem>
+                        <SelectItem value="designers" className="text-lg py-3">🎨 Designers & UX</SelectItem>
+                        <SelectItem value="leaders" className="text-lg py-3">👔 Leaders & Managers</SelectItem>
+                        <SelectItem value="advocates" className="text-lg py-3">📣 Advocates & Allies</SelectItem>
+                        <SelectItem value="students" className="text-lg py-3">📚 Students & Newcomers</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="lived-experience" className="text-foreground mb-3 block text-lg font-semibold">
+                      💜 Guest Has Lived Experience with Disability?
+                    </Label>
+                    <Select value={livedExperience} onValueChange={setLivedExperience}>
+                      <SelectTrigger id="lived-experience" className="bg-input border-2 border-border text-foreground text-lg py-6">
+                        <SelectValue placeholder="Select..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card border-2 border-border">
+                        <SelectItem value="yes" className="text-lg py-3">✅ Yes</SelectItem>
+                        <SelectItem value="no" className="text-lg py-3">❌ No</SelectItem>
+                        <SelectItem value="prefer-not" className="text-lg py-3">🤐 Prefer not to say</SelectItem>
+                        <SelectItem value="unknown" className="text-lg py-3">❓ Unknown</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="flex gap-3">
