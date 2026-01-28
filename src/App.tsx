@@ -479,6 +479,10 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
   }, [focusAreas, otherFocusArea, questionCount, topics, experience, audience, soundEnabled, sounds, reshuffleTopics, previousQuestions, setPreviousQuestions])
 
   const handleGenerateClick = () => {
+    toast(mysticalGreeting, {
+      duration: 3000,
+      className: 'bg-card border-2 border-primary/50 text-primary font-medium text-lg',
+    })
     generateQuestions()
   }
 
@@ -665,16 +669,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" aria-hidden="true" />
 
                 <div className="space-y-6">
-                  <motion.p
-                    key={greetingKey}
-                    initial={animationsEnabled ? { opacity: 0, y: -10 } : {}}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={animationsEnabled ? { duration: 0.5 } : { duration: 0 }}
-                    className="text-center text-lg text-primary font-medium italic pt-2"
-                  >
-                    {mysticalGreeting}
-                  </motion.p>
-                  
                   <div>
                     <Label htmlFor="topics" className="text-foreground mb-3 block text-lg font-semibold">
                       🌟 Topics to explore
