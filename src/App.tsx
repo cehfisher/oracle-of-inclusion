@@ -125,6 +125,21 @@ const MYSTICAL_LOADING_PHRASES = [
   "The cosmic hamster is running... 🐹",
 ]
 
+const MYSTIC_THINKING_QUESTIONS = [
+  "What stories deserve to be heard?",
+  "Which barriers shall we dissolve today?",
+  "What wisdom lies in lived experience?",
+  "How might we design for everyone?",
+  "What does true belonging look like?",
+  "Where does accessibility meet joy?",
+  "What assumptions need questioning?",
+  "How do we center those most affected?",
+  "What futures are we building together?",
+  "How can technology serve humanity?",
+  "What does inclusive innovation mean?",
+  "Where is the magic in accessibility?",
+]
+
 const MYSTICAL_GREETINGS = [
   "The oracle senses your need ✨",
   "Your questions await revelation ✨",
@@ -243,6 +258,7 @@ export default function App() {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [loadingPhrase, setLoadingPhrase] = useState('')
   const [loadingProgress, setLoadingProgress] = useState(0)
+  const [thinkingQuestions, setThinkingQuestions] = useState<string[]>([])
   const [isShuffling, setIsShuffling] = useState(false)
   const [soundEnabled, setSoundEnabled] = useKV<boolean>('oracle-sound-enabled-v2', true)
   const [animationsEnabled, setAnimationsEnabled] = useKV<boolean>('oracle-animations-enabled-v2', true)
@@ -283,13 +299,29 @@ export default function App() {
   useEffect(() => {
     if (isGenerating) {
       setLoadingProgress(0)
-      const interval = setInterval(() => {
+      setThinkingQuestions([])
+      
+      const shuffled = shuffleArray([...MYSTIC_THINKING_QUESTIONS])
+      let questionIndex = 0
+      
+      const questionInterval = setInterval(() => {
+        if (questionIndex < 4) {
+          setThinkingQuestions(prev => [...prev, shuffled[questionIndex]])
+          questionIndex++
+        }
+      }, 800)
+      
+      const progressInterval = setInterval(() => {
         setLoadingProgress(prev => {
           if (prev >= 90) return prev
           return prev + Math.random() * 15
         })
       }, 300)
-      return () => clearInterval(interval)
+      
+      return () => {
+        clearInterval(questionInterval)
+        clearInterval(progressInterval)
+      }
     } else {
       setLoadingProgress(100)
     }
@@ -850,12 +882,32 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                       ✨
                     </motion.div>
                     <motion.p 
-                      className="text-xl text-primary font-medium mb-4"
+                      className="text-xl text-primary font-medium mb-6"
                       animate={animationsEnabled ? { opacity: [0.7, 1, 0.7] } : {}}
                       transition={{ duration: 1.5, repeat: Infinity }}
                     >
                       {loadingPhrase}
                     </motion.p>
+                    
+                    <div className="mb-6 p-4 rounded-xl bg-gradient-to-br from-primary/10 via-accent/5 to-secondary/10 border border-primary/20 max-w-md mx-auto">
+                      <p className="text-sm text-muted-foreground mb-3 italic">The oracle ponders...</p>
+                      <div className="space-y-2 min-h-[120px]">
+                        <AnimatePresence>
+                          {thinkingQuestions.map((question, index) => (
+                            <motion.p
+                              key={question}
+                              initial={animationsEnabled ? { opacity: 0, x: -10 } : {}}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={animationsEnabled ? { duration: 0.4, delay: index * 0.1 } : { duration: 0 }}
+                              className="text-base text-foreground/80 font-medium"
+                            >
+                              "{question}"
+                            </motion.p>
+                          ))}
+                        </AnimatePresence>
+                      </div>
+                    </div>
+                    
                     <div className="w-full max-w-xs mx-auto h-3 bg-muted rounded-full overflow-hidden" role="progressbar" aria-valuenow={Math.round(loadingProgress)} aria-valuemin={0} aria-valuemax={100}>
                       <motion.div 
                         className="h-full bg-gradient-to-r from-primary via-accent to-primary rounded-full"
