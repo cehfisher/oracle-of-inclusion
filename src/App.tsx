@@ -830,7 +830,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         onChange={(e) => setTopicInput(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder="Type a topic..."
-                        className="bg-input border-2 border-border text-foreground placeholder:text-foreground/50 text-lg py-6"
+                        className="bg-input border-2 border-border text-foreground placeholder:text-foreground/50 placeholder:font-semibold text-lg font-semibold py-6"
                         aria-describedby="topics-hint"
                       />
                       <Button 
@@ -850,7 +850,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         <Badge 
                           key={topic} 
                           variant="secondary"
-                          className="pl-4 pr-2 py-2 flex items-center gap-2 bg-primary/20 text-primary border-2 border-primary/30 text-base font-medium"
+                          className="pl-4 pr-2 py-2 flex items-center gap-2 bg-primary/20 text-primary border-2 border-primary/30 text-lg font-semibold"
                           role="listitem"
                         >
                           {topic}
@@ -869,7 +869,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         <button
                           key={suggestion}
                           onClick={() => addTopic(suggestion)}
-                          className="text-lg px-4 py-2.5 rounded-full border-2 border-border text-foreground hover:border-primary hover:text-primary transition-all hover:bg-primary/10 font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+                          className="text-lg px-4 py-2.5 rounded-full border-2 border-border text-foreground hover:border-primary hover:text-primary transition-all hover:bg-primary/10 font-semibold focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
                         >
                           {suggestion}
                         </button>
@@ -895,7 +895,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                           aria-pressed={focusAreas.includes(area.id)}
                           aria-describedby={area.id === 'other' ? 'other-focus-hint' : undefined}
                         >
-                          <span className="text-lg font-medium">{area.label}</span>
+                          <span className="text-lg font-semibold">{area.label}</span>
                           {focusAreas.includes(area.id) && (
                             <span className="text-primary text-xl" aria-hidden="true">✓</span>
                           )}
@@ -911,7 +911,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                           value={otherFocusArea}
                           onChange={(e) => setOtherFocusArea(e.target.value)}
                           placeholder="Describe your focus area..."
-                          className="bg-input border-2 border-border text-foreground placeholder:text-foreground/50 text-lg py-6"
+                          className="bg-input border-2 border-border text-foreground placeholder:text-foreground/50 placeholder:font-semibold text-lg font-semibold py-6"
                         />
                         <p id="other-focus-hint" className="sr-only">When selected, you can describe your custom focus area</p>
                       </div>
@@ -924,15 +924,15 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         ⏳ Digital accessibility experience
                       </Label>
                       <Select value={experience} onValueChange={setExperience}>
-                        <SelectTrigger id="experience" className="bg-input border-2 border-border text-foreground text-lg py-6 w-full">
+                        <SelectTrigger id="experience" className="bg-input border-2 border-border text-foreground text-lg font-semibold py-6 w-full [&_[data-placeholder]]:text-foreground/50 [&_[data-placeholder]]:font-semibold [&_svg]:size-5 [&_svg]:text-foreground">
                           <SelectValue placeholder="Select level..." />
                         </SelectTrigger>
                         <SelectContent className="bg-card border-2 border-border min-w-[280px]">
-                          <SelectItem value="0-2" className="text-lg py-3">🌱 New to it (0-2 years)</SelectItem>
-                          <SelectItem value="3-5" className="text-lg py-3">🌿 Growing (3-5 years)</SelectItem>
-                          <SelectItem value="6-10" className="text-lg py-3">🌳 Seasoned (6-10 years)</SelectItem>
-                          <SelectItem value="11-15" className="text-lg py-3">🏆 Expert (11-15 years)</SelectItem>
-                          <SelectItem value="15+" className="text-lg py-3">⭐ Veteran (15+ years)</SelectItem>
+                          <SelectItem value="0-2" className="text-lg py-3 font-semibold">🌱 New to it (0-2 years)</SelectItem>
+                          <SelectItem value="3-5" className="text-lg py-3 font-semibold">🌿 Growing (3-5 years)</SelectItem>
+                          <SelectItem value="6-10" className="text-lg py-3 font-semibold">🌳 Seasoned (6-10 years)</SelectItem>
+                          <SelectItem value="11-15" className="text-lg py-3 font-semibold">🏆 Expert (11-15 years)</SelectItem>
+                          <SelectItem value="15+" className="text-lg py-3 font-semibold">⭐ Veteran (15+ years)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -942,16 +942,16 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         👥 Who's the audience?
                       </Label>
                       <Select value={audience} onValueChange={setAudience}>
-                        <SelectTrigger id="audience" className="bg-input border-2 border-border text-foreground text-lg py-6 w-full">
+                        <SelectTrigger id="audience" className="bg-input border-2 border-border text-foreground text-lg font-semibold py-6 w-full [&_[data-placeholder]]:text-foreground/50 [&_[data-placeholder]]:font-semibold [&_svg]:size-5 [&_svg]:text-foreground">
                           <SelectValue placeholder="Select audience..." />
                         </SelectTrigger>
                         <SelectContent className="bg-card border-2 border-border min-w-[280px]">
-                          <SelectItem value="general" className="text-lg py-3">🌍 General / mixed</SelectItem>
-                          <SelectItem value="developers" className="text-lg py-3">💻 Developers & engineers</SelectItem>
-                          <SelectItem value="designers" className="text-lg py-3">🎨 Designers & UX</SelectItem>
-                          <SelectItem value="leaders" className="text-lg py-3">👔 Leaders & managers</SelectItem>
-                          <SelectItem value="advocates" className="text-lg py-3">📣 Advocates & allies</SelectItem>
-                          <SelectItem value="students" className="text-lg py-3">📚 Students & newcomers</SelectItem>
+                          <SelectItem value="general" className="text-lg py-3 font-semibold">🌍 General / mixed</SelectItem>
+                          <SelectItem value="developers" className="text-lg py-3 font-semibold">💻 Developers & engineers</SelectItem>
+                          <SelectItem value="designers" className="text-lg py-3 font-semibold">🎨 Designers & UX</SelectItem>
+                          <SelectItem value="leaders" className="text-lg py-3 font-semibold">👔 Leaders & managers</SelectItem>
+                          <SelectItem value="advocates" className="text-lg py-3 font-semibold">📣 Advocates & allies</SelectItem>
+                          <SelectItem value="students" className="text-lg py-3 font-semibold">📚 Students & newcomers</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
