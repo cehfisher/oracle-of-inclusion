@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Copy, ArrowClockwise, Check, Plus, X, SpeakerHigh, SpeakerSlash, Sparkle, ArrowCounterClockwise, Keyboard, LinkedinLogo } from '@phosphor-icons/react'
+import { Copy, ArrowClockwise, Check, Plus, X, SpeakerHigh, SpeakerSlash, Sparkle, ArrowCounterClockwise, Keyboard, Star } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -101,8 +101,26 @@ const useSound = () => {
       osc.stop(now + i * 0.12 + 0.5)
     })
   }
+
+  const playFavorite = () => {
+    const ctx = getContext()
+    const now = ctx.currentTime
+    const notes = [880, 1100, 1320]
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.frequency.value = freq
+      osc.type = 'sine'
+      gain.gain.setValueAtTime(0.08, now + i * 0.1)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.3)
+      osc.start(now + i * 0.1)
+      osc.stop(now + i * 0.1 + 0.3)
+    })
+  }
   
-  return { playTwinkle, playSparkle, playShimmer, playMagic }
+  return { playTwinkle, playSparkle, playShimmer, playMagic, playFavorite }
 }
 
 interface Question {
@@ -112,24 +130,24 @@ interface Question {
 }
 
 const MYSTICAL_LOADING_PHRASES = [
-  "Consulting the accessibility spirits... 👻",
-  "Reading the WCAG tea leaves... 🍵",
-  "Channeling the wisdom of the ancients... 📜",
-  "The cosmic energy is warming up... 🔥",
-  "Summoning inclusive insights... ✨",
-  "Decoding the cosmic keyboard shortcuts... ⌨️",
-  "The oracle stirs from its slumber... 🌙",
-  "Aligning the stars of inclusion... ⭐",
-  "Brewing a potion of perspective... 🧪",
-  "The crystals are vibrating with knowledge... 💎",
+  "The spirits are whispering... 👻",
+  "Gazing into the cosmic void... 🌌",
+  "The mists are parting... 🌫️",
+  "Ancient wisdom stirs... 📜",
+  "The veil grows thin... ✨",
+  "Channeling ethereal knowledge... 🔮",
+  "The stars align... ⭐",
+  "Seeking hidden truths... 🌙",
+  "The crystals resonate... 💎",
+  "Divining your path... 🃏",
 ]
 
 const MYSTICAL_GREETINGS = [
-  "I know just what to ask... 🌟",
-  "The right questions await... ✨",
-  "Let me find the perfect questions... 🔮",
-  "I sense the questions you need... 🌙",
-  "The questions are forming... ⭐",
+  "The oracle senses your need... 🌟",
+  "Your questions await revelation... ✨",
+  "The cosmos whispers your queries... 🔮",
+  "Destiny stirs within the crystal... 🌙",
+  "The ancient spirits are listening... ⭐",
 ]
 
 const getRandomGreeting = (): string => {
@@ -224,6 +242,7 @@ const KEYBOARD_SHORTCUTS = [
   { key: '←', action: 'Previous question' },
   { key: '→', action: 'Next question' },
   { key: 'C', action: 'Copy current question' },
+  { key: 'F', action: 'Toggle favorite' },
   { key: 'R', action: 'Shuffle all questions' },
   { key: 'Escape', action: 'Start over / Reset' },
   { key: '?', action: 'Show keyboard shortcuts' },
@@ -251,6 +270,8 @@ export default function App() {
   const [animationsEnabled, setAnimationsEnabled] = useKV<boolean>('oracle-animations-enabled', true)
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [showCelebration, setShowCelebration] = useState(false)
+  const [favorites, setFavorites] = useKV<string[]>('oracle-favorites', [])
+  const [previousQuestions, setPreviousQuestions] = useKV<string[]>('oracle-previous-questions', [])
   
   const [shuffledTopicSuggestions, setShuffledTopicSuggestions] = useState(() => shuffleArray(TOPIC_SUGGESTIONS))
   const [mysticalGreeting] = useState(() => getRandomGreeting())
@@ -309,6 +330,19 @@ export default function App() {
     )
   }
 
+  const toggleFavorite = useCallback((questionId: string) => {
+    const currentFavorites = favorites ?? []
+    const isFavorite = currentFavorites.includes(questionId)
+    if (isFavorite) {
+      setFavorites(currentFavorites.filter(id => id !== questionId))
+      toast.success('⭐ Removed from favorites')
+    } else {
+      setFavorites([...currentFavorites, questionId])
+      playSound(sounds.playFavorite)
+      toast.success('⭐ Added to favorites!')
+    }
+  }, [favorites, setFavorites, soundEnabled, sounds])
+
   const resetForm = useCallback(() => {
     setTopics([])
     setTopicInput('')
@@ -317,7 +351,7 @@ export default function App() {
     setExperience('')
     setAudience('')
 
-    setQuestionCount(3)
+    setQuestionCount(5)
     setQuestions([])
     setCurrentQuestionIndex(0)
     setQuickAnswer(null)
@@ -351,6 +385,9 @@ export default function App() {
           return `${count} ${vibe.split(' ')[1]}`
         }).join(', ')
 
+    const recentQuestions = previousQuestions ?? []
+    const avoidList = recentQuestions.slice(-50).join('\n- ')
+
     const prompt = spark.llmPrompt`Generate ${questionCount} simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
 
 Context:
@@ -359,6 +396,10 @@ Context:
 - Years in accessibility/inclusion work: ${experience || 'not specified'}
 - Audience type: ${audience || 'general / mixed'}
 
+${avoidList ? `IMPORTANT - Do NOT generate questions similar to these recently asked questions:
+- ${avoidList}
+
+Generate COMPLETELY DIFFERENT questions on new angles and perspectives.` : ''}
 
 Rules:
 - Write at a 9th grade reading level or lower
@@ -375,6 +416,7 @@ Rules:
 - If audience is technical (developers/designers), include questions about practical implementation
 - If audience is leaders, include questions about culture and organizational change
 - If guest is new to the field, ask about their journey and what drew them to this work
+- CRITICAL: Each question must be UNIQUE and different from all others - no repetition of themes or angles
 
 IMPORTANT - Be respectful and inclusive:
 - NEVER use offensive, patronizing, or insensitive language about disability
@@ -397,6 +439,10 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
         vibe: q.vibe || getRandomVibe()
       })))
       setQuestions(generatedQuestions)
+      
+      const newQuestionTexts = generatedQuestions.map(q => q.text)
+      setPreviousQuestions((prev) => [...(prev ?? []).slice(-100), ...newQuestionTexts])
+      
       setShowCelebration(true)
       setTimeout(() => setShowCelebration(false), 2000)
       playSound(sounds.playMagic)
@@ -406,7 +452,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
     } finally {
       setIsGenerating(false)
     }
-  }, [focusAreas, otherFocusArea, questionCount, topics, experience, audience, soundEnabled, sounds, reshuffleTopics])
+  }, [focusAreas, otherFocusArea, questionCount, topics, experience, audience, soundEnabled, sounds, reshuffleTopics, previousQuestions, setPreviousQuestions])
 
   const handleGenerateClick = () => {
     generateQuestions()
@@ -425,6 +471,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
   }, [currentQuestionIndex])
 
   const currentQuestion = questions[currentQuestionIndex]
+  const isCurrentFavorite = currentQuestion && (favorites ?? []).includes(currentQuestion.id)
 
   const copyQuestion = useCallback(async (question: Question) => {
     const textToCopy = `${question.text}\n\n${question.vibe}`
@@ -475,6 +522,13 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
             copyQuestion(currentQuestion)
           }
           break
+        case 'f':
+        case 'F':
+          e.preventDefault()
+          if (currentQuestion) {
+            toggleFavorite(currentQuestion.id)
+          }
+          break
         case 'r':
         case 'R':
           e.preventDefault()
@@ -491,7 +545,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
 
     window.addEventListener('keydown', handleGlobalKeyDown)
     return () => window.removeEventListener('keydown', handleGlobalKeyDown)
-  }, [questions, currentQuestion, prevQuestion, nextQuestion, copyQuestion, generateQuestions, resetForm, isGenerating])
+  }, [questions, currentQuestion, prevQuestion, nextQuestion, copyQuestion, generateQuestions, resetForm, isGenerating, toggleFavorite])
 
   const animationProps = animationsEnabled 
     ? { initial: { opacity: 0, y: -20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.6 } }
@@ -719,10 +773,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
             >
               <Card className="p-6 md:p-8 bg-card border-2 border-border mystic-glow relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" aria-hidden="true" />
-                
-                <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6 text-center">
-                  Consult the Oracle
-                </h2>
 
                 <div className="space-y-6">
                   <div>
@@ -1008,6 +1058,11 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         <span className="text-lg font-bold text-primary bg-primary/20 px-4 py-2 rounded-full">
                           {currentQuestion.vibe}
                         </span>
+                        {isCurrentFavorite && (
+                          <span className="text-lg font-bold text-yellow-400 bg-yellow-400/20 px-4 py-2 rounded-full">
+                            ⭐ Favorite
+                          </span>
+                        )}
                       </div>
                       
                       <div className="p-6 rounded-xl bg-gradient-to-br from-primary/15 via-accent/10 to-secondary/15 border-2 border-primary/30">
@@ -1047,6 +1102,28 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
 
               <Card className="p-6 bg-card border-2 border-border">
                 <div className="flex flex-wrap gap-3 justify-center">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() => currentQuestion && toggleFavorite(currentQuestion.id)}
+                    disabled={!currentQuestion}
+                    className={`text-lg py-6 px-6 border-2 focus:ring-4 focus:ring-ring focus:ring-offset-2 ${
+                      isCurrentFavorite 
+                        ? 'border-yellow-400 text-yellow-400 bg-yellow-400/10 hover:bg-yellow-400/20' 
+                        : ''
+                    }`}
+                    aria-label={isCurrentFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                    aria-pressed={isCurrentFavorite}
+                  >
+                    <Star 
+                      size={22} 
+                      className={`mr-2 ${isCurrentFavorite ? 'text-yellow-400' : ''}`} 
+                      weight={isCurrentFavorite ? 'fill' : 'regular'}
+                      aria-hidden="true" 
+                    />
+                    {isCurrentFavorite ? 'Favorited' : 'Favorite'}
+                    <kbd className="ml-2 px-1.5 py-0.5 bg-muted rounded text-sm font-mono hidden sm:inline" aria-hidden="true">F</kbd>
+                  </Button>
                   <Button
                     variant="outline"
                     size="lg"
@@ -1106,11 +1183,10 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
             href="https://www.linkedin.com/in/cariefisher/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-primary hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded-lg px-3 py-2"
-            aria-label="Reach out on LinkedIn with suggestions or questions (opens in new tab)"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground/70 hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded px-2 py-1"
+            aria-label="Reach out on LinkedIn (opens in new tab)"
           >
-            <LinkedinLogo size={24} aria-hidden="true" />
-            <span className="text-base font-medium">Suggestions? Reach out on LinkedIn</span>
+            Suggestions? Reach out
           </a>
         </motion.footer>
       </div>
