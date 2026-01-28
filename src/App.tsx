@@ -127,40 +127,40 @@ const MYSTICAL_LOADING_PHRASES = [
 
 const MYSTICAL_GREETINGS = [
   "The oracle senses your need ✨",
-  "Your questions await revelation 🌟",
+  "Your questions await revelation ✨",
   "The cosmos whispers your queries 🌙",
   "Destiny stirs within the crystal 💎",
   "The ancient spirits are listening ⭐",
-  "The veil between worlds grows thin 🌌",
+  "The veil between worlds grows thin ✨",
   "Wisdom flows through the ether ✨",
   "The stars align in your favor 💫",
-  "Ancient knowledge awakens 🌟",
-  "The mystic currents guide you 🌊",
-  "Celestial forces gather 🌟",
+  "Ancient knowledge awakens ✨",
+  "The mystic currents guide you ✨",
+  "Celestial forces gather ✨",
   "Sacred questions find their voice ✨",
   "The crystal shimmers with insight 💎",
   "Ethereal whispers draw near 🌙",
   "Infinite wisdom awaits discovery ⭐",
   "Arcane energies converge ✨",
-  "The universe bends to listen 🌌",
-  "Stardust settles upon your path 🌠",
-  "The cosmic library opens for you 📚",
+  "The universe bends to listen ✨",
+  "Stardust settles upon your path 💫",
+  "The cosmic library opens for you ✨",
   "Mystery unfolds before you ✨",
-  "The astral winds carry your intent 🍃",
+  "The astral winds carry your intent ✨",
   "Moonlight illuminates hidden truths 🌙",
-  "The sacred scrolls unfurl 📜",
+  "The sacred scrolls unfurl ✨",
   "Enchanted wisdom stirs 🪄",
-  "The constellation of answers forms 🌟",
-  "Timeless secrets await sharing ⏳",
-  "The aurora of insight appears 🌈",
-  "Mystic fog parts to reveal clarity 🌫️",
-  "The enchanted realm welcomes you 🏰",
-  "Cosmic tides flow in your direction 🌊",
+  "The constellation of answers forms ✨",
+  "Timeless secrets await sharing ✨",
+  "The aurora of insight appears ✨",
+  "Mystic fog parts to reveal clarity ✨",
+  "The enchanted realm welcomes you ✨",
+  "Cosmic tides flow in your direction ✨",
   "The starlit path reveals itself ⭐",
   "Ancient runes glow with meaning ✨",
-  "The celestial choir hums softly 🎵",
-  "Twilight magic awakens 🌆",
-  "The universe prepares its gifts 🎁",
+  "The celestial choir hums softly ✨",
+  "Twilight magic awakens ✨",
+  "The universe prepares its gifts ✨",
 ]
 
 const getRandomGreeting = (): string => {
@@ -585,7 +585,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           <h1 className="text-4xl md:text-6xl font-bold text-foreground tracking-tight mb-3" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
             Oracle of Inclusion
           </h1>
-          <p className="text-foreground text-lg md:text-xl mb-2">
+          <p className="text-muted-foreground text-lg md:text-xl mb-8">
             The path to understanding begins with the right question...
           </p>
           <div className="flex justify-center items-center gap-3 flex-wrap mb-6">
@@ -637,7 +637,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                   <div>
                     <motion.p 
                       key={greetingKey}
-                      className="text-primary text-xl md:text-2xl font-semibold mb-4 text-center"
+                      className="text-primary text-2xl md:text-3xl font-semibold mb-4 text-center"
                       initial={animationsEnabled ? { opacity: 0, scale: 0.9 } : {}}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.4, type: "spring" }}
