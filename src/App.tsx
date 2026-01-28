@@ -622,8 +622,8 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
             </div>
           </div>
         </motion.header>
+        </motion.header>
 
-        <main id="main-content" role="main">
           {questions.length === 0 && !isShuffling ? (
             <motion.div
               initial={animationsEnabled ? { opacity: 0, y: 20 } : {}}
