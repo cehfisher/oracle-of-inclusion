@@ -438,7 +438,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
       setPreviousQuestions((prev) => [...(prev ?? []).slice(-100), ...newQuestionTexts])
       
       playSound(sounds.playMagic)
-      toast.success('✨ The oracle has spoken!')
     } catch {
       toast.error('The oracle needs a moment... Please try again.')
     } finally {
