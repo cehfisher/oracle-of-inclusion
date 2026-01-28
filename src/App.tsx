@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Copy, ArrowsClockwise, Check, Plus, X, SpeakerHigh, SpeakerSlash, Sparkle, Keyboard, ArrowCounterClockwise } from '@phosphor-icons/react'
+import { Copy, ArrowsClockwise, Check, Plus, X, SpeakerHigh, SpeakerSlash, Sparkle, Keyboard, ArrowCounterClockwise, Moon, Sun } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -297,29 +297,31 @@ const FOCUS_AREAS = [
 ]
 
 const MYSTICAL_8BALL_RESPONSES = [
-  { text: "✨ It is certain! ✨", type: "yes" },
-  { text: "🌟 Without a doubt! 🌟", type: "yes" },
-  { text: "💫 You may rely on it! 💫", type: "yes" },
-  { text: "⭐ Yes, definitely! ⭐", type: "yes" },
-  { text: "🔮 As I see it, yes! 🔮", type: "yes" },
-  { text: "✨ Most likely! ✨", type: "yes" },
-  { text: "🌈 Outlook good! 🌈", type: "yes" },
-  { text: "💖 Signs point to yes! 💖", type: "yes" },
-  { text: "🎯 Absolutely! 🎯", type: "yes" },
-  { text: "🌟 The stars say YES! 🌟", type: "yes" },
-  { text: "🌙 Don't count on it... 🌙", type: "no" },
-  { text: "🌒 My reply is no 🌒", type: "no" },
-  { text: "👻 My sources say no 👻", type: "no" },
-  { text: "🌑 Outlook not so good 🌑", type: "no" },
-  { text: "😬 Very doubtful... 😬", type: "no" },
-  { text: "❌ The spirits shake their heads ❌", type: "no" },
-  { text: "🎭 Reply hazy, try again! 🎭", type: "maybe" },
-  { text: "🤔 Ask again later... 🤔", type: "maybe" },
-  { text: "🙊 Better not tell you now 🙊", type: "maybe" },
-  { text: "🌀 Cannot predict now 🌀", type: "maybe" },
-  { text: "🧘 Concentrate and ask again 🧘", type: "maybe" },
-  { text: "🎲 The fates are undecided 🎲", type: "maybe" },
-  { text: "🌫️ The mists obscure the answer 🌫️", type: "maybe" },
+  { text: "✨ Oh absolutely, bestie! ✨", type: "yes" },
+  { text: "🌟 That's a hard yes from the cosmos! 🌟", type: "yes" },
+  { text: "💫 The universe just gave you a standing ovation! 💫", type: "yes" },
+  { text: "⭐ Yes! Now go touch grass to celebrate! ⭐", type: "yes" },
+  { text: "🔮 Big yes energy detected! 🔮", type: "yes" },
+  { text: "✨ The vibes are immaculate - YES! ✨", type: "yes" },
+  { text: "🌈 Green light! Full send! 🌈", type: "yes" },
+  { text: "💖 The spirits are literally cheering! 💖", type: "yes" },
+  { text: "🎯 100% certified yes! 🎯", type: "yes" },
+  { text: "🌟 Even my skeptical ghost agrees - YES! 🌟", type: "yes" },
+  { text: "🌙 That's gonna be a no from the moon... 🌙", type: "no" },
+  { text: "🌒 The spirits just laughed nervously 🌒", type: "no" },
+  { text: "👻 My ghost consultant said 'lol no' 👻", type: "no" },
+  { text: "🌑 Yikes... that's a cosmic nope 🌑", type: "no" },
+  { text: "😬 The universe left you on read... 😬", type: "no" },
+  { text: "❌ Hard pass from the ethereal realm ❌", type: "no" },
+  { text: "🙅 The ancestors are shaking their heads 🙅", type: "no" },
+  { text: "🎭 Plot twist: Maybe! Try again! 🎭", type: "maybe" },
+  { text: "🤔 The spirits are having a meeting about this... 🤔", type: "maybe" },
+  { text: "🙊 *mysterious silence* ...ask later! 🙊", type: "maybe" },
+  { text: "🌀 Error 404: Destiny not found 🌀", type: "maybe" },
+  { text: "🧘 The oracle is buffering... 🧘", type: "maybe" },
+  { text: "🎲 Flip a coin? Just kidding, ask again! 🎲", type: "maybe" },
+  { text: "🌫️ The WiFi to the spirit realm is spotty 🌫️", type: "maybe" },
+  { text: "🤷 Even the all-knowing oracle needs a moment 🤷", type: "maybe" },
 ]
 
 const getRandomResponse = () => {
@@ -355,6 +357,7 @@ export default function App() {
   const [showQuickOracle, setShowQuickOracle] = useState(false)
   const [soundEnabled, setSoundEnabled] = useKV<boolean>('oracle-sound-enabled', true)
   const [animationsEnabled, setAnimationsEnabled] = useKV<boolean>('oracle-animations-enabled', true)
+  const [darkMode, setDarkMode] = useKV<boolean>('oracle-dark-mode', false)
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [previousQuestions, setPreviousQuestions] = useKV<string[]>('oracle-previous-questions', [])
   
@@ -367,6 +370,14 @@ export default function App() {
     setMysticalGreeting(getRandomGreeting())
     setGreetingKey(prev => prev + 1)
   }, [])
+  
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [darkMode])
   
   const sounds = useSound()
   
@@ -454,6 +465,9 @@ export default function App() {
       ? focusAreasLabels.join(', ')
       : 'accessibility and inclusion in technology'
 
+    const hasCustomTopics = topics.length > 0
+    const hasCustomFocusAreas = focusAreas.length > 0
+
     const vibeDistribution = questionCount === 1 
       ? 'any vibe of your choice'
       : VIBE_TYPES.map((vibe, idx) => {
@@ -464,11 +478,19 @@ export default function App() {
     const recentQuestions = previousQuestions ?? []
     const avoidList = recentQuestions.slice(-50).join('\n- ')
 
+    const topicEmphasis = hasCustomTopics 
+      ? `CRITICAL PRIORITY - The user specifically selected these topics: ${topics.join(', ')}. At least ${Math.ceil(questionCount * 0.7)} of the ${questionCount} questions (70%+) MUST directly relate to one or more of these specific topics. These are the primary focus areas the user cares about most.`
+      : `Topics: accessibility, inclusion, disability in tech, universal design, assistive technology`
+
+    const focusAreaEmphasis = hasCustomFocusAreas
+      ? `CRITICAL PRIORITY - The guest works in: ${focusAreasText}. Tailor questions to their specific expertise. At least ${Math.ceil(questionCount * 0.6)} of the ${questionCount} questions (60%+) should connect to their professional focus areas.`
+      : `Guest's work area: accessibility and inclusion in technology (general)`
+
     const prompt = spark.llmPrompt`Generate ${questionCount} simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
 
 Context:
-- Topics: ${topics.length > 0 ? topics.join(', ') : 'accessibility, inclusion, disability in tech, universal design, assistive technology'}
-- Guest's work area: ${focusAreasText}
+${topicEmphasis}
+${focusAreaEmphasis}
 - Years in accessibility/inclusion work: ${experience || 'not specified'}
 - Audience type: ${audience || 'general / mixed'}
 
@@ -624,7 +646,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
     : {}
 
   const sparklePositions = useMemo(() => 
-    Array.from({ length: 20 }, (_, i) => ({
+    Array.from({ length: 40 }, (_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,
       top: `${Math.random() * 100}%`,
@@ -674,74 +696,106 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           {...animationProps}
           role="banner"
         >
-          <div className="flex justify-between items-start mb-4 flex-wrap gap-4">
+          <motion.div 
+            className="inline-block mb-4"
+            animate={animationsEnabled ? floatAnimation : {}}
+            transition={animationsEnabled ? { duration: 4, repeat: Infinity, ease: "easeInOut" } : {}}
+            aria-hidden="true"
+          >
+            <span className="text-7xl md:text-8xl">🔮</span>
+          </motion.div>
+          
+          <h1 className="text-4xl md:text-6xl font-bold text-foreground tracking-tight mb-3">
+            Oracle of Inclusion
+          </h1>
+          <p className="text-muted-foreground text-xl md:text-2xl mb-2">
+            "Ask and the wisdom shall be revealed..."
+          </p>
+          <motion.p 
+            key={greetingKey}
+            className="text-primary text-lg font-medium mb-6"
+            initial={animationsEnabled ? { opacity: 0, scale: 0.9 } : {}}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, type: "spring" }}
+          >
+            {mysticalGreeting}
+          </motion.p>
+
+          <div className="flex justify-center items-center gap-3 flex-wrap mb-6">
             <button
               onClick={() => setShowQuickOracle(!showQuickOracle)}
               className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
               aria-label="Toggle Magic 8-Ball for yes/no/maybe answers"
               aria-expanded={showQuickOracle}
             >
-              <span className="text-2xl" aria-hidden="true">🎱</span>
-              <span className="text-sm font-medium">Magic 8-Ball</span>
+              <span className="text-xl" aria-hidden="true">🎱</span>
+              <span className="text-sm font-medium">8-Ball</span>
             </button>
             
-            <div className="flex gap-4 flex-wrap">
-              <Dialog open={showShortcuts} onOpenChange={setShowShortcuts}>
-                <DialogTrigger asChild>
-                  <button
-                    className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
-                    aria-label="View keyboard shortcuts"
-                  >
-                    <Keyboard size={20} className="text-primary" aria-hidden="true" />
-                    <span className="text-sm font-medium">Keys</span>
-                  </button>
-                </DialogTrigger>
-                <DialogContent className="bg-card border-2 border-border">
-                  <DialogHeader>
-                    <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-                      <Keyboard size={28} className="text-primary" aria-hidden="true" />
-                      Keyboard Shortcuts
-                    </DialogTitle>
-                  </DialogHeader>
-                  <div className="mt-4 space-y-3" role="list" aria-label="Available keyboard shortcuts">
-                    {KEYBOARD_SHORTCUTS.map(shortcut => (
-                      <div 
-                        key={shortcut.key} 
-                        className="flex items-center justify-between p-3 rounded-lg bg-muted/40"
-                        role="listitem"
-                      >
-                        <span className="text-lg font-medium text-foreground">{shortcut.action}</span>
-                        <kbd className="px-3 py-1.5 bg-primary/20 text-primary rounded-lg font-mono text-lg font-bold border border-primary/30">
-                          {shortcut.key}
-                        </kbd>
-                      </div>
-                    ))}
-                  </div>
-                </DialogContent>
-              </Dialog>
-              
-              <div className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border text-foreground">
-                <Sparkle size={20} className="text-primary" aria-hidden="true" />
-                <Label htmlFor="animations-toggle" className="text-sm font-medium cursor-pointer">Animations</Label>
-                <Switch 
-                  id="animations-toggle"
-                  checked={animationsEnabled ?? true}
-                  onCheckedChange={setAnimationsEnabled}
-                  aria-describedby="animations-desc"
-                />
-                <span id="animations-desc" className="sr-only">Toggle animations on or off</span>
-              </div>
-              <div className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border text-foreground">
-                {soundEnabled ? <SpeakerHigh size={20} className="text-primary" aria-hidden="true" /> : <SpeakerSlash size={20} className="text-muted-foreground" aria-hidden="true" />}
-                <Label htmlFor="sound-toggle" className="text-sm font-medium cursor-pointer">Sound</Label>
-                <Switch 
-                  id="sound-toggle"
-                  checked={soundEnabled ?? true}
-                  onCheckedChange={setSoundEnabled}
-                  aria-describedby="sound-desc"
-                />
-                <span id="sound-desc" className="sr-only">Toggle sound effects on or off</span>
-              </div>
+            <Dialog open={showShortcuts} onOpenChange={setShowShortcuts}>
+              <DialogTrigger asChild>
+                <button
+                  className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+                  aria-label="View keyboard shortcuts"
+                >
+                  <Keyboard size={18} className="text-primary" aria-hidden="true" />
+                  <span className="text-sm font-medium">Keys</span>
+                </button>
+              </DialogTrigger>
+              <DialogContent className="bg-card border-2 border-border">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+                    <Keyboard size={28} className="text-primary" aria-hidden="true" />
+                    Keyboard Shortcuts
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="mt-4 space-y-3" role="list" aria-label="Available keyboard shortcuts">
+                  {KEYBOARD_SHORTCUTS.map(shortcut => (
+                    <div 
+                      key={shortcut.key} 
+                      className="flex items-center justify-between p-3 rounded-lg bg-muted/40"
+                      role="listitem"
+                    >
+                      <span className="text-lg font-medium text-foreground">{shortcut.action}</span>
+                      <kbd className="px-3 py-1.5 bg-primary/20 text-primary rounded-lg font-mono text-lg font-bold border border-primary/30">
+                        {shortcut.key}
+                      </kbd>
+                    </div>
+                  ))}
+                </div>
+              </DialogContent>
+            </Dialog>
+            
+            <button
+              onClick={() => setDarkMode(prev => !prev)}
+              className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+              aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {darkMode ? <Sun size={18} className="text-primary" aria-hidden="true" /> : <Moon size={18} className="text-primary" aria-hidden="true" />}
+              <span className="text-sm font-medium">{darkMode ? 'Light' : 'Dark'}</span>
+            </button>
+            
+            <div className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border text-foreground">
+              <Sparkle size={18} className="text-primary" aria-hidden="true" />
+              <Label htmlFor="animations-toggle" className="text-sm font-medium cursor-pointer">Animations</Label>
+              <Switch 
+                id="animations-toggle"
+                checked={animationsEnabled ?? true}
+                onCheckedChange={setAnimationsEnabled}
+                aria-describedby="animations-desc"
+              />
+              <span id="animations-desc" className="sr-only">Toggle animations on or off</span>
+            </div>
+            <div className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border text-foreground">
+              {soundEnabled ? <SpeakerHigh size={18} className="text-primary" aria-hidden="true" /> : <SpeakerSlash size={18} className="text-muted-foreground" aria-hidden="true" />}
+              <Label htmlFor="sound-toggle" className="text-sm font-medium cursor-pointer">Sound</Label>
+              <Switch 
+                id="sound-toggle"
+                checked={soundEnabled ?? true}
+                onCheckedChange={setSoundEnabled}
+                aria-describedby="sound-desc"
+              />
+              <span id="sound-desc" className="sr-only">Toggle sound effects on or off</span>
             </div>
           </div>
 
@@ -831,33 +885,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
               </motion.div>
             )}
           </AnimatePresence>
-          
-          <motion.div 
-            className="inline-block mb-4"
-            animate={animationsEnabled ? floatAnimation : {}}
-            transition={animationsEnabled ? { duration: 4, repeat: Infinity, ease: "easeInOut" } : {}}
-            aria-hidden="true"
-          >
-            <div className={`w-24 h-24 rounded-full crystal-ball mystic-glow flex items-center justify-center ${animationsEnabled ? 'pulse-glow-animation' : ''}`}>
-              <span className="text-5xl">🔮</span>
-            </div>
-          </motion.div>
-          
-          <h1 className="text-4xl md:text-6xl font-bold text-foreground tracking-tight mb-3">
-            Oracle of Inclusion
-          </h1>
-          <p className="text-muted-foreground text-xl md:text-2xl mb-2">
-            "Ask and the wisdom shall be revealed..."
-          </p>
-          <motion.p 
-            key={greetingKey}
-            className="text-primary text-lg font-medium"
-            initial={animationsEnabled ? { opacity: 0, scale: 0.9 } : {}}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, type: "spring" }}
-          >
-            {mysticalGreeting}
-          </motion.p>
         </motion.header>
 
         <main id="main-content" role="main">
@@ -1211,24 +1238,24 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
         </main>
 
         <motion.footer 
-          className="text-center mt-8 text-muted-foreground text-lg space-y-4"
+          className="text-center mt-8 text-muted-foreground text-lg"
           initial={animationsEnabled ? { opacity: 0 } : {}}
           animate={{ opacity: 1 }}
           transition={animationsEnabled ? { delay: 0.8 } : { duration: 0 }}
           role="contentinfo"
         >
           <p className="text-sm text-muted-foreground/70 border-t border-border/50 pt-4">
-            This is an experiment. Questions are AI-generated. This app may not be fully accessible.
+            This is an experiment. Questions are AI-generated. This app may not be fully accessible.{' '}
+            <a
+              href="https://www.linkedin.com/in/cariefisher/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80 underline underline-offset-2 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded"
+              aria-label="Reach out with feedback (opens LinkedIn in new tab)"
+            >
+              Reach out with feedback
+            </a>
           </p>
-          <a
-            href="https://www.linkedin.com/in/cariefisher/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block text-primary text-lg font-medium hover:text-primary/80 transition-colors focus:outline-none focus:ring-4 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
-            aria-label="Send comments, questions, or suggestions (opens LinkedIn in new tab)"
-          >
-            Comments? Questions? Suggestions?
-          </a>
         </motion.footer>
       </div>
     </div>
