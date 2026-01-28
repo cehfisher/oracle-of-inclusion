@@ -137,15 +137,30 @@ const MYSTICAL_GREETINGS = [
   "Ancient knowledge awakens 🌟",
   "The mystic currents guide you 🌊",
   "Celestial forces gather 🌟",
-  "The oracle's eye opens wide 👁️",
   "Sacred questions find their voice ✨",
   "The crystal shimmers with insight 💎",
   "Ethereal whispers draw near 🌙",
-  "The cosmic web vibrates 🕸️",
   "Infinite wisdom awaits discovery ⭐",
-  "The spirit realm responds 👻",
   "Arcane energies converge ✨",
   "The universe bends to listen 🌌",
+  "Stardust settles upon your path 🌠",
+  "The cosmic library opens for you 📚",
+  "Mystery unfolds before you ✨",
+  "The astral winds carry your intent 🍃",
+  "Moonlight illuminates hidden truths 🌙",
+  "The sacred scrolls unfurl 📜",
+  "Enchanted wisdom stirs 🪄",
+  "The constellation of answers forms 🌟",
+  "Timeless secrets await sharing ⏳",
+  "The aurora of insight appears 🌈",
+  "Mystic fog parts to reveal clarity 🌫️",
+  "The enchanted realm welcomes you 🏰",
+  "Cosmic tides flow in your direction 🌊",
+  "The starlit path reveals itself ⭐",
+  "Ancient runes glow with meaning ✨",
+  "The celestial choir hums softly 🎵",
+  "Twilight magic awakens 🌆",
+  "The universe prepares its gifts 🎁",
 ]
 
 const getRandomGreeting = (): string => {
@@ -567,7 +582,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
             <span className="text-7xl md:text-8xl">🔮</span>
           </motion.div>
           
-          <h1 className="text-4xl md:text-6xl font-bold text-foreground tracking-tight mb-3">
+          <h1 className="text-4xl md:text-6xl font-bold text-foreground tracking-tight mb-3" style={{ fontFamily: "'Pacifico', cursive" }}>
             Oracle of Inclusion
           </h1>
           <p className="text-muted-foreground text-xl md:text-2xl mb-2">
@@ -625,7 +640,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
               animate={{ opacity: 1, y: 0 }}
               transition={animationsEnabled ? { duration: 0.5, delay: 0.1 } : { duration: 0 }}
             >
-              <Card className="p-6 md:p-8 bg-card border-2 border-border mystic-glow relative overflow-hidden">
+              <Card className="p-6 md:p-8 bg-card border-2 border-border mystic-glow card-subtle-glow relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" aria-hidden="true" />
 
                 <div className="space-y-6">
@@ -829,7 +844,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
               transition={animationsEnabled ? { duration: 0.5 } : { duration: 0 }}
               className="space-y-6"
             >
-              <Card className="p-6 md:p-8 bg-card border-2 border-border relative overflow-hidden">
+              <Card className="p-6 md:p-8 bg-card border-2 border-border card-subtle-glow relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-accent via-primary to-accent" aria-hidden="true" />
 
                 {isGenerating && (
@@ -876,7 +891,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     >
                       <div className="text-center mb-4 flex items-center justify-center gap-3 flex-wrap">
                         <span className="text-lg font-bold text-muted-foreground bg-muted/50 px-4 py-2 rounded-full">
-                          Question {currentQuestionIndex + 1} of {questions.length} 📜
+                          Question {currentQuestionIndex + 1} of {questions.length}
                         </span>
                         <span className="text-lg font-bold text-primary bg-primary/20 px-4 py-2 rounded-full">
                           {currentQuestion.vibe}
@@ -918,7 +933,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                 </AnimatePresence>
               </Card>
 
-              <Card className="p-6 bg-card border-2 border-border">
+              <Card className="p-6 bg-card border-2 border-border card-subtle-glow">
                 <div className="flex flex-wrap gap-3 justify-center">
                   <Button
                     variant="outline"
