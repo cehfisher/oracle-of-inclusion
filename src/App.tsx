@@ -366,14 +366,16 @@ export default function App() {
     setQuestions([])
     setCurrentQuestionIndex(0)
     playSound(sounds.playReset)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
     toast.custom(
-      () => (
+      (t) => (
         <motion.div
           initial={{ opacity: 0, scale: 0.8, y: -20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: -10 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
-          className="relative px-8 py-5 rounded-2xl border-2 border-border bg-background overflow-hidden mystic-glow"
+          className="relative px-8 py-5 rounded-2xl border-2 border-border bg-card overflow-hidden mystic-glow cursor-pointer"
+          onClick={() => toast.dismiss(t)}
         >
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" aria-hidden="true" />
           
@@ -400,11 +402,11 @@ export default function App() {
             className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-primary via-accent to-primary"
             initial={{ width: '100%' }}
             animate={{ width: '0%' }}
-            transition={{ duration: 5, ease: 'linear' }}
+            transition={{ duration: 1.5, ease: 'linear' }}
           />
         </motion.div>
       ),
-      { duration: 5000 }
+      { duration: 1500 }
     )
   }, [soundEnabled, sounds])
 
@@ -518,6 +520,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
   }, [focusAreas, otherFocusArea, questionCount, topics, experience, audience, soundEnabled, sounds, reshuffleTopics, previousQuestions, setPreviousQuestions])
 
   const handleGenerateClick = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
     toast.custom(
       (t) => (
         <motion.div
@@ -525,7 +528,8 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: -10 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
-          className="relative px-8 py-5 rounded-2xl border-2 border-border bg-background overflow-hidden mystic-glow"
+          className="relative px-8 py-5 rounded-2xl border-2 border-border bg-card overflow-hidden mystic-glow cursor-pointer"
+          onClick={() => toast.dismiss(t)}
         >
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" aria-hidden="true" />
           
@@ -552,11 +556,11 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
             className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-primary via-accent to-primary"
             initial={{ width: '100%' }}
             animate={{ width: '0%' }}
-            transition={{ duration: 5, ease: 'linear' }}
+            transition={{ duration: 1.5, ease: 'linear' }}
           />
         </motion.div>
       ),
-      { duration: 5000 }
+      { duration: 1500 }
     )
     generateQuestions()
   }
