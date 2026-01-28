@@ -588,16 +588,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           <p className="text-foreground text-lg md:text-xl mb-2">
             The path to understanding begins with the right question...
           </p>
-          <motion.p 
-            key={greetingKey}
-            className="text-primary text-xl md:text-2xl font-semibold mb-6"
-            initial={animationsEnabled ? { opacity: 0, scale: 0.9 } : {}}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, type: "spring" }}
-          >
-            {mysticalGreeting}
-          </motion.p>
-
           <div className="flex justify-center items-center gap-3 flex-wrap mb-6">
             <button
               onClick={() => setDarkMode(prev => !prev)}
@@ -645,6 +635,15 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
 
                 <div className="space-y-6">
                   <div>
+                    <motion.p 
+                      key={greetingKey}
+                      className="text-primary text-xl md:text-2xl font-semibold mb-4 text-center"
+                      initial={animationsEnabled ? { opacity: 0, scale: 0.9 } : {}}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.4, type: "spring" }}
+                    >
+                      {mysticalGreeting}
+                    </motion.p>
                     <Label htmlFor="topics" className="text-foreground mb-3 block text-lg font-semibold">
                       🌟 Topics to explore
                     </Label>
