@@ -32,7 +32,7 @@ const useSound = () => {
     const ctx = getContext()
     const now = ctx.currentTime
     
-    const frequencies = [1200, 1600, 2000, 2400, 1800]
+    const frequencies = [1200, 1600, 2000]
     frequencies.forEach((freq, i) => {
       const osc = ctx.createOscillator()
       const gain = ctx.createGain()
@@ -40,18 +40,18 @@ const useSound = () => {
       gain.connect(ctx.destination)
       osc.frequency.value = freq
       osc.type = 'sine'
-      gain.gain.setValueAtTime(0, now + i * 0.08)
-      gain.gain.linearRampToValueAtTime(0.08, now + i * 0.08 + 0.02)
-      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.4)
-      osc.start(now + i * 0.08)
-      osc.stop(now + i * 0.08 + 0.4)
+      gain.gain.setValueAtTime(0, now + i * 0.04)
+      gain.gain.linearRampToValueAtTime(0.06, now + i * 0.04 + 0.01)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.04 + 0.15)
+      osc.start(now + i * 0.04)
+      osc.stop(now + i * 0.04 + 0.15)
     })
   }
   
   const playMagic = () => {
     const ctx = getContext()
     const now = ctx.currentTime
-    const notes = [1047, 1319, 1568, 2093]
+    const notes = [1047, 1568, 2093]
     notes.forEach((freq, i) => {
       const osc = ctx.createOscillator()
       const gain = ctx.createGain()
@@ -59,10 +59,10 @@ const useSound = () => {
       gain.connect(ctx.destination)
       osc.frequency.value = freq
       osc.type = 'sine'
-      gain.gain.setValueAtTime(0.1, now + i * 0.12)
-      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.5)
-      osc.start(now + i * 0.12)
-      osc.stop(now + i * 0.12 + 0.5)
+      gain.gain.setValueAtTime(0.08, now + i * 0.06)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.06 + 0.2)
+      osc.start(now + i * 0.06)
+      osc.stop(now + i * 0.06 + 0.2)
     })
   }
   
@@ -76,18 +76,17 @@ const useSound = () => {
     gain.connect(ctx.destination)
     osc.frequency.value = 600
     osc.type = 'sine'
-    gain.gain.setValueAtTime(0.06, now)
-    gain.gain.linearRampToValueAtTime(0.08, now + 0.05)
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15)
+    gain.gain.setValueAtTime(0.05, now)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08)
     osc.start(now)
-    osc.stop(now + 0.15)
+    osc.stop(now + 0.08)
   }
   
   const playReset = () => {
     const ctx = getContext()
     const now = ctx.currentTime
     
-    const notes = [500, 400, 300]
+    const notes = [500, 350]
     notes.forEach((freq, i) => {
       const osc = ctx.createOscillator()
       const gain = ctx.createGain()
@@ -95,11 +94,11 @@ const useSound = () => {
       gain.connect(ctx.destination)
       osc.frequency.value = freq
       osc.type = 'sine'
-      gain.gain.setValueAtTime(0, now + i * 0.08)
-      gain.gain.linearRampToValueAtTime(0.07, now + i * 0.08 + 0.02)
-      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.2)
-      osc.start(now + i * 0.08)
-      osc.stop(now + i * 0.08 + 0.2)
+      gain.gain.setValueAtTime(0, now + i * 0.05)
+      gain.gain.linearRampToValueAtTime(0.06, now + i * 0.05 + 0.01)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.05 + 0.12)
+      osc.start(now + i * 0.05)
+      osc.stop(now + i * 0.05 + 0.12)
     })
   }
   
@@ -376,7 +375,7 @@ export default function App() {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: -10 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
-          className="relative px-8 py-5 rounded-2xl border-2 border-border overflow-hidden mystic-glow cursor-pointer bg-[oklch(0.98_0.01_280)] dark:bg-[oklch(0.20_0.035_278/0.92)] backdrop-blur-xl"
+          className="relative px-8 py-5 rounded-2xl border-2 border-border overflow-hidden mystic-glow cursor-pointer bg-[oklch(0.98_0.01_280/0.92)] dark:bg-[oklch(0.20_0.035_278/0.92)] backdrop-blur-xl"
           onClick={() => toast.dismiss(t)}
         >
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" aria-hidden="true" />
@@ -444,7 +443,7 @@ export default function App() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: -10 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
-            className="relative px-8 py-5 rounded-2xl border-2 border-border overflow-hidden mystic-glow cursor-pointer bg-[oklch(0.98_0.01_280)] dark:bg-[oklch(0.20_0.035_278/0.92)] backdrop-blur-xl"
+            className="relative px-8 py-5 rounded-2xl border-2 border-border overflow-hidden mystic-glow cursor-pointer bg-[oklch(0.98_0.01_280/0.92)] dark:bg-[oklch(0.20_0.035_278/0.92)] backdrop-blur-xl"
             onClick={() => toast.dismiss(t)}
           >
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" aria-hidden="true" />
@@ -582,7 +581,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: -10 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
-          className="relative px-8 py-5 rounded-2xl border-2 border-border overflow-hidden mystic-glow cursor-pointer bg-[oklch(0.98_0.01_280)] dark:bg-[oklch(0.20_0.035_278/0.92)] backdrop-blur-xl"
+          className="relative px-8 py-5 rounded-2xl border-2 border-border overflow-hidden mystic-glow cursor-pointer bg-[oklch(0.98_0.01_280/0.92)] dark:bg-[oklch(0.20_0.035_278/0.92)] backdrop-blur-xl"
           onClick={() => toast.dismiss(t)}
         >
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" aria-hidden="true" />
