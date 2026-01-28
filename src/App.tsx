@@ -214,7 +214,7 @@ export default function App() {
   const [otherFocusArea, setOtherFocusArea] = useState('')
   const [experience, setExperience] = useState('')
   const [audience, setAudience] = useState('')
-  const [livedExperience, setLivedExperience] = useState('')
+
   const [questionCount, setQuestionCount] = useState(3)
   const [questions, setQuestions] = useState<Question[]>([])
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
@@ -293,7 +293,7 @@ export default function App() {
     setOtherFocusArea('')
     setExperience('')
     setAudience('')
-    setLivedExperience('')
+
     setQuestionCount(3)
     setQuestions([])
     setCurrentQuestionIndex(0)
@@ -359,7 +359,7 @@ Context:
 - Guest's work area: ${focusAreasText}
 - Years in accessibility/inclusion work: ${experience || 'not specified'}
 - Audience type: ${audience || 'general / mixed'}
-- Guest has lived experience with disability: ${livedExperience || 'unknown'}
+
 
 Rules:
 - Write at a 9th grade reading level or lower
@@ -406,7 +406,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
     } finally {
       setIsGenerating(false)
     }
-  }, [focusAreas, otherFocusArea, questionCount, topics, experience, audience, livedExperience, soundEnabled, sounds, reshuffleTopics])
+  }, [focusAreas, otherFocusArea, questionCount, topics, experience, audience, soundEnabled, sounds, reshuffleTopics])
 
   const handleGenerateClick = () => {
     generateQuestions()
@@ -829,7 +829,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
 
                     <div>
                       <Label htmlFor="experience" className="text-foreground mb-3 block text-lg font-semibold">
-                        ⏳ Years in Accessibility/Inclusion Work
+                        ⏳ About Accessibility
                       </Label>
                       <Select value={experience} onValueChange={setExperience}>
                         <SelectTrigger id="experience" className="bg-input border-2 border-border text-foreground text-lg py-6">
@@ -861,23 +861,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         <SelectItem value="leaders" className="text-lg py-3">👔 Leaders & Managers</SelectItem>
                         <SelectItem value="advocates" className="text-lg py-3">📣 Advocates & Allies</SelectItem>
                         <SelectItem value="students" className="text-lg py-3">📚 Students & Newcomers</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="lived-experience" className="text-foreground mb-3 block text-lg font-semibold">
-                      💜 Guest Has Lived Experience with Disability?
-                    </Label>
-                    <Select value={livedExperience} onValueChange={setLivedExperience}>
-                      <SelectTrigger id="lived-experience" className="bg-input border-2 border-border text-foreground text-lg py-6">
-                        <SelectValue placeholder="Select..." />
-                      </SelectTrigger>
-                      <SelectContent className="bg-card border-2 border-border">
-                        <SelectItem value="yes" className="text-lg py-3">✅ Yes</SelectItem>
-                        <SelectItem value="no" className="text-lg py-3">❌ No</SelectItem>
-                        <SelectItem value="prefer-not" className="text-lg py-3">🤐 Prefer not to say</SelectItem>
-                        <SelectItem value="unknown" className="text-lg py-3">❓ Unknown</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
