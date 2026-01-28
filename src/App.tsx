@@ -198,16 +198,16 @@ interface Question {
 }
 
 const MYSTICAL_LOADING_PHRASES = [
-  "The spirits are whispering... 👻",
-  "Gazing into the cosmic void... 🌌",
-  "The mists are parting... 🌫️",
-  "Ancient wisdom stirs... 📜",
-  "The veil grows thin... ✨",
-  "Channeling ethereal knowledge... 🔮",
-  "The stars align... ⭐",
-  "Seeking hidden truths... 🌙",
-  "The crystals resonate... 💎",
-  "Divining your path... 🃏",
+  "Consulting the ancient WiFi... 📡",
+  "Bribing the spirits with coffee... ☕",
+  "The ghosts are Googling... 👻",
+  "Shaking the magic snow globe... 🌨️",
+  "The intern spirits are on it... 📋",
+  "Downloading wisdom at 56k... 💾",
+  "The oracle hit snooze, one sec... 😴",
+  "Spirits on hold, please wait... 📞",
+  "Consulting the wise rubber duck... 🦆",
+  "The cosmic hamster is running... 🐹",
 ]
 
 const MYSTICAL_GREETINGS = [
@@ -355,6 +355,7 @@ export default function App() {
   const [quickAnswer, setQuickAnswer] = useState<{text: string, type: string} | null>(null)
   const [isShakingOrb, setIsShakingOrb] = useState(false)
   const [showQuickOracle, setShowQuickOracle] = useState(false)
+  const [isShuffling, setIsShuffling] = useState(false)
   const [soundEnabled, setSoundEnabled] = useKV<boolean>('oracle-sound-enabled-v2', true)
   const [animationsEnabled, setAnimationsEnabled] = useKV<boolean>('oracle-animations-enabled-v2', true)
   const [darkMode, setDarkMode] = useKV<boolean>('oracle-dark-mode-v2', true)
@@ -449,9 +450,13 @@ export default function App() {
     return VIBE_TYPES[Math.floor(Math.random() * VIBE_TYPES.length)]
   }
 
-  const generateQuestions = useCallback(async () => {
+  const generateQuestions = useCallback(async (isShuffle = false) => {
     setIsGenerating(true)
-    setQuestions([])
+    if (isShuffle) {
+      setIsShuffling(true)
+    } else {
+      setQuestions([])
+    }
     setCurrentQuestionIndex(0)
     setLoadingPhrase(getRandomLoadingPhrase())
     playSound(sounds.playTwinkle)
@@ -544,9 +549,10 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
       playSound(sounds.playMagic)
       toast.success('🔮 The oracle has spoken!')
     } catch {
-      toast.error('🌙 The oracle needs a moment... Please try again.')
+      toast.error('The oracle needs a moment... Please try again.')
     } finally {
       setIsGenerating(false)
+      setIsShuffling(false)
     }
   }, [focusAreas, otherFocusArea, questionCount, topics, experience, audience, soundEnabled, sounds, reshuffleTopics, previousQuestions, setPreviousQuestions])
 
@@ -623,7 +629,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
         case 'R':
           e.preventDefault()
           if (!isGenerating) {
-            generateQuestions()
+            generateQuestions(true)
           }
           break
         case 'Escape':
@@ -722,6 +728,14 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           </motion.p>
 
           <div className="flex justify-center items-center gap-3 flex-wrap mb-6">
+            <button
+              onClick={() => setShowQuickOracle(!showQuickOracle)}
+              className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background opacity-60 hover:opacity-100"
+              aria-label="Open Magic 8-Ball fortune teller"
+              aria-expanded={showQuickOracle}
+            >
+              <span className="text-lg" aria-hidden="true">🎱</span>
+            </button>
             <Dialog open={showShortcuts} onOpenChange={setShowShortcuts}>
               <DialogTrigger asChild>
                 <button
@@ -791,7 +805,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
         </motion.header>
 
         <main id="main-content" role="main">
-          {questions.length === 0 ? (
+          {questions.length === 0 && !isShuffling ? (
             <motion.div
               initial={animationsEnabled ? { opacity: 0, y: 20 } : {}}
               animate={{ opacity: 1, y: 0 }}
@@ -979,16 +993,13 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                           <ArrowsClockwise size={28} />
                         </motion.div>
                       ) : (
-                        <>
-                          <span className="text-2xl mr-3" aria-hidden="true">🔮</span>
-                          Reveal My Questions!
-                        </>
+                        'Reveal My Questions'
                       )}
                     </Button>
                     <Button 
                       onClick={resetForm}
                       variant="outline"
-                      className="py-7 px-6 border-2 border-border text-muted-foreground hover:bg-muted hover:text-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                      className="py-7 px-6 border-2 border-border text-muted-foreground hover:bg-muted hover:text-foreground hover:border-primary focus:ring-4 focus:ring-ring focus:ring-offset-2"
                       aria-label="Reset form"
                     >
                       <ArrowCounterClockwise size={24} aria-hidden="true" />
@@ -1100,7 +1111,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     size="lg"
                     onClick={() => currentQuestion && copyQuestion(currentQuestion)}
                     disabled={!currentQuestion}
-                    className="text-lg py-6 px-6 border-2 border-border text-foreground bg-card hover:bg-primary hover:text-primary-foreground hover:border-primary focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                    className="text-lg py-6 px-6 border-2 border-primary/50 text-foreground bg-card hover:bg-primary hover:text-primary-foreground hover:border-primary focus:ring-4 focus:ring-ring focus:ring-offset-2"
                     aria-label={copiedId === currentQuestion?.id ? 'Copied to clipboard' : 'Copy question to clipboard'}
                   >
                     {copiedId === currentQuestion?.id ? (
@@ -1114,9 +1125,9 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                   <Button
                     variant="outline"
                     size="lg"
-                    onClick={generateQuestions}
+                    onClick={() => generateQuestions(true)}
                     disabled={isGenerating}
-                    className="text-lg py-6 px-8 border-2 border-border text-foreground bg-card hover:bg-accent hover:text-accent-foreground hover:border-accent focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                    className="text-lg py-6 px-8 border-2 border-accent/50 text-foreground bg-card hover:bg-accent hover:text-accent-foreground hover:border-accent focus:ring-4 focus:ring-ring focus:ring-offset-2"
                     aria-label="Shuffle all questions and generate new ones"
                   >
                     <ArrowsClockwise size={22} className="mr-2" aria-hidden="true" />
@@ -1127,7 +1138,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     variant="outline"
                     size="lg"
                     onClick={resetForm}
-                    className="text-lg py-6 px-8 border-2 border-border text-foreground bg-card hover:bg-muted-foreground hover:text-background hover:border-muted-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                    className="text-lg py-6 px-8 border-2 border-muted-foreground/50 text-foreground bg-card hover:bg-muted-foreground hover:text-background hover:border-muted-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
                     aria-label="Restart and reset the form"
                   >
                     <ArrowCounterClockwise size={22} className="mr-2" aria-hidden="true" />
@@ -1159,17 +1170,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
               Reach out with feedback
             </a>
           </p>
-          
-          <div className="mt-4 pt-4 border-t border-border/30">
-                            <button
-                              onClick={() => setShowQuickOracle(!showQuickOracle)}
-                              className="text-base opacity-40 hover:opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded-lg p-1"
-                              aria-label="Open Magic 8-Ball fortune teller"
-                              aria-expanded={showQuickOracle}
-                            >
-                              🎱
-                            </button>
-                          </div>
           
           <AnimatePresence>
             {showQuickOracle && (
