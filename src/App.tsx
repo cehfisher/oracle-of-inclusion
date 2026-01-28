@@ -520,13 +520,13 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
     : {}
 
   const sparklePositions = useMemo(() => 
-    Array.from({ length: 25 }, (_, i) => ({
+    Array.from({ length: 20 }, (_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,
       top: `${Math.random() * 100}%`,
-      duration: 5 + Math.random() * 6,
-      delay: Math.random() * 10,
-      size: Math.random() * 0.7 + 0.3,
+      duration: 12 + Math.random() * 18,
+      delay: Math.random() * 25,
+      size: 0.15 + Math.random() * 1.2,
       symbol: Math.random() > 0.7 ? '★' : '✦',
     })), []
   )
