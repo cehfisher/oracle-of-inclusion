@@ -375,7 +375,7 @@ export default function App() {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: -10 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
-          className="relative px-8 py-5 rounded-2xl border-2 border-border overflow-hidden mystic-glow cursor-pointer bg-[oklch(0.98_0.01_280/0.92)] dark:bg-[oklch(0.20_0.035_278/0.92)] backdrop-blur-xl"
+          className="relative px-8 py-5 rounded-2xl border-2 border-border overflow-hidden mystic-glow cursor-pointer toast-popup"
           onClick={() => toast.dismiss(t)}
         >
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" aria-hidden="true" />
@@ -443,7 +443,7 @@ export default function App() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: -10 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
-            className="relative px-8 py-5 rounded-2xl border-2 border-border overflow-hidden mystic-glow cursor-pointer bg-[oklch(0.98_0.01_280/0.92)] dark:bg-[oklch(0.20_0.035_278/0.92)] backdrop-blur-xl"
+            className="relative px-8 py-5 rounded-2xl border-2 border-border overflow-hidden mystic-glow cursor-pointer toast-popup"
             onClick={() => toast.dismiss(t)}
           >
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" aria-hidden="true" />
@@ -581,7 +581,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: -10 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
-          className="relative px-8 py-5 rounded-2xl border-2 border-border overflow-hidden mystic-glow cursor-pointer bg-[oklch(0.98_0.01_280/0.92)] dark:bg-[oklch(0.20_0.035_278/0.92)] backdrop-blur-xl"
+          className="relative px-8 py-5 rounded-2xl border-2 border-border overflow-hidden mystic-glow cursor-pointer toast-popup"
           onClick={() => toast.dismiss(t)}
         >
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" aria-hidden="true" />

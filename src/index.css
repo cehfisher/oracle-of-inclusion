@@ -2,7 +2,7 @@
   --radius: 0.75rem;
   --background: oklch(0.96 0.012 280);
   --foreground: oklch(0.28 0.035 280);
-  --card: oklch(0.99 0.006 280 / 0.75);
+  --card: oklch(0.98 0.008 280);
   --card-foreground: oklch(0.28 0.035 280);
   --popover: oklch(0.99 0.006 280 / 0.88);
   --popover-foreground: oklch(0.28 0.035 280);
@@ -200,6 +200,14 @@ h1, h2, h3, h4, h5, h6 {
 .bg-card {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+}
+
+.toast-popup {
+  background-color: oklch(0.98 0.008 280);
+}
+
+.dark .toast-popup {
+  background-color: oklch(0.22 0.035 278);
 }
 
 button:hover:not(:disabled) {
