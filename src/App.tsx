@@ -468,8 +468,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
   const currentQuestion = questions[currentQuestionIndex]
 
   const copyQuestion = useCallback(async (question: Question) => {
-    const textToCopy = `${question.text}\n\n${question.vibe}`
-    await navigator.clipboard.writeText(textToCopy)
+    await navigator.clipboard.writeText(question.text)
     setCopiedId(question.id)
     toast.success('📋 Copied to clipboard!')
     setTimeout(() => setCopiedId(null), 2000)
