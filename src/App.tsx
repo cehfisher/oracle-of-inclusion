@@ -228,7 +228,11 @@ export default function App() {
   const [animationsEnabled, setAnimationsEnabled] = useKV<boolean>('oracle-animations-enabled', true)
   const [showShortcuts, setShowShortcuts] = useState(false)
   
-  const shuffledTopicSuggestions = useMemo(() => shuffleArray(TOPIC_SUGGESTIONS), [])
+  const [shuffledTopicSuggestions, setShuffledTopicSuggestions] = useState(() => shuffleArray(TOPIC_SUGGESTIONS))
+  
+  const reshuffleTopics = useCallback(() => {
+    setShuffledTopicSuggestions(shuffleArray(TOPIC_SUGGESTIONS))
+  }, [])
   
   const sounds = useSound()
   
@@ -327,6 +331,7 @@ export default function App() {
     setCurrentQuestionIndex(0)
     setLoadingPhrase(getRandomLoadingPhrase())
     playSound(sounds.playMysticChime)
+    reshuffleTopics()
 
     const focusAreasLabels = FOCUS_AREAS.filter(a => focusAreas.includes(a.id) && a.id !== 'other').map(a => a.label)
     if (focusAreas.includes('other') && otherFocusArea.trim()) {
@@ -362,6 +367,16 @@ Rules:
 - CRITICAL: Generate an even mix of vibes: ${vibeDistribution}. Each vibe type MUST be represented.
 - Randomize the order of vibes - do NOT group same vibes together
 
+IMPORTANT - Be respectful and inclusive:
+- NEVER use offensive, patronizing, or insensitive language about disability
+- NEVER ask questions that treat disability as a tragedy or something to overcome
+- NEVER use inspiration porn framing (e.g., "despite your disability")
+- NEVER assume negative experiences or limitations
+- DO use identity-first or person-first language appropriately (follow the guest's lead)
+- DO frame questions around expertise, experiences, and perspectives - not limitations
+- DO treat guests as experts in their field, not just their disability experience
+- Questions should empower, not objectify or pity
+
 Return a JSON object with a "questions" array containing exactly ${questionCount} objects, each with "text" (the question) and "vibe" (one of: "😜 Whimsical", "🤗 Warm", "🤔 Thoughtful", "🧘 Deep").`
 
     try {
@@ -381,7 +396,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
     } finally {
       setIsGenerating(false)
     }
-  }, [focusAreas, otherFocusArea, questionCount, topics, experience, soundEnabled, sounds])
+  }, [focusAreas, otherFocusArea, questionCount, topics, experience, soundEnabled, sounds, reshuffleTopics])
 
   const handleGenerateClick = () => {
     generateQuestions()
