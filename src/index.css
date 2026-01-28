@@ -71,3 +71,21 @@ h1, h2, h3, h4, h5, h6 {
 .shimmer-animation {
   animation: shimmer 2s ease-in-out infinite;
 }
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+.sparkle-particle {
+  position: absolute;
+  pointer-events: none;
+  animation: twinkle 2s ease-in-out infinite;
+}
+
+.mystical-bg {
+  background: 
+    radial-gradient(ellipse at 20% 20%, oklch(0.25 0.08 280 / 0.3) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, oklch(0.30 0.10 320 / 0.2) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, oklch(0.20 0.05 275 / 0.5) 0%, transparent 70%);
+}

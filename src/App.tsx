@@ -118,7 +118,22 @@ const MYSTICAL_LOADING_PHRASES = [
   "Summoning inclusive insights... ✨",
   "Decoding the cosmic keyboard shortcuts... ⌨️",
   "The oracle stirs from its slumber... 🌙",
+  "Aligning the stars of inclusion... ⭐",
+  "Brewing a potion of perspective... 🧪",
+  "The crystals are vibrating with knowledge... 💎",
 ]
+
+const MYSTICAL_GREETINGS = [
+  "The spirits sense your curiosity... 🌟",
+  "Welcome, seeker of inclusive wisdom! ✨",
+  "The oracle has been expecting you... 🔮",
+  "Your journey toward insight begins here... 🌙",
+  "The cosmos aligns in your favor today... ⭐",
+]
+
+const getRandomGreeting = (): string => {
+  return MYSTICAL_GREETINGS[Math.floor(Math.random() * MYSTICAL_GREETINGS.length)]
+}
 
 const getRandomLoadingPhrase = (): string => {
   return MYSTICAL_LOADING_PHRASES[Math.floor(Math.random() * MYSTICAL_LOADING_PHRASES.length)]
@@ -200,6 +215,21 @@ const MYSTICAL_RESPONSES = [
   { text: "Concentrate and ask again 🧘", type: "maybe" },
 ]
 
+const MYSTICAL_WISDOM = [
+  "🌟 The best designs are those that nobody notices.",
+  "✨ Inclusion is not a feature—it's a foundation.",
+  "💫 Every barrier removed opens a door for someone.",
+  "🔮 True innovation serves everyone, not just the many.",
+  "🌙 Accessibility is the mother of invention.",
+  "⭐ Design for the edges, and the center will follow.",
+  "🎭 Nothing about us without us.",
+  "💎 The most powerful code is the code that includes all.",
+]
+
+const getRandomWisdom = (): string => {
+  return MYSTICAL_WISDOM[Math.floor(Math.random() * MYSTICAL_WISDOM.length)]
+}
+
 const getRandomResponse = () => {
   return MYSTICAL_RESPONSES[Math.floor(Math.random() * MYSTICAL_RESPONSES.length)]
 }
@@ -236,8 +266,11 @@ export default function App() {
   const [soundEnabled, setSoundEnabled] = useKV<boolean>('oracle-sound-enabled', true)
   const [animationsEnabled, setAnimationsEnabled] = useKV<boolean>('oracle-animations-enabled', true)
   const [showShortcuts, setShowShortcuts] = useState(false)
+  const [currentWisdom, setCurrentWisdom] = useState('')
+  const [showCelebration, setShowCelebration] = useState(false)
   
   const [shuffledTopicSuggestions, setShuffledTopicSuggestions] = useState(() => shuffleArray(TOPIC_SUGGESTIONS))
+  const [mysticalGreeting] = useState(() => getRandomGreeting())
   
   const reshuffleTopics = useCallback(() => {
     setShuffledTopicSuggestions(shuffleArray(TOPIC_SUGGESTIONS))
@@ -406,6 +439,9 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
         vibe: q.vibe || getRandomVibe()
       })))
       setQuestions(generatedQuestions)
+      setCurrentWisdom(getRandomWisdom())
+      setShowCelebration(true)
+      setTimeout(() => setShowCelebration(false), 2000)
       playSound(sounds.playSuccess)
       toast.success('🔮 The oracle has spoken!')
     } catch {
@@ -534,8 +570,45 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
     ? { y: [0, -8, 0] }
     : {}
 
+  const sparklePositions = useMemo(() => 
+    Array.from({ length: 12 }, (_, i) => ({
+      id: i,
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`,
+      delay: Math.random() * 3,
+      size: Math.random() * 0.5 + 0.5,
+    })), []
+  )
+
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
+    <div className="min-h-screen bg-background p-4 md:p-8 relative overflow-hidden mystical-bg">
+      {animationsEnabled && (
+        <div className="fixed inset-0 pointer-events-none" aria-hidden="true">
+          {sparklePositions.map((sparkle) => (
+            <motion.span
+              key={sparkle.id}
+              className="sparkle-particle text-primary/40"
+              style={{ 
+                left: sparkle.left, 
+                top: sparkle.top,
+                fontSize: `${sparkle.size * 24}px`,
+              }}
+              animate={{ 
+                opacity: [0.2, 0.8, 0.2],
+                scale: [1, 1.3, 1],
+              }}
+              transition={{
+                duration: 3,
+                delay: sparkle.delay,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            >
+              ✦
+            </motion.span>
+          ))}
+        </div>
+      )}
       <Toaster position="top-center" theme="dark" />
       
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:font-bold">
@@ -693,9 +766,17 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           <h1 className="text-4xl md:text-6xl font-bold text-foreground tracking-tight mb-3">
             The Oracle of Inclusion
           </h1>
-          <p className="text-muted-foreground text-xl md:text-2xl">
+          <p className="text-muted-foreground text-xl md:text-2xl mb-2">
             "Ask, and the wisdom shall be revealed..."
           </p>
+          <motion.p 
+            className="text-primary text-lg font-medium"
+            initial={animationsEnabled ? { opacity: 0 } : {}}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            {mysticalGreeting}
+          </motion.p>
         </motion.header>
 
         <main id="main-content" role="main">
@@ -922,12 +1003,51 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
               transition={animationsEnabled ? { duration: 0.5 } : { duration: 0 }}
               className="space-y-6"
             >
+              {showCelebration && animationsEnabled && (
+                <div className="fixed inset-0 pointer-events-none z-50" aria-hidden="true">
+                  {Array.from({ length: 20 }).map((_, i) => (
+                    <motion.span
+                      key={i}
+                      className="absolute text-2xl"
+                      style={{
+                        left: '50%',
+                        top: '40%',
+                      }}
+                      initial={{ opacity: 1, scale: 0 }}
+                      animate={{
+                        opacity: [1, 1, 0],
+                        scale: [0, 1.5, 1],
+                        x: (Math.random() - 0.5) * 400,
+                        y: (Math.random() - 0.5) * 400,
+                      }}
+                      transition={{
+                        duration: 1.5,
+                        delay: i * 0.05,
+                        ease: "easeOut",
+                      }}
+                    >
+                      {['✨', '🌟', '💫', '⭐', '🔮', '💎'][i % 6]}
+                    </motion.span>
+                  ))}
+                </div>
+              )}
               <Card className="p-6 md:p-8 bg-card border-2 border-border relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-accent via-primary to-accent" aria-hidden="true" />
                 
-                <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">
-                  Your Question
-                </h2>
+                <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
+                  <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+                    Your Question
+                  </h2>
+                  {currentWisdom && !isGenerating && (
+                    <motion.p
+                      initial={animationsEnabled ? { opacity: 0, x: 20 } : {}}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="text-sm md:text-base text-accent italic font-medium"
+                    >
+                      {currentWisdom}
+                    </motion.p>
+                  )}
+                </div>
 
                 {isGenerating && (
                   <div className="text-center py-12" role="status" aria-live="polite">
