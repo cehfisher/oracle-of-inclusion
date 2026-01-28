@@ -269,6 +269,8 @@ export default function App() {
   const [shuffledTopicSuggestions, setShuffledTopicSuggestions] = useState(() => shuffleArray(TOPIC_SUGGESTIONS))
   const [mysticalGreeting, setMysticalGreeting] = useState(() => getRandomGreeting())
   const [greetingKey, setGreetingKey] = useState(0)
+  const [explosionParticles, setExplosionParticles] = useState<Array<{ id: number; x: number; y: number; angle: number; distance: number; symbol: string; color: string }>>([])
+  const [isExploding, setIsExploding] = useState(false)
   
   const reshuffleTopics = useCallback(() => {
     setShuffledTopicSuggestions(shuffleArray(TOPIC_SUGGESTIONS))
@@ -401,6 +403,33 @@ export default function App() {
     )
   }, [soundEnabled, sounds])
 
+  const triggerExplosion = useCallback(() => {
+    if (isExploding) return
+    
+    const symbols = ['✨', '💫', '⭐', '🌟', '💎', '🔮', '✦', '★', '🌙']
+    const colors = ['text-primary', 'text-accent', 'text-secondary', 'text-yellow-400', 'text-purple-400', 'text-pink-400']
+    
+    const particles = Array.from({ length: 24 }, (_, i) => ({
+      id: i,
+      x: 0,
+      y: 0,
+      angle: (i / 24) * 360 + Math.random() * 15,
+      distance: 80 + Math.random() * 120,
+      symbol: symbols[Math.floor(Math.random() * symbols.length)],
+      color: colors[Math.floor(Math.random() * colors.length)]
+    }))
+    
+    setExplosionParticles(particles)
+    setIsExploding(true)
+    playSound(sounds.playMagic)
+    
+    setTimeout(() => {
+      setIsExploding(false)
+      setExplosionParticles([])
+      resetForm()
+    }, 800)
+  }, [isExploding, resetForm, sounds, playSound])
+
   const getRandomVibe = (): string => {
     return VIBE_TYPES[Math.floor(Math.random() * VIBE_TYPES.length)]
   }
@@ -409,6 +438,38 @@ export default function App() {
     setIsGenerating(true)
     if (isShuffle) {
       setIsShuffling(true)
+      toast.custom(
+        (t) => (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: -20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: -10 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="relative px-8 py-5 rounded-2xl border-2 border-border overflow-hidden mystic-glow cursor-pointer bg-[oklch(0.99_0.006_280/0.85)] dark:bg-[oklch(0.20_0.035_278/0.85)] backdrop-blur-xl"
+            onClick={() => toast.dismiss(t)}
+          >
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" aria-hidden="true" />
+            
+            <div className="relative flex items-center gap-4 pt-2">
+              <span className="text-4xl">🔄</span>
+              <div className="flex flex-col">
+                <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium mb-1">The Oracle Shuffles</span>
+                <span className="text-xl font-bold text-foreground" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+                  New wisdom emerges... ✨
+                </span>
+              </div>
+            </div>
+            
+            <motion.div 
+              className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-primary via-accent to-primary"
+              initial={{ width: '100%' }}
+              animate={{ width: '0%' }}
+              transition={{ duration: 3, ease: 'linear' }}
+            />
+          </motion.div>
+        ),
+        { duration: 3000 }
+      )
     } else {
       setQuestions([])
     }
@@ -669,13 +730,39 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           role="banner"
         >
           <motion.button 
-            className="inline-block mb-4 cursor-pointer hover:scale-110 transition-transform focus:outline-none select-none active:scale-100"
-            animate={animationsEnabled ? floatAnimation : {}}
+            className="inline-block mb-4 cursor-pointer hover:scale-110 transition-transform focus:outline-none select-none active:scale-100 relative"
+            animate={animationsEnabled && !isExploding ? floatAnimation : {}}
             transition={animationsEnabled ? { duration: 4, repeat: Infinity, ease: "easeInOut" } : {}}
-            onClick={resetForm}
+            onClick={triggerExplosion}
             aria-label="Reset form and start over"
           >
-            <span className="text-7xl md:text-8xl">🔮</span>
+            <motion.span 
+              className="text-7xl md:text-8xl inline-block"
+              animate={isExploding ? { scale: [1, 1.3, 0], opacity: [1, 1, 0] } : { scale: 1, opacity: 1 }}
+              transition={isExploding ? { duration: 0.4, ease: "easeOut" } : { duration: 0.5, ease: "easeOut" }}
+            >
+              🔮
+            </motion.span>
+            <AnimatePresence>
+              {isExploding && explosionParticles.map((particle) => (
+                <motion.span
+                  key={particle.id}
+                  className={`absolute left-1/2 top-1/2 ${particle.color} pointer-events-none`}
+                  initial={{ x: 0, y: 0, scale: 1, opacity: 1 }}
+                  animate={{ 
+                    x: Math.cos(particle.angle * Math.PI / 180) * particle.distance,
+                    y: Math.sin(particle.angle * Math.PI / 180) * particle.distance,
+                    scale: 0,
+                    opacity: 0
+                  }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.7, ease: "easeOut" }}
+                  style={{ fontSize: '1.5rem' }}
+                >
+                  {particle.symbol}
+                </motion.span>
+              ))}
+            </AnimatePresence>
           </motion.button>
           
           <h1 className="text-4xl md:text-6xl font-bold text-foreground tracking-tight mb-3" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
