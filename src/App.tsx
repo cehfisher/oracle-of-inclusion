@@ -391,7 +391,7 @@ Rules:
 - Ask open questions (not yes/no)
 - Mix personal story questions with big picture questions
 - Center the disability community voice
-- Keep each question to 1-2 sentences max
+- CRITICAL: Keep each question to 1-2 SHORT sentences max (under 25 words total)
 - CRITICAL: Generate an even mix of vibes: ${vibeDistribution}. Each vibe type MUST be represented.
 - Randomize the order of vibes - do NOT group same vibes together
 - If guest has lived experience, include questions that honor their perspective as an expert
@@ -537,7 +537,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
   return (
     <div className="min-h-screen bg-background p-4 md:p-8 relative overflow-hidden mystical-bg">
       {animationsEnabled && (
-        <div className="fixed inset-0 pointer-events-none" aria-hidden="true">
+        <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }} aria-hidden="true">
           {sparklePositions.map((sparkle) => (
             <motion.span
               key={sparkle.id}
@@ -553,8 +553,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
               {sparkle.symbol}
             </motion.span>
           ))}
-          
-
         </div>
       )}
       <Toaster position="top-center" theme="dark" />
@@ -565,7 +563,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
       
       <div className="max-w-3xl mx-auto relative z-10">
         <motion.header 
-          className="text-center mb-10"
+          className="text-center mb-10 relative z-20"
           {...animationProps}
           role="banner"
         >
@@ -929,7 +927,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                       </div>
                       
                       <div className="p-6 rounded-xl bg-gradient-to-br from-primary/15 via-accent/10 to-secondary/15 border-2 border-primary/30">
-                        <p className="text-2xl md:text-3xl text-foreground leading-relaxed font-medium text-center" role="status" aria-live="polite">
+                        <p className="text-2xl md:text-3xl text-foreground leading-relaxed font-medium text-center line-clamp-3" role="status" aria-live="polite">
                           "{currentQuestion.text}"
                         </p>
                       </div>
