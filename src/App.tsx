@@ -528,7 +528,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
   return (
     <div className="min-h-screen bg-background p-4 md:p-8 relative overflow-hidden mystical-bg">
       {animationsEnabled && (
-        <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }} aria-hidden="true">
+        <div className="fixed inset-0 pointer-events-none z-[1]" aria-hidden="true">
           {sparklePositions.map((sparkle) => (
             <motion.span
               key={sparkle.id}
@@ -631,7 +631,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                 <div className="space-y-6">
                   <div>
                     <Label htmlFor="topics" className="text-foreground mb-3 block text-lg font-semibold">
-                      🎯 Topics to explore
+                      🌟 Topics to explore
                     </Label>
                     <div className="flex gap-2 mb-3">
                       <Input
@@ -749,7 +749,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
 
                     <div>
                       <Label htmlFor="audience" className="text-foreground mb-3 block text-lg font-semibold">
-                        🎯 Who's the audience?
+                        👥 Who's the audience?
                       </Label>
                       <Select value={audience} onValueChange={setAudience}>
                         <SelectTrigger id="audience" className="bg-input border-2 border-border text-foreground text-lg py-6 w-full">
@@ -876,7 +876,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     >
                       <div className="text-center mb-4 flex items-center justify-center gap-3 flex-wrap">
                         <span className="text-lg font-bold text-muted-foreground bg-muted/50 px-4 py-2 rounded-full">
-                          Question {currentQuestionIndex + 1} of {questions.length} 🎯
+                          Question {currentQuestionIndex + 1} of {questions.length} 📜
                         </span>
                         <span className="text-lg font-bold text-primary bg-primary/20 px-4 py-2 rounded-full">
                           {currentQuestion.vibe}
