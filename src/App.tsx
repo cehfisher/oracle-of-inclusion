@@ -803,33 +803,8 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
-                      <Label htmlFor="question-count-slider" className="text-foreground mb-3 block text-lg font-semibold">
-                        🔢 Number of Questions <span className="text-accent font-bold text-xl">{questionCount}</span>
-                      </Label>
-                      <div className="px-2 py-4">
-                        <Slider
-                          id="question-count-slider"
-                          value={[questionCount]}
-                          onValueChange={(value) => setQuestionCount(value[0])}
-                          min={1}
-                          max={5}
-                          step={1}
-                          className="w-full [&_[data-radix-slider-track]]:bg-muted [&_[data-radix-slider-range]]:bg-accent [&_[data-radix-slider-thumb]]:bg-accent [&_[data-radix-slider-thumb]]:border-2 [&_[data-radix-slider-thumb]]:border-foreground"
-                          aria-valuemin={1}
-                          aria-valuemax={5}
-                          aria-valuenow={questionCount}
-                          aria-valuetext={`${questionCount} question${questionCount === 1 ? '' : 's'}`}
-                        />
-                        <div className="flex justify-between mt-2 text-base text-foreground font-bold" aria-hidden="true">
-                          <span>1</span>
-                          <span>5</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
                       <Label htmlFor="experience" className="text-foreground mb-3 block text-lg font-semibold">
-                        ⏳ About Accessibility
+                        ⏳ Digital Accessibility Experience
                       </Label>
                       <Select value={experience} onValueChange={setExperience}>
                         <SelectTrigger id="experience" className="bg-input border-2 border-border text-foreground text-lg py-6">
@@ -844,25 +819,50 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         </SelectContent>
                       </Select>
                     </div>
+
+                    <div>
+                      <Label htmlFor="audience" className="text-foreground mb-3 block text-lg font-semibold">
+                        🎯 Who's the Audience?
+                      </Label>
+                      <Select value={audience} onValueChange={setAudience}>
+                        <SelectTrigger id="audience" className="bg-input border-2 border-border text-foreground text-lg py-6">
+                          <SelectValue placeholder="Select audience..." />
+                        </SelectTrigger>
+                        <SelectContent className="bg-card border-2 border-border">
+                          <SelectItem value="general" className="text-lg py-3">🌍 General / Mixed</SelectItem>
+                          <SelectItem value="developers" className="text-lg py-3">💻 Developers & Engineers</SelectItem>
+                          <SelectItem value="designers" className="text-lg py-3">🎨 Designers & UX</SelectItem>
+                          <SelectItem value="leaders" className="text-lg py-3">👔 Leaders & Managers</SelectItem>
+                          <SelectItem value="advocates" className="text-lg py-3">📣 Advocates & Allies</SelectItem>
+                          <SelectItem value="students" className="text-lg py-3">📚 Students & Newcomers</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
                   <div>
-                    <Label htmlFor="audience" className="text-foreground mb-3 block text-lg font-semibold">
-                      🎯 Who's the Audience?
+                    <Label htmlFor="question-count-slider" className="text-foreground mb-3 block text-lg font-semibold">
+                      🔢 Number of Questions <span className="text-accent font-bold text-xl">{questionCount}</span>
                     </Label>
-                    <Select value={audience} onValueChange={setAudience}>
-                      <SelectTrigger id="audience" className="bg-input border-2 border-border text-foreground text-lg py-6">
-                        <SelectValue placeholder="Select audience..." />
-                      </SelectTrigger>
-                      <SelectContent className="bg-card border-2 border-border">
-                        <SelectItem value="general" className="text-lg py-3">🌍 General / Mixed</SelectItem>
-                        <SelectItem value="developers" className="text-lg py-3">💻 Developers & Engineers</SelectItem>
-                        <SelectItem value="designers" className="text-lg py-3">🎨 Designers & UX</SelectItem>
-                        <SelectItem value="leaders" className="text-lg py-3">👔 Leaders & Managers</SelectItem>
-                        <SelectItem value="advocates" className="text-lg py-3">📣 Advocates & Allies</SelectItem>
-                        <SelectItem value="students" className="text-lg py-3">📚 Students & Newcomers</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="px-2 py-4">
+                      <Slider
+                        id="question-count-slider"
+                        value={[questionCount]}
+                        onValueChange={(value) => setQuestionCount(value[0])}
+                        min={1}
+                        max={5}
+                        step={1}
+                        className="w-full [&_[data-radix-slider-track]]:bg-muted [&_[data-radix-slider-range]]:bg-accent [&_[data-radix-slider-thumb]]:bg-accent [&_[data-radix-slider-thumb]]:border-2 [&_[data-radix-slider-thumb]]:border-foreground"
+                        aria-valuemin={1}
+                        aria-valuemax={5}
+                        aria-valuenow={questionCount}
+                        aria-valuetext={`${questionCount} question${questionCount === 1 ? '' : 's'}`}
+                      />
+                      <div className="flex justify-between mt-2 text-base text-foreground font-bold" aria-hidden="true">
+                        <span>1</span>
+                        <span>5</span>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="flex gap-3">
