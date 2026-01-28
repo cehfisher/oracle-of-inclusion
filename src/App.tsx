@@ -113,16 +113,16 @@ interface Question {
 }
 
 const MYSTICAL_LOADING_PHRASES = [
-  "Consulting the ancient WiFi... 📡",
-  "Bribing the spirits with coffee... ☕",
-  "The ghosts are Googling... 👻",
-  "Shaking the magic snow globe... 🌨️",
-  "The intern spirits are on it... 📋",
-  "Downloading wisdom at 56k... 💾",
-  "The oracle hit snooze, one sec... 😴",
-  "Spirits on hold, please wait... 📞",
-  "Consulting the wise rubber duck... 🦆",
-  "The cosmic hamster is running... 🐹",
+  "Consulting the ancient stars... ✨",
+  "The cosmos whispers secrets... 🌙",
+  "Channeling celestial wisdom... 💫",
+  "The spirits gather their thoughts... 👻",
+  "Starlight reveals the path... ⭐",
+  "The mystic veil parts slowly... 🔮",
+  "Ancient runes glow with meaning... ✨",
+  "The oracle peers beyond... 🌌",
+  "Cosmic energies align... 💎",
+  "Ethereal whispers grow near... ✨",
 ]
 
 const MYSTIC_THINKING_QUESTIONS = [
@@ -604,7 +604,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           role="banner"
         >
           <motion.button 
-            className="inline-block mb-4 cursor-pointer hover:scale-110 transition-transform focus:outline-none focus:ring-4 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded-full"
+            className="inline-block mb-4 cursor-pointer hover:scale-110 transition-transform focus:outline-none focus:ring-4 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded-full select-none active:scale-100"
             animate={animationsEnabled ? floatAnimation : {}}
             transition={animationsEnabled ? { duration: 4, repeat: Infinity, ease: "easeInOut" } : {}}
             onClick={resetForm}
@@ -664,8 +664,8 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
               <Card className="p-6 md:p-8 bg-card border-2 border-border mystic-glow card-subtle-glow relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" aria-hidden="true" />
 
-                <div className="space-y-6">
-                  <div className="pt-6">
+                <div className="space-y-6 pt-4">
+                  <div>
                     <Label htmlFor="topics" className="text-foreground mb-3 block text-lg font-semibold">
                       🌟 Topics to explore
                     </Label>
