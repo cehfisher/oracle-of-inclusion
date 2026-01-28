@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Copy, ArrowClockwise, Check, Plus, X, SpeakerHigh, SpeakerSlash, Sparkle, ArrowCounterClockwise, Keyboard } from '@phosphor-icons/react'
+import { Copy, ArrowClockwise, Check, Plus, X, SpeakerHigh, SpeakerSlash, Sparkle, ArrowCounterClockwise, Keyboard, ShareNetwork } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -10,6 +10,7 @@ import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { useKV } from '@github/spark/hooks'
 import { toast, Toaster } from 'sonner'
 
@@ -532,6 +533,21 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
     toast.success('📋 Copied to clipboard!')
     setTimeout(() => setCopiedId(null), 2000)
   }, [])
+
+  const shareQuestion = useCallback((question: Question, platform: 'twitter' | 'linkedin' | 'bluesky') => {
+    const text = `🔮 ${question.text}\n\n— via Oracle of Inclusion`
+    const encodedText = encodeURIComponent(text)
+    
+    const urls: Record<string, string> = {
+      twitter: `https://twitter.com/intent/tweet?text=${encodedText}`,
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}&summary=${encodedText}`,
+      bluesky: `https://bsky.app/intent/compose?text=${encodedText}`,
+    }
+    
+    window.open(urls[platform], '_blank', 'noopener,noreferrer,width=600,height=400')
+    playSound(sounds.playSparkle)
+    toast.success('✨ Opening share dialog!')
+  }, [soundEnabled, sounds])
 
   const shakeTheOrb = () => {
     setIsShakingOrb(true)
@@ -1130,6 +1146,40 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     {copiedId === currentQuestion?.id ? 'Copied!' : 'Copy Question'}
                     <kbd className="ml-2 px-1.5 py-0.5 bg-muted rounded text-sm font-mono hidden sm:inline" aria-hidden="true">C</kbd>
                   </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        disabled={!currentQuestion}
+                        className="text-lg py-6 px-6 border-2 border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                        aria-label="Share question on social media"
+                      >
+                        <ShareNetwork size={22} className="mr-2" aria-hidden="true" />
+                        Share
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="bg-card border-2 border-border min-w-[180px]">
+                      <DropdownMenuItem 
+                        onClick={() => currentQuestion && shareQuestion(currentQuestion, 'twitter')}
+                        className="text-lg py-3 cursor-pointer"
+                      >
+                        <span className="mr-2" aria-hidden="true">𝕏</span> Twitter / X
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => currentQuestion && shareQuestion(currentQuestion, 'linkedin')}
+                        className="text-lg py-3 cursor-pointer"
+                      >
+                        <span className="mr-2" aria-hidden="true">in</span> LinkedIn
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => currentQuestion && shareQuestion(currentQuestion, 'bluesky')}
+                        className="text-lg py-3 cursor-pointer"
+                      >
+                        <span className="mr-2" aria-hidden="true">🦋</span> Bluesky
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   <Button
                     variant="outline"
                     size="lg"
