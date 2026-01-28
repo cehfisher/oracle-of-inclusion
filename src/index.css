@@ -16,7 +16,7 @@
   --accent-foreground: oklch(0.99 0.01 60);
   --destructive: oklch(0.55 0.24 25);
   --destructive-foreground: oklch(0.99 0.01 60);
-  --border: oklch(0.80 0.05 290);
+  --border: oklch(44.6% 0.03 256.802);
   --input: oklch(0.95 0.02 280);
   --ring: oklch(0.50 0.20 280);
   --chart-1: oklch(0.50 0.20 280);
@@ -24,6 +24,8 @@
   --chart-3: oklch(0.55 0.16 200);
   --chart-4: oklch(0.50 0.14 280);
   --chart-5: oklch(0.45 0.10 275);
+  --font-sans: Open Sans;
+  --spacing: 0.25rem;
 }
 
 .dark {
@@ -43,7 +45,7 @@
   --accent-foreground: oklch(0.12 0.03 280);
   --destructive: oklch(0.62 0.24 25);
   --destructive-foreground: oklch(0.97 0.01 60);
-  --border: oklch(0.50 0.08 290);
+  --border: oklch(44.6% 0.03 256.802);
   --input: oklch(0.22 0.04 280);
   --ring: oklch(0.82 0.18 75);
   --chart-1: oklch(0.82 0.18 75);
@@ -54,7 +56,7 @@
 }
 
 body {
-  font-family: 'Atkinson Hyperlegible', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   font-size: 18px;
   line-height: 1.7;
 }
