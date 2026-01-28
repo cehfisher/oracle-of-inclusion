@@ -586,7 +586,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
             Oracle of Inclusion
           </h1>
           <p className="text-muted-foreground text-xl md:text-2xl mb-2">
-            Where every question leads to understanding...
+            The path to understanding begins with the right question...
           </p>
           <motion.p 
             key={greetingKey}
