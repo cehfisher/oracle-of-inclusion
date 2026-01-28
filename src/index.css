@@ -2,22 +2,22 @@
   --radius: 0.75rem;
   --background: oklch(0.97 0.015 280);
   --foreground: oklch(0.25 0.04 280);
-  --card: oklch(0.995 0.008 280);
+  --card: oklch(0.995 0.008 280 / 0.7);
   --card-foreground: oklch(0.25 0.04 280);
-  --popover: oklch(0.995 0.008 280);
+  --popover: oklch(0.995 0.008 280 / 0.85);
   --popover-foreground: oklch(0.25 0.04 280);
   --primary: oklch(0.45 0.18 280);
   --primary-foreground: oklch(0.99 0.01 60);
   --secondary: oklch(0.50 0.14 300);
   --secondary-foreground: oklch(0.99 0.01 60);
-  --muted: oklch(0.94 0.02 278);
+  --muted: oklch(0.94 0.02 278 / 0.6);
   --muted-foreground: oklch(0.40 0.04 280);
   --accent: oklch(0.50 0.20 320);
   --accent-foreground: oklch(0.99 0.01 60);
   --destructive: oklch(0.50 0.22 25);
   --destructive-foreground: oklch(0.99 0.01 60);
   --border: oklch(0.82 0.04 280);
-  --input: oklch(0.96 0.02 280);
+  --input: oklch(0.96 0.02 280 / 0.8);
   --ring: oklch(0.45 0.18 280);
   --chart-1: oklch(0.45 0.18 280);
   --chart-2: oklch(0.50 0.20 320);
@@ -31,22 +31,22 @@
 .dark {
   --background: oklch(0.12 0.03 280);
   --foreground: oklch(0.97 0.01 60);
-  --card: oklch(0.18 0.04 278);
+  --card: oklch(0.18 0.04 278 / 0.65);
   --card-foreground: oklch(0.97 0.01 60);
-  --popover: oklch(0.18 0.04 278);
+  --popover: oklch(0.18 0.04 278 / 0.85);
   --popover-foreground: oklch(0.97 0.01 60);
   --primary: oklch(0.82 0.18 75);
   --primary-foreground: oklch(0.12 0.03 280);
   --secondary: oklch(0.60 0.16 300);
   --secondary-foreground: oklch(0.97 0.01 60);
-  --muted: oklch(0.28 0.04 278);
+  --muted: oklch(0.28 0.04 278 / 0.5);
   --muted-foreground: oklch(0.78 0.02 60);
   --accent: oklch(0.75 0.18 320);
   --accent-foreground: oklch(0.12 0.03 280);
   --destructive: oklch(0.62 0.24 25);
   --destructive-foreground: oklch(0.97 0.01 60);
   --border: oklch(0.55 0.08 280);
-  --input: oklch(0.22 0.04 280);
+  --input: oklch(0.22 0.04 280 / 0.7);
   --ring: oklch(0.82 0.18 75);
   --chart-1: oklch(0.82 0.18 75);
   --chart-2: oklch(0.72 0.20 320);
@@ -147,6 +147,11 @@ h1, h2, h3, h4, h5, h6 {
 
 .gentle-glow-animation {
   animation: gentle-glow 3s ease-in-out infinite;
+}
+
+.bg-card {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 button:hover:not(:disabled) {
