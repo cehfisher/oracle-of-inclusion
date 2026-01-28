@@ -380,16 +380,7 @@ export default function App() {
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" aria-hidden="true" />
           
           <div className="relative flex items-center gap-4 pt-2">
-            <motion.span 
-              className="text-4xl"
-              animate={{ 
-                rotate: [0, -10, 10, -5, 5, 0],
-                scale: [1, 1.1, 1.05, 1.1, 1]
-              }}
-              transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 0.5 }}
-            >
-              🔮
-            </motion.span>
+            <span className="text-4xl">🌀</span>
             <div className="flex flex-col">
               <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium mb-1">The Oracle Resets</span>
               <span className="text-xl font-bold text-foreground" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
@@ -402,11 +393,11 @@ export default function App() {
             className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-primary via-accent to-primary"
             initial={{ width: '100%' }}
             animate={{ width: '0%' }}
-            transition={{ duration: 1.5, ease: 'linear' }}
+            transition={{ duration: 3, ease: 'linear' }}
           />
         </motion.div>
       ),
-      { duration: 1500 }
+      { duration: 3000 }
     )
   }, [soundEnabled, sounds])
 
@@ -534,16 +525,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" aria-hidden="true" />
           
           <div className="relative flex items-center gap-4 pt-2">
-            <motion.span 
-              className="text-4xl"
-              animate={{ 
-                rotate: [0, -10, 10, -5, 5, 0],
-                scale: [1, 1.1, 1.05, 1.1, 1]
-              }}
-              transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 0.5 }}
-            >
-              🔮
-            </motion.span>
+            <span className="text-4xl">✨</span>
             <div className="flex flex-col">
               <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium mb-1">The Oracle Speaks</span>
               <span className="text-xl font-bold text-foreground" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
@@ -556,11 +538,11 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
             className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-primary via-accent to-primary"
             initial={{ width: '100%' }}
             animate={{ width: '0%' }}
-            transition={{ duration: 1.5, ease: 'linear' }}
+            transition={{ duration: 3, ease: 'linear' }}
           />
         </motion.div>
       ),
-      { duration: 1500 }
+      { duration: 3000 }
     )
     generateQuestions()
   }
