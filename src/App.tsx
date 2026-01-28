@@ -157,36 +157,36 @@ const getRandomLoadingPhrase = (): string => {
 }
 
 const TOPIC_SUGGESTIONS = [
-  '♿ Accessible Design',
-  '🦾 Assistive Technology',
+  '♿ Accessible design',
+  '🦾 Assistive technology',
   '🧠 Neurodiversity',
-  '🔊 Screen Readers',
-  '💼 Inclusive Hiring',
-  '📋 WCAG Standards',
-  '📣 Disability Advocacy',
-  '🌍 Universal Design',
-  '💚 Mental Health',
-  '🏢 Workplace Accommodations',
-  '🩺 Chronic Illness',
-  '🤟 Deaf Culture',
-  '👁️ Blind & Low Vision',
-  '🦽 Mobility & Physical',
-  '📚 Learning Differences',
+  '🔊 Screen readers',
+  '💼 Inclusive hiring',
+  '📋 WCAG standards',
+  '📣 Disability advocacy',
+  '🌍 Universal design',
+  '💚 Mental health',
+  '🏢 Workplace accommodations',
+  '🩺 Chronic illness',
+  '🤟 Deaf culture',
+  '👁️ Blind & low vision',
+  '🦽 Mobility & physical',
+  '📚 Learning differences',
   '🎯 Autism & ADHD',
-  '🙈 Invisible Disabilities',
-  '🎮 Accessible Gaming',
-  '🖼️ Alt Text & Captions',
-  '⌨️ Keyboard Navigation',
-  '🎨 Color Blindness',
-  '🧩 Cognitive Load',
-  '✍️ Plain Language',
-  '🎤 Voice Control',
-  '🤖 AI & Disability',
-  '🏠 Remote Work Access',
-  '🎪 Accessible Events',
-  '💪 Self-Advocacy',
-  '🏳️‍🌈 Disability Pride',
-  '🚌 Accessible Transit'
+  '🙈 Invisible disabilities',
+  '🎮 Accessible gaming',
+  '🖼️ Alt text & captions',
+  '⌨️ Keyboard navigation',
+  '🎨 Color blindness',
+  '🧩 Cognitive load',
+  '✍️ Plain language',
+  '🎤 Voice control',
+  '🤖 AI & disability',
+  '🏠 Remote work access',
+  '🎪 Accessible events',
+  '💪 Self-advocacy',
+  '🏳️‍🌈 Disability pride',
+  '🚌 Accessible transit'
 ]
 
 const shuffleArray = <T,>(array: T[]): T[] => {
@@ -201,13 +201,13 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 const VIBE_TYPES = ['😜 Whimsical', '🤗 Warm', '🤔 Thoughtful', '🧘 Deep']
 
 const FOCUS_AREAS = [
-  { id: 'frontend', label: '🖥️ Front-End Dev' },
-  { id: 'backend', label: '⚙️ Back-End Dev' },
+  { id: 'frontend', label: '🖥️ Front-end dev' },
+  { id: 'backend', label: '⚙️ Back-end dev' },
   { id: 'design', label: '🎨 Design & UX' },
   { id: 'accessibility', label: '🧩 Accessibility' },
   { id: 'leadership', label: '👔 Leadership' },
   { id: 'education', label: '📖 Education' },
-  { id: 'advocacy', label: '📣 Advocacy & Community' },
+  { id: 'advocacy', label: '📣 Advocacy & community' },
   { id: 'other', label: '✏️ Other' },
 ]
 
@@ -756,12 +756,12 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                           <SelectValue placeholder="Select audience..." />
                         </SelectTrigger>
                         <SelectContent className="bg-card border-2 border-border min-w-[280px]">
-                          <SelectItem value="general" className="text-lg py-3">🌍 General / Mixed</SelectItem>
-                          <SelectItem value="developers" className="text-lg py-3">💻 Developers & Engineers</SelectItem>
+                          <SelectItem value="general" className="text-lg py-3">🌍 General / mixed</SelectItem>
+                          <SelectItem value="developers" className="text-lg py-3">💻 Developers & engineers</SelectItem>
                           <SelectItem value="designers" className="text-lg py-3">🎨 Designers & UX</SelectItem>
-                          <SelectItem value="leaders" className="text-lg py-3">👔 Leaders & Managers</SelectItem>
-                          <SelectItem value="advocates" className="text-lg py-3">📣 Advocates & Allies</SelectItem>
-                          <SelectItem value="students" className="text-lg py-3">📚 Students & Newcomers</SelectItem>
+                          <SelectItem value="leaders" className="text-lg py-3">👔 Leaders & managers</SelectItem>
+                          <SelectItem value="advocates" className="text-lg py-3">📣 Advocates & allies</SelectItem>
+                          <SelectItem value="students" className="text-lg py-3">📚 Students & newcomers</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -807,7 +807,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                           <ArrowsClockwise size={28} />
                         </motion.div>
                       ) : (
-                        'Reveal My Questions'
+                        'Reveal questions'
                       )}
                     </Button>
                     <Button 
