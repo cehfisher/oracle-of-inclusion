@@ -520,70 +520,18 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
     : {}
 
   const sparklePositions = useMemo(() => 
-    Array.from({ length: 50 }, (_, i) => ({
+    Array.from({ length: 25 }, (_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,
       top: `${Math.random() * 100}%`,
-      duration: 2 + Math.random() * 4,
-      delay: Math.random() * 6,
+      duration: 5 + Math.random() * 6,
+      delay: Math.random() * 10,
       size: Math.random() * 0.7 + 0.3,
       symbol: Math.random() > 0.7 ? '★' : '✦',
     })), []
   )
 
-  const [shootingStars, setShootingStars] = useState<Array<{ id: number; left: string; top: string }>>([])
-  
-  useEffect(() => {
-    if (!animationsEnabled) return
-    
-    const spawnShootingStar = () => {
-      const id = Date.now()
-      const left = `${Math.random() * 60}%`
-      const top = `${Math.random() * 40}%`
-      setShootingStars(prev => [...prev, { id, left, top }])
-      setTimeout(() => {
-        setShootingStars(prev => prev.filter(s => s.id !== id))
-      }, 1500)
-    }
-    
-    const interval = setInterval(() => {
-      if (Math.random() > 0.5) {
-        spawnShootingStar()
-      }
-    }, 4000)
-    
-    const initialTimeout = setTimeout(spawnShootingStar, 2000)
-    
-    return () => {
-      clearInterval(interval)
-      clearTimeout(initialTimeout)
-    }
-  }, [animationsEnabled])
 
-  const [showCow, setShowCow] = useState(false)
-  const [cowKey, setCowKey] = useState(0)
-  
-  useEffect(() => {
-    if (!animationsEnabled) return
-    
-    const spawnCow = () => {
-      setCowKey(prev => prev + 1)
-      setShowCow(true)
-      setTimeout(() => setShowCow(false), 25000)
-    }
-    
-    const initialDelay = setTimeout(spawnCow, 8000)
-    const interval = setInterval(() => {
-      if (Math.random() > 0.6) {
-        spawnCow()
-      }
-    }, 35000)
-    
-    return () => {
-      clearTimeout(initialDelay)
-      clearInterval(interval)
-    }
-  }, [animationsEnabled])
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8 relative overflow-hidden mystical-bg">
@@ -605,23 +553,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
             </motion.span>
           ))}
           
-          {shootingStars.map((star) => (
-            <div
-              key={star.id}
-              className="shooting-star"
-              style={{ left: star.left, top: star.top }}
-            />
-          ))}
-          
-          {showCow && (
-            <div
-              key={cowKey}
-              className="floating-cow"
-              style={{ top: `${15 + Math.random() * 25}%` }}
-            >
-              🐄✨
-            </div>
-          )}
+
         </div>
       )}
       <Toaster position="top-center" theme="dark" />
