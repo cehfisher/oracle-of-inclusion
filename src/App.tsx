@@ -590,7 +590,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           </p>
           <motion.p 
             key={greetingKey}
-            className="text-primary text-lg font-medium mb-6"
+            className="text-primary text-lg font-lg mb-6"
             initial={animationsEnabled ? { opacity: 0, scale: 0.9 } : {}}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4, type: "spring" }}
