@@ -48,75 +48,6 @@ const useSound = () => {
     })
   }
   
-  const playSparkle = () => {
-    const ctx = getContext()
-    const now = ctx.currentTime
-    
-    for (let i = 0; i < 3; i++) {
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      osc.frequency.value = 1800 + Math.random() * 800
-      osc.type = 'sine'
-      gain.gain.setValueAtTime(0, now + i * 0.1)
-      gain.gain.linearRampToValueAtTime(0.06, now + i * 0.1 + 0.02)
-      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.25)
-      osc.start(now + i * 0.1)
-      osc.stop(now + i * 0.1 + 0.25)
-    }
-  }
-  
-  const playShimmer = () => {
-    const ctx = getContext()
-    const now = ctx.currentTime
-    
-    const osc1 = ctx.createOscillator()
-    const gain1 = ctx.createGain()
-    osc1.connect(gain1)
-    gain1.connect(ctx.destination)
-    osc1.frequency.value = 180
-    osc1.type = 'sine'
-    gain1.gain.setValueAtTime(0.15, now)
-    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.8)
-    osc1.start(now)
-    osc1.stop(now + 0.8)
-    
-    const frequencies = [400, 500, 600, 700, 800]
-    frequencies.forEach((freq, i) => {
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      osc.frequency.value = freq
-      osc.type = 'sine'
-      gain.gain.setValueAtTime(0.06, now + i * 0.1)
-      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.3)
-      osc.start(now + i * 0.1)
-      osc.stop(now + i * 0.1 + 0.3)
-    })
-  }
-  
-  const play8BallReveal = () => {
-    const ctx = getContext()
-    const now = ctx.currentTime
-    
-    const notes = [220, 330, 440, 550, 660, 880]
-    notes.forEach((freq, i) => {
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      osc.frequency.value = freq
-      osc.type = 'triangle'
-      gain.gain.setValueAtTime(0, now + i * 0.08)
-      gain.gain.linearRampToValueAtTime(0.12, now + i * 0.08 + 0.03)
-      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.5)
-      osc.start(now + i * 0.08)
-      osc.stop(now + i * 0.08 + 0.5)
-    })
-  }
-  
   const playMagic = () => {
     const ctx = getContext()
     const now = ctx.currentTime
@@ -133,22 +64,6 @@ const useSound = () => {
       osc.start(now + i * 0.12)
       osc.stop(now + i * 0.12 + 0.5)
     })
-  }
-  
-  const playClick = () => {
-    const ctx = getContext()
-    const now = ctx.currentTime
-    
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.connect(gain)
-    gain.connect(ctx.destination)
-    osc.frequency.value = 800
-    osc.type = 'sine'
-    gain.gain.setValueAtTime(0.08, now)
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1)
-    osc.start(now)
-    osc.stop(now + 0.1)
   }
   
   const playNav = () => {
@@ -188,7 +103,7 @@ const useSound = () => {
     })
   }
   
-  return { playTwinkle, playSparkle, playShimmer, playMagic, play8BallReveal, playClick, playNav, playReset }
+  return { playTwinkle, playMagic, playNav, playReset }
 }
 
 interface Question {
@@ -296,38 +211,6 @@ const FOCUS_AREAS = [
   { id: 'other', label: '✏️ Other' },
 ]
 
-const MYSTICAL_8BALL_RESPONSES = [
-  { text: "✨ Oh absolutely, bestie! ✨", type: "yes" },
-  { text: "🌟 That's a hard yes from the cosmos! 🌟", type: "yes" },
-  { text: "💫 The universe just gave you a standing ovation! 💫", type: "yes" },
-  { text: "⭐ Yes! Now go touch grass to celebrate! ⭐", type: "yes" },
-  { text: "🔮 Big yes energy detected! 🔮", type: "yes" },
-  { text: "✨ The vibes are immaculate - YES! ✨", type: "yes" },
-  { text: "🌈 Green light! Full send! 🌈", type: "yes" },
-  { text: "💖 The spirits are literally cheering! 💖", type: "yes" },
-  { text: "🎯 100% certified yes! 🎯", type: "yes" },
-  { text: "🌟 Even my skeptical ghost agrees - YES! 🌟", type: "yes" },
-  { text: "🌙 That's gonna be a no from the moon... 🌙", type: "no" },
-  { text: "🌒 The spirits just laughed nervously 🌒", type: "no" },
-  { text: "👻 My ghost consultant said 'lol no' 👻", type: "no" },
-  { text: "🌑 Yikes... that's a cosmic nope 🌑", type: "no" },
-  { text: "😬 The universe left you on read... 😬", type: "no" },
-  { text: "❌ Hard pass from the ethereal realm ❌", type: "no" },
-  { text: "🙅 The ancestors are shaking their heads 🙅", type: "no" },
-  { text: "🎭 Plot twist: Maybe! Try again! 🎭", type: "maybe" },
-  { text: "🤔 The spirits are having a meeting about this... 🤔", type: "maybe" },
-  { text: "🙊 *mysterious silence* ...ask later! 🙊", type: "maybe" },
-  { text: "🌀 Error 404: Destiny not found 🌀", type: "maybe" },
-  { text: "🧘 The oracle is buffering... 🧘", type: "maybe" },
-  { text: "🎲 Flip a coin? Just kidding, ask again! 🎲", type: "maybe" },
-  { text: "🌫️ The WiFi to the spirit realm is spotty 🌫️", type: "maybe" },
-  { text: "🤷 Even the all-knowing oracle needs a moment 🤷", type: "maybe" },
-]
-
-const getRandomResponse = () => {
-  return MYSTICAL_8BALL_RESPONSES[Math.floor(Math.random() * MYSTICAL_8BALL_RESPONSES.length)]
-}
-
 const KEYBOARD_SHORTCUTS = [
   { key: '←', action: 'Previous question' },
   { key: '→', action: 'Next question' },
@@ -352,9 +235,6 @@ export default function App() {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [loadingPhrase, setLoadingPhrase] = useState('')
   const [loadingProgress, setLoadingProgress] = useState(0)
-  const [quickAnswer, setQuickAnswer] = useState<{text: string, type: string} | null>(null)
-  const [isShakingOrb, setIsShakingOrb] = useState(false)
-  const [showQuickOracle, setShowQuickOracle] = useState(false)
   const [isShuffling, setIsShuffling] = useState(false)
   const [soundEnabled, setSoundEnabled] = useKV<boolean>('oracle-sound-enabled-v2', true)
   const [animationsEnabled, setAnimationsEnabled] = useKV<boolean>('oracle-animations-enabled-v2', true)
@@ -441,7 +321,6 @@ export default function App() {
     setQuestionCount(3)
     setQuestions([])
     setCurrentQuestionIndex(0)
-    setQuickAnswer(null)
     playSound(sounds.playReset)
     toast.success('Form reset!')
   }, [soundEnabled, sounds])
@@ -584,17 +463,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
     setTimeout(() => setCopiedId(null), 2000)
   }, [])
 
-  const shakeTheOrb = () => {
-    setIsShakingOrb(true)
-    setQuickAnswer(null)
-    playSound(sounds.playShimmer)
-    setTimeout(() => {
-      setQuickAnswer(getRandomResponse())
-      setIsShakingOrb(false)
-      playSound(sounds.play8BallReveal)
-    }, 1500)
-  }
-
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
@@ -728,14 +596,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           </motion.p>
 
           <div className="flex justify-center items-center gap-3 flex-wrap mb-6">
-            <button
-              onClick={() => setShowQuickOracle(!showQuickOracle)}
-              className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background opacity-60 hover:opacity-100"
-              aria-label="Open Magic 8-Ball fortune teller"
-              aria-expanded={showQuickOracle}
-            >
-              <span className="text-lg" aria-hidden="true">🎱</span>
-            </button>
             <Dialog open={showShortcuts} onOpenChange={setShowShortcuts}>
               <DialogTrigger asChild>
                 <button
@@ -999,7 +859,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     <Button 
                       onClick={resetForm}
                       variant="outline"
-                      className="py-7 px-6 border-2 border-border text-muted-foreground hover:bg-muted hover:text-foreground hover:border-primary focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                      className="py-7 px-6 border-2 border-primary/50 text-muted-foreground hover:bg-muted hover:text-foreground hover:border-primary focus:ring-4 focus:ring-ring focus:ring-offset-2"
                       aria-label="Reset form"
                     >
                       <ArrowCounterClockwise size={24} aria-hidden="true" />
@@ -1127,7 +987,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     size="lg"
                     onClick={() => generateQuestions(true)}
                     disabled={isGenerating}
-                    className="text-lg py-6 px-8 border-2 border-accent/50 text-foreground bg-card hover:bg-accent hover:text-accent-foreground hover:border-accent focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                    className="text-lg py-6 px-8 border-2 border-primary/50 text-foreground bg-card hover:bg-accent hover:text-accent-foreground hover:border-accent focus:ring-4 focus:ring-ring focus:ring-offset-2"
                     aria-label="Shuffle all questions and generate new ones"
                   >
                     <ArrowsClockwise size={22} className="mr-2" aria-hidden="true" />
@@ -1138,7 +998,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     variant="outline"
                     size="lg"
                     onClick={resetForm}
-                    className="text-lg py-6 px-8 border-2 border-muted-foreground/50 text-foreground bg-card hover:bg-muted-foreground hover:text-background hover:border-muted-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                    className="text-lg py-6 px-8 border-2 border-primary/50 text-foreground bg-card hover:bg-muted-foreground hover:text-background hover:border-muted-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
                     aria-label="Restart and reset the form"
                   >
                     <ArrowCounterClockwise size={22} className="mr-2" aria-hidden="true" />
@@ -1170,93 +1030,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
               Reach out with feedback
             </a>
           </p>
-          
-          <AnimatePresence>
-            {showQuickOracle && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="mt-4 overflow-hidden"
-              >
-                <Card className="p-6 bg-card border-2 border-border relative overflow-hidden max-w-md mx-auto">
-                  <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-                    {[...Array(8)].map((_, i) => (
-                      <motion.span
-                        key={i}
-                        className="absolute text-primary/30"
-                        style={{ 
-                          left: `${10 + i * 12}%`, 
-                          top: `${20 + (i % 3) * 25}%`,
-                          fontSize: '12px'
-                        }}
-                        animate={animationsEnabled ? { 
-                          opacity: [0.2, 0.6, 0.2],
-                          scale: [0.8, 1.2, 0.8],
-                        } : {}}
-                        transition={{
-                          duration: 2,
-                          delay: i * 0.3,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                        }}
-                      >
-                        ✦
-                      </motion.span>
-                    ))}
-                  </div>
-                  <div className="flex flex-col items-center gap-4 relative z-10">
-                    <p className="text-muted-foreground text-lg">Think of a yes/no question, then shake!</p>
-                    <motion.button
-                      onClick={shakeTheOrb}
-                      disabled={isShakingOrb}
-                      className="text-7xl cursor-pointer hover:scale-110 transition-transform disabled:cursor-wait focus:outline-none focus:ring-4 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded-lg p-2"
-                      animate={isShakingOrb && animationsEnabled ? { 
-                        x: [0, -15, 15, -15, 15, -10, 10, 0],
-                        rotate: [0, -8, 8, -8, 8, -5, 5, 0],
-                        scale: [1, 1.05, 1, 1.05, 1, 1.02, 1, 1]
-                      } : {}}
-                      transition={{ duration: 0.8, repeat: isShakingOrb ? Infinity : 0 }}
-                      aria-label="Shake the Magic 8-Ball for a yes/no answer"
-                      aria-live="polite"
-                    >
-                      <span aria-hidden="true">🎱</span>
-                    </motion.button>
-                    
-                    <AnimatePresence>
-                      {isShakingOrb && (
-                        <motion.p
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          className="text-primary text-lg font-medium italic"
-                        >
-                          ✨ The spirits are stirring... ✨
-                        </motion.p>
-                      )}
-                      {quickAnswer && !isShakingOrb && (
-                        <motion.div
-                          initial={animationsEnabled ? { opacity: 0, scale: 0.5, rotate: -10 } : {}}
-                          animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                          exit={animationsEnabled ? { opacity: 0, scale: 0.8 } : {}}
-                          transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                          className={`px-8 py-4 rounded-2xl text-xl font-bold ${
-                            quickAnswer.type === 'yes' ? 'bg-green-500/20 text-green-300 border-2 border-green-500/40' :
-                            quickAnswer.type === 'no' ? 'bg-red-500/20 text-red-300 border-2 border-red-500/40' :
-                            'bg-primary/20 text-primary border-2 border-primary/40'
-                          }`}
-                          role="status"
-                          aria-live="polite"
-                        >
-                          {quickAnswer.text}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </Card>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </motion.footer>
       </div>
     </div>
