@@ -628,7 +628,38 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
   const copyQuestion = useCallback(async (question: Question) => {
     await navigator.clipboard.writeText(question.text)
     setCopiedId(question.id)
-    toast.success('📋 Copied to clipboard!')
+    toast.custom(
+      (t) => (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8, y: -20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: -10 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="relative px-8 py-5 rounded-2xl border-2 border-border overflow-hidden mystic-glow cursor-pointer toast-popup"
+          onClick={() => toast.dismiss(t)}
+        >
+          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" aria-hidden="true" />
+          
+          <div className="relative flex items-center gap-4 pt-2">
+            <span className="text-4xl shrink-0">📋</span>
+            <div className="flex flex-col">
+              <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium mb-1">Captured</span>
+              <span className="text-xl font-bold text-foreground" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+                Copied to clipboard&nbsp;✨
+              </span>
+            </div>
+          </div>
+          
+          <motion.div 
+            className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-primary via-accent to-primary"
+            initial={{ width: '100%' }}
+            animate={{ width: '0%' }}
+            transition={{ duration: 2, ease: 'linear' }}
+          />
+        </motion.div>
+      ),
+      { duration: 2000 }
+    )
     setTimeout(() => setCopiedId(null), 2000)
   }, [])
 
