@@ -215,7 +215,7 @@ export default function App() {
   const [experience, setExperience] = useState('')
   const [audience, setAudience] = useState('')
 
-  const [questionCount, setQuestionCount] = useState(3)
+  const [questionCount, setQuestionCount] = useState(5)
   const [questions, setQuestions] = useState<Question[]>([])
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -807,10 +807,10 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         ⏳ Digital Accessibility Experience
                       </Label>
                       <Select value={experience} onValueChange={setExperience}>
-                        <SelectTrigger id="experience" className="bg-input border-2 border-border text-foreground text-lg py-6">
+                        <SelectTrigger id="experience" className="bg-input border-2 border-border text-foreground text-lg py-6 w-full">
                           <SelectValue placeholder="Select level..." />
                         </SelectTrigger>
-                        <SelectContent className="bg-card border-2 border-border">
+                        <SelectContent className="bg-card border-2 border-border min-w-[280px]">
                           <SelectItem value="0-2" className="text-lg py-3">🌱 New to it (0-2 years)</SelectItem>
                           <SelectItem value="3-5" className="text-lg py-3">🌿 Growing (3-5 years)</SelectItem>
                           <SelectItem value="6-10" className="text-lg py-3">🌳 Seasoned (6-10 years)</SelectItem>
@@ -825,10 +825,10 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         🎯 Who's the Audience?
                       </Label>
                       <Select value={audience} onValueChange={setAudience}>
-                        <SelectTrigger id="audience" className="bg-input border-2 border-border text-foreground text-lg py-6">
+                        <SelectTrigger id="audience" className="bg-input border-2 border-border text-foreground text-lg py-6 w-full">
                           <SelectValue placeholder="Select audience..." />
                         </SelectTrigger>
-                        <SelectContent className="bg-card border-2 border-border">
+                        <SelectContent className="bg-card border-2 border-border min-w-[280px]">
                           <SelectItem value="general" className="text-lg py-3">🌍 General / Mixed</SelectItem>
                           <SelectItem value="developers" className="text-lg py-3">💻 Developers & Engineers</SelectItem>
                           <SelectItem value="designers" className="text-lg py-3">🎨 Designers & UX</SelectItem>
@@ -850,17 +850,17 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         value={[questionCount]}
                         onValueChange={(value) => setQuestionCount(value[0])}
                         min={1}
-                        max={5}
+                        max={10}
                         step={1}
                         className="w-full [&_[data-radix-slider-track]]:bg-muted [&_[data-radix-slider-range]]:bg-accent [&_[data-radix-slider-thumb]]:bg-accent [&_[data-radix-slider-thumb]]:border-2 [&_[data-radix-slider-thumb]]:border-foreground"
                         aria-valuemin={1}
-                        aria-valuemax={5}
+                        aria-valuemax={10}
                         aria-valuenow={questionCount}
                         aria-valuetext={`${questionCount} question${questionCount === 1 ? '' : 's'}`}
                       />
                       <div className="flex justify-between mt-2 text-base text-foreground font-bold" aria-hidden="true">
                         <span>1</span>
-                        <span>5</span>
+                        <span>10</span>
                       </div>
                     </div>
                   </div>
@@ -1118,7 +1118,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
         >
           <p className="font-medium">"Nothing about us without us" — Disability Rights Movement</p>
           <p className="text-sm text-muted-foreground/70 border-t border-border/50 pt-3 mt-3">
-            ⚗️ This is an experiment. Questions are AI-generated and may not be perfect.
+            ⚗️ This is an experiment. Questions are AI-generated and may not be perfect. This site may not be fully accessible as it is being developed.
           </p>
         </motion.footer>
       </div>
