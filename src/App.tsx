@@ -128,23 +128,23 @@ const MYSTICAL_LOADING_PHRASES = [
 const MYSTICAL_GREETINGS = [
   "The oracle senses your need ✨",
   "Your questions await revelation 🌟",
-  "The cosmos whispers your queries 🔮",
-  "Destiny stirs within the crystal 🌙",
+  "The cosmos whispers your queries 🌙",
+  "Destiny stirs within the crystal 💎",
   "The ancient spirits are listening ⭐",
   "The veil between worlds grows thin 🌌",
   "Wisdom flows through the ether ✨",
   "The stars align in your favor 💫",
-  "Ancient knowledge awakens 🔮",
+  "Ancient knowledge awakens 🌟",
   "The mystic currents guide you 🌊",
   "Celestial forces gather 🌟",
   "The oracle's eye opens wide 👁️",
   "Sacred questions find their voice ✨",
-  "The crystal pulses with insight 💎",
+  "The crystal shimmers with insight 💎",
   "Ethereal whispers draw near 🌙",
   "The cosmic web vibrates 🕸️",
   "Infinite wisdom awaits discovery ⭐",
   "The spirit realm responds 👻",
-  "Arcane energies converge 🔮",
+  "Arcane energies converge ✨",
   "The universe bends to listen 🌌",
 ]
 
@@ -419,7 +419,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
       setPreviousQuestions((prev) => [...(prev ?? []).slice(-100), ...newQuestionTexts])
       
       playSound(sounds.playMagic)
-      toast.success('🔮 The oracle has spoken!')
+      toast.success('✨ The oracle has spoken!')
     } catch {
       toast.error('The oracle needs a moment... Please try again.')
     } finally {
@@ -627,7 +627,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                 <div className="space-y-6">
                   <div>
                     <Label htmlFor="topics" className="text-foreground mb-3 block text-lg font-semibold">
-                      🎯 Topics to Explore
+                      🎯 Topics to explore
                     </Label>
                     <div className="flex gap-2 mb-3">
                       <Input
@@ -685,7 +685,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
 
                   <fieldset>
                     <legend className="text-foreground mb-3 block text-lg font-semibold">
-                      👤 Guest's Focus Areas (select all that apply)
+                      👤 Guest's focus areas (select all that apply)
                     </legend>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {FOCUS_AREAS.map(area => (
@@ -727,7 +727,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                       <Label htmlFor="experience" className="text-foreground mb-3 block text-lg font-semibold">
-                        ⏳ Digital Accessibility Experience
+                        ⏳ Digital accessibility experience
                       </Label>
                       <Select value={experience} onValueChange={setExperience}>
                         <SelectTrigger id="experience" className="bg-input border-2 border-border text-foreground text-lg py-6 w-full">
@@ -745,7 +745,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
 
                     <div>
                       <Label htmlFor="audience" className="text-foreground mb-3 block text-lg font-semibold">
-                        🎯 Who's the Audience?
+                        🎯 Who's the audience?
                       </Label>
                       <Select value={audience} onValueChange={setAudience}>
                         <SelectTrigger id="audience" className="bg-input border-2 border-border text-foreground text-lg py-6 w-full">
@@ -765,7 +765,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
 
                   <div>
                     <Label htmlFor="question-count-slider" className="text-foreground mb-3 block text-lg font-semibold">
-                      🔢 Number of Questions <span className="text-accent font-bold text-xl">{questionCount}</span>
+                      🔢 Number of questions <span className="text-accent font-bold text-xl">{questionCount}</span>
                     </Label>
                     <div className="px-2 py-4">
                       <Slider
