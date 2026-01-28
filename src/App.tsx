@@ -564,7 +564,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
         Skip to main content
       </a>
       
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-3xl mx-auto relative z-10">
         <motion.header 
           className="text-center mb-10"
           {...animationProps}
