@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Copy, ArrowClockwise, Check, Plus, X, SpeakerHigh, SpeakerSlash, Sparkle, ArrowCounterClockwise, Keyboard } from '@phosphor-icons/react'
+import { Copy, ArrowClockwise, Check, Plus, X, SpeakerHigh, SpeakerSlash, Sparkle, ArrowCounterClockwise, Keyboard, LinkedinLogo } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -8,7 +8,6 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { useKV } from '@github/spark/hooks'
@@ -29,11 +28,11 @@ const useSound = () => {
     return audioContextRef.current
   }
   
-  const playMysticChime = () => {
+  const playTwinkle = () => {
     const ctx = getContext()
     const now = ctx.currentTime
     
-    const frequencies = [523.25, 659.25, 783.99, 1046.5]
+    const frequencies = [1200, 1600, 2000, 2400, 1800]
     frequencies.forEach((freq, i) => {
       const osc = ctx.createOscillator()
       const gain = ctx.createGain()
@@ -41,51 +40,54 @@ const useSound = () => {
       gain.connect(ctx.destination)
       osc.frequency.value = freq
       osc.type = 'sine'
-      gain.gain.setValueAtTime(0, now + i * 0.15)
-      gain.gain.linearRampToValueAtTime(0.15, now + i * 0.15 + 0.05)
-      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.15 + 0.8)
-      osc.start(now + i * 0.15)
-      osc.stop(now + i * 0.15 + 0.8)
+      gain.gain.setValueAtTime(0, now + i * 0.08)
+      gain.gain.linearRampToValueAtTime(0.08, now + i * 0.08 + 0.02)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.4)
+      osc.start(now + i * 0.08)
+      osc.stop(now + i * 0.08 + 0.4)
     })
   }
   
-  const playReveal = () => {
+  const playSparkle = () => {
     const ctx = getContext()
     const now = ctx.currentTime
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.connect(gain)
-    gain.connect(ctx.destination)
-    osc.frequency.setValueAtTime(300, now)
-    osc.frequency.exponentialRampToValueAtTime(600, now + 0.2)
-    osc.type = 'triangle'
-    gain.gain.setValueAtTime(0.2, now)
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3)
-    osc.start(now)
-    osc.stop(now + 0.3)
-  }
-  
-  const playShake = () => {
-    const ctx = getContext()
-    const now = ctx.currentTime
-    for (let i = 0; i < 5; i++) {
+    
+    for (let i = 0; i < 3; i++) {
       const osc = ctx.createOscillator()
       const gain = ctx.createGain()
       osc.connect(gain)
       gain.connect(ctx.destination)
-      osc.frequency.value = 150 + Math.random() * 100
-      osc.type = 'square'
-      gain.gain.setValueAtTime(0.05, now + i * 0.1)
-      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.08)
+      osc.frequency.value = 1800 + Math.random() * 800
+      osc.type = 'sine'
+      gain.gain.setValueAtTime(0, now + i * 0.1)
+      gain.gain.linearRampToValueAtTime(0.06, now + i * 0.1 + 0.02)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.25)
       osc.start(now + i * 0.1)
-      osc.stop(now + i * 0.1 + 0.08)
+      osc.stop(now + i * 0.1 + 0.25)
     }
   }
   
-  const playSuccess = () => {
+  const playShimmer = () => {
     const ctx = getContext()
     const now = ctx.currentTime
-    const notes = [523.25, 659.25, 783.99]
+    for (let i = 0; i < 4; i++) {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.frequency.value = 1400 + i * 200
+      osc.type = 'sine'
+      gain.gain.setValueAtTime(0.04, now + i * 0.06)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.06 + 0.2)
+      osc.start(now + i * 0.06)
+      osc.stop(now + i * 0.06 + 0.2)
+    }
+  }
+  
+  const playMagic = () => {
+    const ctx = getContext()
+    const now = ctx.currentTime
+    const notes = [1047, 1319, 1568, 2093]
     notes.forEach((freq, i) => {
       const osc = ctx.createOscillator()
       const gain = ctx.createGain()
@@ -93,14 +95,14 @@ const useSound = () => {
       gain.connect(ctx.destination)
       osc.frequency.value = freq
       osc.type = 'sine'
-      gain.gain.setValueAtTime(0.2, now + i * 0.1)
-      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.3)
-      osc.start(now + i * 0.1)
-      osc.stop(now + i * 0.1 + 0.3)
+      gain.gain.setValueAtTime(0.1, now + i * 0.12)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.5)
+      osc.start(now + i * 0.12)
+      osc.stop(now + i * 0.12 + 0.5)
     })
   }
   
-  return { playMysticChime, playReveal, playShake, playSuccess }
+  return { playTwinkle, playSparkle, playShimmer, playMagic }
 }
 
 interface Question {
@@ -214,20 +216,6 @@ const MYSTICAL_RESPONSES = [
   { text: "Concentrate and ask again 🧘", type: "maybe" },
 ]
 
-const MYSTICAL_WISDOM = [
-  "🌟 The best designs are those that nobody notices.",
-  "✨ Inclusion is not a feature—it's a foundation.",
-  "💫 Every barrier removed opens a door for someone.",
-  "🌙 Accessibility is the mother of invention.",
-  "⭐ Design for the edges, and the center will follow.",
-  "🎭 Nothing about us without us.",
-  "💎 The most powerful code is the code that includes all.",
-]
-
-const getRandomWisdom = (): string => {
-  return MYSTICAL_WISDOM[Math.floor(Math.random() * MYSTICAL_WISDOM.length)]
-}
-
 const getRandomResponse = () => {
   return MYSTICAL_RESPONSES[Math.floor(Math.random() * MYSTICAL_RESPONSES.length)]
 }
@@ -262,7 +250,6 @@ export default function App() {
   const [soundEnabled, setSoundEnabled] = useKV<boolean>('oracle-sound-enabled', true)
   const [animationsEnabled, setAnimationsEnabled] = useKV<boolean>('oracle-animations-enabled', true)
   const [showShortcuts, setShowShortcuts] = useState(false)
-  const [currentWisdom, setCurrentWisdom] = useState('')
   const [showCelebration, setShowCelebration] = useState(false)
   
   const [shuffledTopicSuggestions, setShuffledTopicSuggestions] = useState(() => shuffleArray(TOPIC_SUGGESTIONS))
@@ -346,7 +333,7 @@ export default function App() {
     setQuestions([])
     setCurrentQuestionIndex(0)
     setLoadingPhrase(getRandomLoadingPhrase())
-    playSound(sounds.playMysticChime)
+    playSound(sounds.playTwinkle)
     reshuffleTopics()
 
     const focusAreasLabels = FOCUS_AREAS.filter(a => focusAreas.includes(a.id) && a.id !== 'other').map(a => a.label)
@@ -410,10 +397,9 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
         vibe: q.vibe || getRandomVibe()
       })))
       setQuestions(generatedQuestions)
-      setCurrentWisdom(getRandomWisdom())
       setShowCelebration(true)
       setTimeout(() => setShowCelebration(false), 2000)
-      playSound(sounds.playSuccess)
+      playSound(sounds.playMagic)
       toast.success('🔮 The oracle has spoken!')
     } catch {
       toast.error('🌙 The oracle needs a moment... Please try again.')
@@ -451,11 +437,11 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
   const shakeTheOrb = () => {
     setIsShakingOrb(true)
     setQuickAnswer(null)
-    playSound(sounds.playShake)
+    playSound(sounds.playShimmer)
     setTimeout(() => {
       setQuickAnswer(getRandomResponse())
       setIsShakingOrb(false)
-      playSound(sounds.playReveal)
+      playSound(sounds.playSparkle)
     }, 1500)
   }
 
@@ -703,7 +689,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
             transition={animationsEnabled ? { duration: 4, repeat: Infinity, ease: "easeInOut" } : {}}
             aria-hidden="true"
           >
-            <div className="w-24 h-24 rounded-full crystal-ball mystic-glow flex items-center justify-center">
+            <div className={`w-24 h-24 rounded-full crystal-ball mystic-glow flex items-center justify-center ${animationsEnabled ? 'pulse-glow-animation' : ''}`}>
               <span className="text-5xl">🔮</span>
             </div>
           </motion.div>
@@ -734,7 +720,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
               <Card className="p-6 md:p-8 bg-card border-2 border-border mystic-glow relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" aria-hidden="true" />
                 
-                <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">
+                <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6 text-center">
                   Consult the Oracle
                 </h2>
 
@@ -803,29 +789,23 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     </legend>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {FOCUS_AREAS.map(area => (
-                        <div 
+                        <button 
                           key={area.id}
-                          className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                          type="button"
+                          className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all text-left ${
                             focusAreas.includes(area.id) 
                               ? 'border-primary bg-primary/15' 
                               : 'border-border hover:border-primary/50'
-                          }`}
+                          } focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background`}
                           onClick={() => toggleFocusArea(area.id)}
+                          aria-pressed={focusAreas.includes(area.id)}
+                          aria-describedby={area.id === 'other' ? 'other-focus-hint' : undefined}
                         >
-                          <Checkbox 
-                            id={`focus-${area.id}`}
-                            checked={focusAreas.includes(area.id)}
-                            onCheckedChange={() => toggleFocusArea(area.id)}
-                            className="border-2"
-                            aria-describedby={area.id === 'other' ? 'other-focus-hint' : undefined}
-                          />
-                          <Label 
-                            htmlFor={`focus-${area.id}`} 
-                            className="text-lg font-medium cursor-pointer flex-1"
-                          >
-                            {area.label}
-                          </Label>
-                        </div>
+                          <span className="text-lg font-medium">{area.label}</span>
+                          {focusAreas.includes(area.id) && (
+                            <span className="text-primary text-xl" aria-hidden="true">✓</span>
+                          )}
+                        </button>
                       ))}
                     </div>
                     
@@ -978,21 +958,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
               )}
               <Card className="p-6 md:p-8 bg-card border-2 border-border relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-accent via-primary to-accent" aria-hidden="true" />
-                
-                <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
-                  <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                    Your Question
-                  </h2>
-                  {currentWisdom && !isGenerating && (
-                    <motion.p
-                      initial={animationsEnabled ? { opacity: 0, x: 20 } : {}}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="text-sm md:text-base text-accent italic font-medium"
-                    >
-                      {currentWisdom}
-                    </motion.p>
-                  )}
-                </div>
 
                 {isGenerating && (
                   <div className="text-center py-12" role="status" aria-live="polite">
@@ -1095,7 +1060,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     ) : (
                       <Copy size={22} className="mr-2" aria-hidden="true" />
                     )}
-                    {copiedId === currentQuestion?.id ? 'Copied!' : 'Copy'}
+                    {copiedId === currentQuestion?.id ? 'Copied!' : 'Copy Question'}
                     <kbd className="ml-2 px-1.5 py-0.5 bg-muted rounded text-sm font-mono hidden sm:inline" aria-hidden="true">C</kbd>
                   </Button>
                   <Button
@@ -1134,10 +1099,19 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           transition={animationsEnabled ? { delay: 0.8 } : { duration: 0 }}
           role="contentinfo"
         >
-          <p className="font-medium">"Nothing about us without us" — Disability Rights Movement</p>
-          <p className="text-sm text-muted-foreground/70 border-t border-border/50 pt-3 mt-3">
+          <p className="text-sm text-muted-foreground/70 border-t border-border/50 pt-3">
             This is an experiment. Questions are AI-generated. This app may not be fully accessible.
           </p>
+          <a
+            href="https://www.linkedin.com/in/cariefisher/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-primary hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded-lg px-3 py-2"
+            aria-label="Reach out on LinkedIn with suggestions or questions (opens in new tab)"
+          >
+            <LinkedinLogo size={24} aria-hidden="true" />
+            <span className="text-base font-medium">Suggestions? Reach out on LinkedIn</span>
+          </a>
         </motion.footer>
       </div>
     </div>
