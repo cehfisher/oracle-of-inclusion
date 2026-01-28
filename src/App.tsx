@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Copy, ArrowsClockwise, Check, Plus, X, SpeakerHigh, SpeakerSlash, Sparkle, House, Keyboard, ShareNetwork } from '@phosphor-icons/react'
+import { Copy, ArrowsClockwise, Check, Plus, X, SpeakerHigh, SpeakerSlash, Sparkle, Keyboard, ArrowCounterClockwise } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -10,7 +10,6 @@ import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { useKV } from '@github/spark/hooks'
 import { toast, Toaster } from 'sonner'
 
@@ -212,11 +211,26 @@ const MYSTICAL_LOADING_PHRASES = [
 ]
 
 const MYSTICAL_GREETINGS = [
-  "The oracle senses your need 🌟",
-  "Your questions await revelation ✨",
+  "The oracle senses your need ✨",
+  "Your questions await revelation 🌟",
   "The cosmos whispers your queries 🔮",
   "Destiny stirs within the crystal 🌙",
   "The ancient spirits are listening ⭐",
+  "The veil between worlds grows thin 🌌",
+  "Wisdom flows through the ether ✨",
+  "The stars align in your favor 💫",
+  "Ancient knowledge awakens 🔮",
+  "The mystic currents guide you 🌊",
+  "Celestial forces gather 🌟",
+  "The oracle's eye opens wide 👁️",
+  "Sacred questions find their voice ✨",
+  "The crystal pulses with insight 💎",
+  "Ethereal whispers draw near 🌙",
+  "The cosmic web vibrates 🕸️",
+  "Infinite wisdom awaits discovery ⭐",
+  "The spirit realm responds 👻",
+  "Arcane energies converge 🔮",
+  "The universe bends to listen 🌌",
 ]
 
 const getRandomGreeting = (): string => {
@@ -282,29 +296,34 @@ const FOCUS_AREAS = [
   { id: 'other', label: '✏️ Other' },
 ]
 
-const MYSTICAL_RESPONSES = [
-  { text: "It is certain! ✨", type: "yes" },
-  { text: "Without a doubt! 🌟", type: "yes" },
-  { text: "You may rely on it! 💫", type: "yes" },
-  { text: "Yes, definitely! ⭐", type: "yes" },
-  { text: "As I see it, yes! 🔮", type: "yes" },
-  { text: "Most likely! ✨", type: "yes" },
-  { text: "Outlook good! 🌈", type: "yes" },
-  { text: "Signs point to yes! 💖", type: "yes" },
-  { text: "Don't count on it... 🌙", type: "no" },
-  { text: "My reply is no 🌒", type: "no" },
-  { text: "My sources say no 👻", type: "no" },
-  { text: "Outlook not so good 🌑", type: "no" },
-  { text: "Very doubtful... 😬", type: "no" },
-  { text: "Reply hazy, try again 🎭", type: "maybe" },
-  { text: "Ask again later 🤔", type: "maybe" },
-  { text: "Better not tell you now 🙊", type: "maybe" },
-  { text: "Cannot predict now 🌀", type: "maybe" },
-  { text: "Concentrate and ask again 🧘", type: "maybe" },
+const MYSTICAL_8BALL_RESPONSES = [
+  { text: "✨ It is certain! ✨", type: "yes" },
+  { text: "🌟 Without a doubt! 🌟", type: "yes" },
+  { text: "💫 You may rely on it! 💫", type: "yes" },
+  { text: "⭐ Yes, definitely! ⭐", type: "yes" },
+  { text: "🔮 As I see it, yes! 🔮", type: "yes" },
+  { text: "✨ Most likely! ✨", type: "yes" },
+  { text: "🌈 Outlook good! 🌈", type: "yes" },
+  { text: "💖 Signs point to yes! 💖", type: "yes" },
+  { text: "🎯 Absolutely! 🎯", type: "yes" },
+  { text: "🌟 The stars say YES! 🌟", type: "yes" },
+  { text: "🌙 Don't count on it... 🌙", type: "no" },
+  { text: "🌒 My reply is no 🌒", type: "no" },
+  { text: "👻 My sources say no 👻", type: "no" },
+  { text: "🌑 Outlook not so good 🌑", type: "no" },
+  { text: "😬 Very doubtful... 😬", type: "no" },
+  { text: "❌ The spirits shake their heads ❌", type: "no" },
+  { text: "🎭 Reply hazy, try again! 🎭", type: "maybe" },
+  { text: "🤔 Ask again later... 🤔", type: "maybe" },
+  { text: "🙊 Better not tell you now 🙊", type: "maybe" },
+  { text: "🌀 Cannot predict now 🌀", type: "maybe" },
+  { text: "🧘 Concentrate and ask again 🧘", type: "maybe" },
+  { text: "🎲 The fates are undecided 🎲", type: "maybe" },
+  { text: "🌫️ The mists obscure the answer 🌫️", type: "maybe" },
 ]
 
 const getRandomResponse = () => {
-  return MYSTICAL_RESPONSES[Math.floor(Math.random() * MYSTICAL_RESPONSES.length)]
+  return MYSTICAL_8BALL_RESPONSES[Math.floor(Math.random() * MYSTICAL_8BALL_RESPONSES.length)]
 }
 
 const KEYBOARD_SHORTCUTS = [
@@ -341,10 +360,12 @@ export default function App() {
   
   const [shuffledTopicSuggestions, setShuffledTopicSuggestions] = useState(() => shuffleArray(TOPIC_SUGGESTIONS))
   const [mysticalGreeting, setMysticalGreeting] = useState(() => getRandomGreeting())
+  const [greetingKey, setGreetingKey] = useState(0)
   
   const reshuffleTopics = useCallback(() => {
     setShuffledTopicSuggestions(shuffleArray(TOPIC_SUGGESTIONS))
     setMysticalGreeting(getRandomGreeting())
+    setGreetingKey(prev => prev + 1)
   }, [])
   
   const sounds = useSound()
@@ -535,21 +556,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
     setTimeout(() => setCopiedId(null), 2000)
   }, [])
 
-  const shareQuestion = useCallback((question: Question, platform: 'twitter' | 'linkedin' | 'bluesky') => {
-    const text = `🔮 ${question.text}\n\n— via Oracle of Inclusion`
-    const encodedText = encodeURIComponent(text)
-    
-    const urls: Record<string, string> = {
-      twitter: `https://twitter.com/intent/tweet?text=${encodedText}`,
-      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}&summary=${encodedText}`,
-      bluesky: `https://bsky.app/intent/compose?text=${encodedText}`,
-    }
-    
-    window.open(urls[platform], '_blank', 'noopener,noreferrer,width=600,height=400')
-    playSound(sounds.playSparkle)
-    toast.success('✨ Opening share dialog!')
-  }, [soundEnabled, sounds])
-
   const shakeTheOrb = () => {
     setIsShakingOrb(true)
     setQuickAnswer(null)
@@ -618,12 +624,12 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
     : {}
 
   const sparklePositions = useMemo(() => 
-    Array.from({ length: 12 }, (_, i) => ({
+    Array.from({ length: 20 }, (_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,
       top: `${Math.random() * 100}%`,
-      delay: Math.random() * 3,
-      size: Math.random() * 0.5 + 0.5,
+      delay: Math.random() * 4,
+      size: Math.random() * 0.6 + 0.4,
     })), []
   )
 
@@ -747,18 +753,44 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                 exit={{ opacity: 0, height: 0 }}
                 className="mb-6 overflow-hidden"
               >
-                <Card className="p-6 bg-card border-2 border-border">
-                  <div className="flex flex-col items-center gap-4">
-                    <p className="text-muted-foreground text-lg">🎱 Ask a yes/no question, then shake the ball!</p>
+                <Card className="p-6 bg-card border-2 border-border relative overflow-hidden">
+                  <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+                    {[...Array(8)].map((_, i) => (
+                      <motion.span
+                        key={i}
+                        className="absolute text-primary/30"
+                        style={{ 
+                          left: `${10 + i * 12}%`, 
+                          top: `${20 + (i % 3) * 25}%`,
+                          fontSize: '12px'
+                        }}
+                        animate={animationsEnabled ? { 
+                          opacity: [0.2, 0.6, 0.2],
+                          scale: [0.8, 1.2, 0.8],
+                        } : {}}
+                        transition={{
+                          duration: 2,
+                          delay: i * 0.3,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      >
+                        ✦
+                      </motion.span>
+                    ))}
+                  </div>
+                  <div className="flex flex-col items-center gap-4 relative z-10">
+                    <p className="text-muted-foreground text-lg">🎱 Think of a yes/no question, then shake!</p>
                     <motion.button
                       onClick={shakeTheOrb}
                       disabled={isShakingOrb}
-                      className="w-20 h-20 rounded-full bg-gradient-to-br from-gray-900 via-gray-800 to-black mystic-glow flex items-center justify-center text-4xl cursor-pointer hover:scale-110 transition-transform disabled:cursor-wait focus:outline-none focus:ring-4 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+                      className="w-24 h-24 rounded-full bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center text-5xl cursor-pointer hover:scale-110 transition-transform disabled:cursor-wait focus:outline-none focus:ring-4 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background shadow-[0_0_40px_rgba(255,200,100,0.3),0_0_80px_rgba(200,100,255,0.2)]"
                       animate={isShakingOrb && animationsEnabled ? { 
-                        x: [0, -10, 10, -10, 10, 0],
-                        rotate: [0, -5, 5, -5, 5, 0]
+                        x: [0, -15, 15, -15, 15, -10, 10, 0],
+                        rotate: [0, -8, 8, -8, 8, -5, 5, 0],
+                        scale: [1, 1.05, 1, 1.05, 1, 1.02, 1, 1]
                       } : {}}
-                      transition={{ duration: 0.5, repeat: isShakingOrb ? Infinity : 0 }}
+                      transition={{ duration: 0.8, repeat: isShakingOrb ? Infinity : 0 }}
                       aria-label="Shake the Magic 8-Ball for a yes/no answer"
                       aria-live="polite"
                     >
@@ -768,9 +800,9 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     <AnimatePresence>
                       {isShakingOrb && (
                         <motion.p
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
                           className="text-primary text-lg font-medium italic"
                         >
                           ✨ The spirits are stirring... ✨
@@ -778,13 +810,14 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                       )}
                       {quickAnswer && !isShakingOrb && (
                         <motion.div
-                          initial={animationsEnabled ? { opacity: 0, scale: 0.8 } : {}}
-                          animate={{ opacity: 1, scale: 1 }}
+                          initial={animationsEnabled ? { opacity: 0, scale: 0.5, rotate: -10 } : {}}
+                          animate={{ opacity: 1, scale: 1, rotate: 0 }}
                           exit={animationsEnabled ? { opacity: 0, scale: 0.8 } : {}}
-                          className={`px-6 py-3 rounded-xl text-lg font-bold ${
-                            quickAnswer.type === 'yes' ? 'bg-green-500/20 text-green-400 border-2 border-green-500/30' :
-                            quickAnswer.type === 'no' ? 'bg-red-500/20 text-red-400 border-2 border-red-500/30' :
-                            'bg-primary/20 text-primary border-2 border-primary/30'
+                          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                          className={`px-8 py-4 rounded-2xl text-xl font-bold ${
+                            quickAnswer.type === 'yes' ? 'bg-green-500/20 text-green-400 border-2 border-green-500/40 shadow-[0_0_20px_rgba(34,197,94,0.3)]' :
+                            quickAnswer.type === 'no' ? 'bg-red-500/20 text-red-400 border-2 border-red-500/40 shadow-[0_0_20px_rgba(239,68,68,0.3)]' :
+                            'bg-primary/20 text-primary border-2 border-primary/40 shadow-[0_0_20px_rgba(200,150,50,0.3)]'
                           }`}
                           role="status"
                           aria-live="polite"
@@ -817,10 +850,11 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
             "Ask and the wisdom shall be revealed..."
           </p>
           <motion.p 
+            key={greetingKey}
             className="text-primary text-lg font-medium"
-            initial={animationsEnabled ? { opacity: 0 } : {}}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
+            initial={animationsEnabled ? { opacity: 0, scale: 0.9 } : {}}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, type: "spring" }}
           >
             {mysticalGreeting}
           </motion.p>
@@ -1027,7 +1061,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                       className="py-7 px-6 border-2 border-border text-muted-foreground hover:bg-muted hover:text-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
                       aria-label="Reset form"
                     >
-                      <House size={24} aria-hidden="true" />
+                      <ArrowCounterClockwise size={24} aria-hidden="true" />
                     </Button>
                   </div>
                 </div>
@@ -1147,40 +1181,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     {copiedId === currentQuestion?.id ? 'Copied!' : 'Copy'}
                     <kbd className="ml-2 px-1.5 py-0.5 bg-muted rounded text-sm font-mono hidden sm:inline" aria-hidden="true">C</kbd>
                   </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="lg"
-                        disabled={!currentQuestion}
-                        className="text-lg py-6 px-6 border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
-                        aria-label="Share question on social media"
-                      >
-                        <ShareNetwork size={22} className="mr-2" aria-hidden="true" />
-                        Share
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="bg-card border-2 border-border min-w-[180px]">
-                      <DropdownMenuItem 
-                        onClick={() => currentQuestion && shareQuestion(currentQuestion, 'twitter')}
-                        className="text-lg py-3 cursor-pointer"
-                      >
-                        <span className="mr-2" aria-hidden="true">𝕏</span> Twitter / X
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => currentQuestion && shareQuestion(currentQuestion, 'linkedin')}
-                        className="text-lg py-3 cursor-pointer"
-                      >
-                        <span className="mr-2" aria-hidden="true">in</span> LinkedIn
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => currentQuestion && shareQuestion(currentQuestion, 'bluesky')}
-                        className="text-lg py-3 cursor-pointer"
-                      >
-                        <span className="mr-2" aria-hidden="true">🦋</span> Bluesky
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
                   <Button
                     variant="outline"
                     size="lg"
@@ -1198,10 +1198,10 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     size="lg"
                     onClick={resetForm}
                     className="text-lg py-6 px-8 border-2 border-muted-foreground text-muted-foreground hover:bg-muted hover:text-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
-                    aria-label="Start over and reset the form"
+                    aria-label="Restart and reset the form"
                   >
-                    <House size={22} className="mr-2" aria-hidden="true" />
-                    Start Over
+                    <ArrowCounterClockwise size={22} className="mr-2" aria-hidden="true" />
+                    Restart
                     <kbd className="ml-2 px-1.5 py-0.5 bg-muted rounded text-sm font-mono hidden sm:inline" aria-hidden="true">Esc</kbd>
                   </Button>
                 </div>
