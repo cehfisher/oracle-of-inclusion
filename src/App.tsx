@@ -354,6 +354,18 @@ export default function App() {
     )
   }
 
+  const popupSparkles = useMemo(() => 
+    Array.from({ length: 12 }, (_, i) => ({
+      id: i,
+      left: `${10 + Math.random() * 80}%`,
+      top: `${10 + Math.random() * 80}%`,
+      delay: Math.random() * 0.5,
+      duration: 1.5 + Math.random() * 1,
+      size: 8 + Math.random() * 10,
+      symbol: ['✦', '✧', '★', '⋆', '✵'][Math.floor(Math.random() * 5)],
+    })), []
+  )
+
   const resetForm = useCallback(() => {
     setTopics([])
     setTopicInput('')
@@ -366,8 +378,73 @@ export default function App() {
     setQuestions([])
     setCurrentQuestionIndex(0)
     playSound(sounds.playReset)
-    toast.success('Form reset!')
-  }, [soundEnabled, sounds])
+    toast.custom(
+      () => (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8, y: -20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: -10 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="relative px-8 py-5 rounded-2xl border-2 border-border bg-background overflow-hidden mystic-glow"
+        >
+          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" aria-hidden="true" />
+          
+          {popupSparkles.map((sparkle) => (
+            <motion.span
+              key={sparkle.id}
+              className="absolute pointer-events-none text-primary/80"
+              style={{
+                left: sparkle.left,
+                top: sparkle.top,
+                fontSize: `${sparkle.size}px`,
+              }}
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ 
+                opacity: [0, 1, 0.8, 0],
+                scale: [0.3, 1.2, 1, 0.5],
+                y: [0, -10, -15, -25],
+              }}
+              transition={{ 
+                duration: sparkle.duration,
+                delay: sparkle.delay,
+                repeat: Infinity,
+                repeatDelay: 0.3,
+              }}
+            >
+              {sparkle.symbol}
+            </motion.span>
+          ))}
+          
+          <div className="relative flex items-center gap-4 pt-2">
+            <motion.span 
+              className="text-4xl"
+              animate={{ 
+                rotate: [0, -10, 10, -5, 5, 0],
+                scale: [1, 1.1, 1.05, 1.1, 1]
+              }}
+              transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 0.5 }}
+            >
+              🔮
+            </motion.span>
+            <div className="flex flex-col">
+              <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium mb-1">The Oracle Resets</span>
+              <span className="text-xl font-bold text-foreground" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+                A fresh start awaits ✨
+              </span>
+            </div>
+          </div>
+          
+          <motion.div 
+            className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-primary via-accent to-primary"
+            initial={{ width: '100%' }}
+            animate={{ width: '0%' }}
+            transition={{ duration: 3, ease: 'linear' }}
+          />
+        </motion.div>
+      ),
+      { duration: 3000 }
+    )
+  }, [soundEnabled, sounds, popupSparkles])
 
   const getRandomVibe = (): string => {
     return VIBE_TYPES[Math.floor(Math.random() * VIBE_TYPES.length)]
@@ -477,18 +554,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
       setIsShuffling(false)
     }
   }, [focusAreas, otherFocusArea, questionCount, topics, experience, audience, soundEnabled, sounds, reshuffleTopics, previousQuestions, setPreviousQuestions])
-
-  const popupSparkles = useMemo(() => 
-    Array.from({ length: 12 }, (_, i) => ({
-      id: i,
-      left: `${10 + Math.random() * 80}%`,
-      top: `${10 + Math.random() * 80}%`,
-      delay: Math.random() * 0.5,
-      duration: 1.5 + Math.random() * 1,
-      size: 8 + Math.random() * 10,
-      symbol: ['✦', '✧', '★', '⋆', '✵'][Math.floor(Math.random() * 5)],
-    })), []
-  )
 
   const handleGenerateClick = () => {
     toast.custom(
