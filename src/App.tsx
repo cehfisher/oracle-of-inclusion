@@ -625,9 +625,19 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
 
   const currentQuestion = questions[currentQuestionIndex]
 
+  const COPY_PHRASES = [
+    { text: "Wisdom captured", emoji: "📜" },
+    { text: "Knowledge secured", emoji: "🗝️" },
+    { text: "Magic bottled", emoji: "🧪" },
+    { text: "Insight preserved", emoji: "💎" },
+    { text: "Words enchanted", emoji: "✨" },
+    { text: "Scroll inscribed", emoji: "📿" },
+  ]
+
   const copyQuestion = useCallback(async (question: Question) => {
     await navigator.clipboard.writeText(question.text)
     setCopiedId(question.id)
+    const phrase = COPY_PHRASES[Math.floor(Math.random() * COPY_PHRASES.length)]
     toast.custom(
       (t) => (
         <motion.div
@@ -641,11 +651,11 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" aria-hidden="true" />
           
           <div className="relative flex items-center gap-4 pt-2">
-            <span className="text-4xl shrink-0">📋</span>
+            <span className="text-4xl shrink-0">{phrase.emoji}</span>
             <div className="flex flex-col">
-              <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium mb-1">Captured</span>
+              <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium mb-1">The Oracle Inscribes</span>
               <span className="text-xl font-bold text-foreground" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-                Copied to clipboard&nbsp;✨
+                {phrase.text}&nbsp;✨
               </span>
             </div>
           </div>
