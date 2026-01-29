@@ -1168,46 +1168,50 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                 </AnimatePresence>
               </Card>
 
-              <Card className="p-6 bg-card border-2 border-border card-subtle-glow">
-                <div className="flex flex-wrap gap-3 justify-center">
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={() => currentQuestion && copyQuestion(currentQuestion)}
-                    disabled={!currentQuestion}
-                    className="text-lg py-6 px-6 border-2 border-primary/50 text-foreground bg-card hover:bg-primary hover:text-primary-foreground hover:border-primary focus:ring-4 focus:ring-ring focus:ring-offset-2"
-                    aria-label={copiedId === currentQuestion?.id ? 'Copied to clipboard' : 'Copy question to clipboard'}
-                  >
-                    {copiedId === currentQuestion?.id ? (
-                      <Check size={22} className="text-green-500 mr-2" aria-hidden="true" />
-                    ) : (
-                      <Copy size={22} className="mr-2" aria-hidden="true" />
-                    )}
-                    {copiedId === currentQuestion?.id ? 'Copied!' : 'Copy'}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={() => generateQuestions(true)}
-                    disabled={isGenerating}
-                    className="text-lg py-6 px-8 border-2 border-primary/50 text-foreground bg-card hover:bg-accent hover:text-accent-foreground hover:border-accent focus:ring-4 focus:ring-ring focus:ring-offset-2"
-                    aria-label="Shuffle all questions and generate new ones"
-                  >
-                    <ArrowsClockwise size={22} className="mr-2" aria-hidden="true" />
-                    Shuffle
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={resetForm}
-                    className="text-lg py-6 px-8 border-2 border-primary/50 text-foreground bg-card hover:bg-muted-foreground hover:text-background hover:border-muted-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
-                    aria-label="Restart and reset the form"
-                  >
-                    <ArrowCounterClockwise size={22} className="mr-2" aria-hidden="true" />
-                    Restart
-                  </Button>
-                </div>
-              </Card>
+              <div className="flex items-center justify-center my-4" aria-hidden="true">
+                <div className="h-px w-16 bg-gradient-to-r from-transparent via-border to-transparent" />
+                <span className="mx-3 text-muted-foreground/50">✦</span>
+                <div className="h-px w-16 bg-gradient-to-l from-transparent via-border to-transparent" />
+              </div>
+
+              <div className="flex flex-wrap gap-3 justify-center">
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  onClick={() => currentQuestion && copyQuestion(currentQuestion)}
+                  disabled={!currentQuestion}
+                  className="text-lg py-6 px-6 text-foreground hover:bg-primary/15 hover:text-primary focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                  aria-label={copiedId === currentQuestion?.id ? 'Copied to clipboard' : 'Copy question to clipboard'}
+                >
+                  {copiedId === currentQuestion?.id ? (
+                    <Check size={22} className="text-green-500 mr-2" aria-hidden="true" />
+                  ) : (
+                    <Copy size={22} className="mr-2" aria-hidden="true" />
+                  )}
+                  {copiedId === currentQuestion?.id ? 'Copied!' : 'Copy'}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  onClick={() => generateQuestions(true)}
+                  disabled={isGenerating}
+                  className="text-lg py-6 px-8 text-foreground hover:bg-accent/15 hover:text-accent focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                  aria-label="Shuffle all questions and generate new ones"
+                >
+                  <ArrowsClockwise size={22} className="mr-2" aria-hidden="true" />
+                  Shuffle
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  onClick={resetForm}
+                  className="text-lg py-6 px-8 text-foreground hover:bg-muted-foreground/15 hover:text-muted-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                  aria-label="Restart and reset the form"
+                >
+                  <ArrowCounterClockwise size={22} className="mr-2" aria-hidden="true" />
+                  Restart
+                </Button>
+              </div>
             </motion.div>
           )}
         </main>
