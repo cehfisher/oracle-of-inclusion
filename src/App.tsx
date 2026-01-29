@@ -767,12 +767,12 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
       
       <div className="max-w-3xl mx-auto relative z-10">
         <motion.header 
-          className="text-center mb-10 relative z-20"
+          className="text-center mb-10 pt-6 relative z-20"
           {...animationProps}
           role="banner"
         >
           <motion.button 
-            className="inline-block mb-4 cursor-pointer hover:scale-110 transition-transform focus:outline-none select-none active:scale-100 relative"
+            className="inline-block mb-6 cursor-pointer hover:scale-110 transition-transform focus:outline-none select-none active:scale-100 relative"
             animate={animationsEnabled && !isExploding ? floatAnimation : {}}
             transition={animationsEnabled ? { duration: 4, repeat: Infinity, ease: "easeInOut" } : {}}
             onClick={triggerExplosion}
@@ -813,7 +813,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           <p className="text-muted-foreground text-lg md:text-xl mb-8">
             The path to understanding begins with the right question...
           </p>
-          <div className="flex justify-center items-center gap-3 flex-wrap mb-6">
+          <div className="flex justify-center items-center gap-3 flex-wrap mb-10">
             <button
               onClick={() => setDarkMode(prev => !prev)}
               className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
@@ -858,7 +858,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
               <Card className="p-6 md:p-8 bg-card border-2 border-border mystic-glow card-subtle-glow relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" aria-hidden="true" />
 
-                <div className="space-y-6">
+                <div className="space-y-8">
                   <div>
                     <Label htmlFor="topics" className="text-foreground mb-3 block text-xl font-bold form-heading">
                       🌟 Topics to explore
