@@ -1028,7 +1028,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
 
                   <div>
                     <Label htmlFor="question-count-slider" className="text-foreground mb-3 block text-xl font-bold form-heading">
-                      ✨ Number of questions <span className="text-accent font-bold text-xl">{questionCount}</span>
+                      🔢 Number of questions
                     </Label>
                     <div className="px-2 py-4">
                       <Slider
@@ -1067,10 +1067,12 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         aria-valuemin={0}
                         aria-valuemax={100}
                         aria-valuenow={questionTone}
-                        aria-valuetext={questionTone <= 25 ? 'Serious' : questionTone <= 50 ? 'Balanced mix' : questionTone <= 75 ? 'Lighter' : 'Fun'}
+                        aria-valuetext={questionTone <= 25 ? 'Serious' : questionTone <= 50 ? 'Balanced' : questionTone <= 75 ? 'Lighter' : 'Fun'}
                       />
                       <div className="flex justify-between mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
                         <span>🎯 Serious</span>
+                        <span>⚖️ Balanced</span>
+                        <span>💡 Lighter</span>
                         <span>🎪 Fun</span>
                       </div>
                     </div>
