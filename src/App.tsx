@@ -917,6 +917,12 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     </div>
                   </div>
 
+                  <div className="flex items-center justify-center" aria-hidden="true">
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent" />
+                    <span className="mx-3 text-muted-foreground/30">✦</span>
+                    <div className="h-px flex-1 bg-gradient-to-l from-transparent via-border to-transparent" />
+                  </div>
+
                   <fieldset>
                     <legend className="text-foreground mb-3 block text-xl font-bold form-heading">
                       👤 Guest's focus areas (select all that apply)
@@ -958,6 +964,12 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     )}
                   </fieldset>
 
+                  <div className="flex items-center justify-center" aria-hidden="true">
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent" />
+                    <span className="mx-3 text-muted-foreground/30">✦</span>
+                    <div className="h-px flex-1 bg-gradient-to-l from-transparent via-border to-transparent" />
+                  </div>
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                       <Label htmlFor="experience" className="text-foreground mb-3 block text-xl font-bold form-heading">
@@ -997,6 +1009,12 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     </div>
                   </div>
 
+                  <div className="flex items-center justify-center" aria-hidden="true">
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent" />
+                    <span className="mx-3 text-muted-foreground/30">✦</span>
+                    <div className="h-px flex-1 bg-gradient-to-l from-transparent via-border to-transparent" />
+                  </div>
+
                   <div>
                     <Label htmlFor="question-count-slider" className="text-foreground mb-3 block text-xl font-bold form-heading">
                       ✨ Number of questions <span className="text-accent font-bold text-xl">{questionCount}</span>
@@ -1020,6 +1038,12 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         <span>10</span>
                       </div>
                     </div>
+                  </div>
+
+                  <div className="flex items-center justify-center" aria-hidden="true">
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent" />
+                    <span className="mx-3 text-muted-foreground/30">✦</span>
+                    <div className="h-px flex-1 bg-gradient-to-l from-transparent via-border to-transparent" />
                   </div>
 
                   <div className="flex gap-3 flex-wrap">
@@ -1168,13 +1192,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                 </AnimatePresence>
               </Card>
 
-              <div className="flex items-center justify-center my-4" aria-hidden="true">
-                <div className="h-px w-16 bg-gradient-to-r from-transparent via-border to-transparent" />
-                <span className="mx-3 text-muted-foreground/50">✦</span>
-                <div className="h-px w-16 bg-gradient-to-l from-transparent via-border to-transparent" />
-              </div>
-
-              <div className="flex flex-wrap gap-3 justify-center">
+              <div className="flex flex-wrap gap-3 justify-center mt-6">
                 <Button
                   variant="ghost"
                   size="lg"
