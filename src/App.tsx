@@ -251,6 +251,7 @@ export default function App() {
   const [audience, setAudience] = useState('')
 
   const [questionCount, setQuestionCount] = useState(3)
+  const [questionTone, setQuestionTone] = useState(50)
   const [questions, setQuestions] = useState<Question[]>([])
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -364,6 +365,7 @@ export default function App() {
     setAudience('')
 
     setQuestionCount(3)
+    setQuestionTone(50)
     setQuestions([])
     setCurrentQuestionIndex(0)
     playSound(sounds.playReset)
@@ -506,11 +508,20 @@ export default function App() {
       ? `CRITICAL PRIORITY - The guest works in: ${focusAreasText}. Tailor questions to their specific expertise. At least ${Math.ceil(questionCount * 0.6)} of the ${questionCount} questions (60%+) should connect to their professional focus areas.`
       : `Guest's work area: accessibility and inclusion in technology (general)`
 
+    const toneDescription = questionTone <= 25 
+      ? 'serious and professional - focus on deep, substantive questions about challenges, strategies, and expertise'
+      : questionTone <= 50
+      ? 'balanced mix - combine thoughtful professional questions with some lighter, more personal ones'
+      : questionTone <= 75
+      ? 'lighter and engaging - lean toward fun, creative, and personal questions while still being meaningful'
+      : 'fun and playful - prioritize creative, surprising, and delightful questions that spark joy and interesting stories'
+
     const prompt = spark.llmPrompt`Generate ${questionCount} simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
 
 Context:
 ${topicEmphasis}
 ${focusAreaEmphasis}
+- Question tone/style: ${toneDescription}
 - Years in accessibility/inclusion work: ${experience || 'not specified'}
 - Audience type: ${audience || 'general / mixed'}
 
@@ -1036,6 +1047,31 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                       <div className="flex justify-between mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
                         <span>1</span>
                         <span>10</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="question-tone-slider" className="text-foreground mb-3 block text-xl font-bold form-heading">
+                      🎭 Question type
+                    </Label>
+                    <div className="px-2 py-4">
+                      <Slider
+                        id="question-tone-slider"
+                        value={[questionTone]}
+                        onValueChange={(value) => setQuestionTone(value[0])}
+                        min={0}
+                        max={100}
+                        step={25}
+                        className="w-full [&_[data-radix-slider-track]]:bg-muted [&_[data-radix-slider-range]]:bg-accent [&_[data-radix-slider-thumb]]:bg-accent [&_[data-radix-slider-thumb]]:border-2 [&_[data-radix-slider-thumb]]:border-foreground"
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={questionTone}
+                        aria-valuetext={questionTone <= 25 ? 'Serious' : questionTone <= 50 ? 'Balanced mix' : questionTone <= 75 ? 'Lighter' : 'Fun'}
+                      />
+                      <div className="flex justify-between mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
+                        <span>🎯 Serious</span>
+                        <span>🎪 Fun</span>
                       </div>
                     </div>
                   </div>
