@@ -1040,12 +1040,6 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-center" aria-hidden="true">
-                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent" />
-                    <span className="mx-3 text-muted-foreground/30">✦</span>
-                    <div className="h-px flex-1 bg-gradient-to-l from-transparent via-border to-transparent" />
-                  </div>
-
                   <div className="flex gap-3 flex-wrap">
                     <Button 
                       onClick={handleGenerateClick}
