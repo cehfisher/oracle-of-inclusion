@@ -859,7 +859,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-accent to-primary" aria-hidden="true" />
 
                 <div className="space-y-8">
-                  <div>
+                  <div className="pt-4">
                     <Label htmlFor="topics" className="text-foreground mb-3 block text-xl font-bold form-heading">
                       🌟 Topics to explore
                     </Label>
@@ -1194,11 +1194,11 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
 
               <div className="flex flex-wrap gap-3 justify-center mt-6">
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="lg"
                   onClick={() => currentQuestion && copyQuestion(currentQuestion)}
                   disabled={!currentQuestion}
-                  className="text-lg py-6 px-6 text-foreground hover:bg-primary/15 hover:text-primary focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                  className="text-lg py-6 px-6 border-2 border-border text-foreground hover:bg-primary/15 hover:text-primary hover:border-primary focus:ring-4 focus:ring-ring focus:ring-offset-2"
                   aria-label={copiedId === currentQuestion?.id ? 'Copied to clipboard' : 'Copy question to clipboard'}
                 >
                   {copiedId === currentQuestion?.id ? (
@@ -1209,21 +1209,21 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                   {copiedId === currentQuestion?.id ? 'Copied!' : 'Copy'}
                 </Button>
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="lg"
                   onClick={() => generateQuestions(true)}
                   disabled={isGenerating}
-                  className="text-lg py-6 px-8 text-foreground hover:bg-accent/15 hover:text-accent focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                  className="text-lg py-6 px-8 border-2 border-border text-foreground hover:bg-accent/15 hover:text-accent hover:border-accent focus:ring-4 focus:ring-ring focus:ring-offset-2"
                   aria-label="Shuffle all questions and generate new ones"
                 >
                   <ArrowsClockwise size={22} className="mr-2" aria-hidden="true" />
                   Shuffle
                 </Button>
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="lg"
                   onClick={resetForm}
-                  className="text-lg py-6 px-8 text-foreground hover:bg-muted-foreground/15 hover:text-muted-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                  className="text-lg py-6 px-8 border-2 border-border text-foreground hover:bg-muted/50 hover:text-muted-foreground hover:border-muted-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
                   aria-label="Restart and reset the form"
                 >
                   <ArrowCounterClockwise size={22} className="mr-2" aria-hidden="true" />
