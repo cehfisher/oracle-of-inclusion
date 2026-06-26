@@ -652,6 +652,7 @@ export default function App() {
     } else {
       setQuestions([])
     }
+    setThinkingQuestions([])
     setIsGenerating(true)
     setCurrentQuestionIndex(0)
     setLoadingPhrase(getRandomLoadingPhrase())
