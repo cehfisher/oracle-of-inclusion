@@ -1273,9 +1273,9 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           transition={animationsEnabled ? { delay: 0.8 } : { duration: 0 }}
           role="contentinfo"
         >
-          <br />
           <p className="text-sm text-muted-foreground/70 border-t border-border/50 pt-4">
-            This is an experiment. Questions are AI-generated. This app may not be fully accessible.{' '}
+            Questions are AI-generated. This app may not be fully accessible.{' '}
+            <br />
             <a
               href="https://github.com/cehfisher"
               target="_blank"
