@@ -1287,7 +1287,10 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
             {' '}
             <a
               href="https://github.com/cehfisher"
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-primary hover:text-primary/80 underline underline-offset-2 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded"
+              aria-label="Created by cehfisher (opens GitHub in new tab)"
             >
               Created by cehfisher
             </a>
