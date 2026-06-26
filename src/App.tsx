@@ -592,15 +592,15 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
     try {
       const result = await llm(prompt, 'gpt-4o', true)
       const generatedResponse = parseQuestionResponse(result)
+      if (generatedResponse.length !== questionCount) {
+        throw new Error(`Expected ${questionCount} questions, received ${generatedResponse.length}`)
+      }
+      
       const generatedQuestions: Question[] = shuffleArray(generatedResponse.map((q, i) => ({
         id: `q-${Date.now()}-${i}`,
         text: q.text.trim(),
         vibe: q.vibe && VIBE_TYPES.includes(q.vibe) ? q.vibe : getRandomVibe()
       })))
-      
-      if (generatedQuestions.length !== questionCount) {
-        throw new Error(`Expected ${questionCount} questions, received ${generatedQuestions.length}`)
-      }
       
       setQuestions(generatedQuestions)
       
