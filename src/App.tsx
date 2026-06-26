@@ -1080,9 +1080,12 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         aria-valuenow={questionCount}
                         aria-valuetext={`${questionCount} question${questionCount === 1 ? '' : 's'}`}
                       />
-                      <div className="flex justify-between mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
-                        <span>1</span>
-                        <span>10</span>
+                      <div className="grid grid-cols-10 mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
+                        {Array.from({ length: 10 }, (_, index) => (
+                          <span key={index + 1} className="text-center">
+                            {index + 1}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   </div>
