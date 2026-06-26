@@ -110,9 +110,26 @@ interface GeneratedQuestion {
   vibe?: string
 }
 
-const FREE_LLM_ENDPOINT = import.meta.env.VITE_FREE_LLM_ENDPOINT ?? 'https://text.pollinations.ai/openai'
+type WookieeBackendResponse = {
+  answer?: string
+  response?: string
+  content?: string
+}
+
+const DEFAULT_WOOKIEE_ENDPOINT = '/api/ask-wookiee'
+const FREE_LLM_ENDPOINT = import.meta.env.VITE_FREE_LLM_ENDPOINT ?? DEFAULT_WOOKIEE_ENDPOINT
 const FREE_LLM_MODEL = 'openai'
-const FREE_LLM_TIMEOUT_MS = 12000
+const DEFAULT_RESPONSE_TIMEOUT_MS = 5500
+const MIN_RESPONSE_TIMEOUT_MS = 1000
+const CACHE_TTL_HOURS = 12
+const CACHE_TTL_MILLISECONDS = 1000 * 60 * 60 * CACHE_TTL_HOURS
+const CACHE_PREFIX = 'ask-wookiee-response:'
+const memoryCache = new Map<string, { content: string; expiresAt: number }>()
+const FREE_LLM_TIMEOUT_MS = (() => {
+  const timeoutMs = Number(import.meta.env.VITE_FREE_LLM_TIMEOUT_MS ?? DEFAULT_RESPONSE_TIMEOUT_MS)
+  if (!Number.isFinite(timeoutMs)) return DEFAULT_RESPONSE_TIMEOUT_MS
+  return Math.max(MIN_RESPONSE_TIMEOUT_MS, Math.floor(timeoutMs))
+})()
 const FREE_LLM_MAX_RETRIES = 2
 const FREE_LLM_RETRY_BASE_DELAY_MS = 600
 const FREE_LLM_RETRY_MAX_DELAY_MS = 2400
@@ -139,13 +156,76 @@ class FreeLlmRequestError extends Error {
 }
 
 const getFreeLlmEndpoint = (): string => {
-  const endpoint = new URL(FREE_LLM_ENDPOINT)
+  const endpoint = FREE_LLM_ENDPOINT.trim()
 
-  if (endpoint.protocol !== 'https:') {
+  if (endpoint.startsWith('/')) {
+    return endpoint
+  }
+
+  const parsedEndpoint = new URL(endpoint)
+
+  if (parsedEndpoint.protocol !== 'https:') {
     throw new Error('Free LLM endpoint must use HTTPS')
   }
 
-  return endpoint.toString()
+  return parsedEndpoint.toString()
+}
+
+const isWookieeEndpoint = (endpoint: string): boolean => endpoint.includes(DEFAULT_WOOKIEE_ENDPOINT)
+
+const getPromptCacheKey = (prompt: string): string => {
+  let hash = 5381
+  for (let index = 0; index < prompt.length; index += 1) {
+    hash = ((hash << 5) + hash) ^ prompt.charCodeAt(index)
+  }
+  return `${CACHE_PREFIX}${Math.abs(hash).toString(36)}:${prompt.length}`
+}
+
+const getCachedPromptResponse = (cacheKey: string): string | null => {
+  const now = Date.now()
+  const memoryCached = memoryCache.get(cacheKey)
+  if (memoryCached && memoryCached.expiresAt > now) {
+    return memoryCached.content
+  }
+  if (memoryCached) {
+    memoryCache.delete(cacheKey)
+  }
+
+  try {
+    const rawStored = window.localStorage.getItem(cacheKey)
+    if (!rawStored) return null
+
+    const parsed = JSON.parse(rawStored) as { content?: unknown; expiresAt?: unknown }
+    if (typeof parsed.content !== 'string' || typeof parsed.expiresAt !== 'number' || parsed.expiresAt <= now) {
+      window.localStorage.removeItem(cacheKey)
+      return null
+    }
+
+    memoryCache.set(cacheKey, { content: parsed.content, expiresAt: parsed.expiresAt })
+    return parsed.content
+  } catch {
+    return null
+  }
+}
+
+const setCachedPromptResponse = (cacheKey: string, content: string): void => {
+  const cacheValue = { content, expiresAt: Date.now() + CACHE_TTL_MILLISECONDS }
+  memoryCache.set(cacheKey, cacheValue)
+  try {
+    window.localStorage.setItem(cacheKey, JSON.stringify(cacheValue))
+  } catch {
+    // Ignore storage quota and serialization issues.
+  }
+}
+
+const extractLlmContent = (
+  data: WookieeBackendResponse & {
+    choices?: Array<{ message?: { content?: unknown }, text?: unknown }>
+  }
+): string | null => {
+  const content = data.answer ?? data.response ?? data.content ?? data.choices?.[0]?.message?.content ?? data.choices?.[0]?.text
+  if (typeof content !== 'string' || !content.trim()) return null
+  return content
 }
 
 const extractJsonObject = (content: string): string => {
@@ -237,6 +317,8 @@ const getFallbackToastMessage = (error: unknown): string => {
 }
 
 const callFreeQuestionLlmOnce = async (prompt: string): Promise<string> => {
+  const endpoint = getFreeLlmEndpoint()
+  const useWookieeBackend = isWookieeEndpoint(endpoint)
   const controller = new AbortController()
   const timeout = window.setTimeout(() => controller.abort(), FREE_LLM_TIMEOUT_MS)
 
@@ -244,30 +326,35 @@ const callFreeQuestionLlmOnce = async (prompt: string): Promise<string> => {
     let response: Response
 
     try {
-      response = await fetch(getFreeLlmEndpoint(), {
+      response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify({
-          model: FREE_LLM_MODEL,
-          messages: [
-            {
-              role: 'system',
-              content: 'You generate inclusive fireside chat questions. Return only valid JSON matching the requested schema.'
-            },
-            { role: 'user', content: prompt }
-          ],
-          response_format: { type: 'json_object' },
-          max_tokens: Math.max(
-            FREE_LLM_MIN_MAX_TOKENS,
-            prompt.length < FREE_LLM_SHORT_PROMPT_LIMIT
-              ? FREE_LLM_SHORT_PROMPT_MAX_TOKENS
-              : FREE_LLM_LONG_PROMPT_MAX_TOKENS
-          ),
-          temperature: FREE_LLM_TEMPERATURE
-        }),
+        body: JSON.stringify(useWookieeBackend
+          ? {
+            prompt,
+            timeoutMs: FREE_LLM_TIMEOUT_MS
+          }
+          : {
+            model: FREE_LLM_MODEL,
+            messages: [
+              {
+                role: 'system',
+                content: 'You generate inclusive fireside chat questions. Return only valid JSON matching the requested schema.'
+              },
+              { role: 'user', content: prompt }
+            ],
+            response_format: { type: 'json_object' },
+            max_tokens: Math.max(
+              FREE_LLM_MIN_MAX_TOKENS,
+              prompt.length < FREE_LLM_SHORT_PROMPT_LIMIT
+                ? FREE_LLM_SHORT_PROMPT_MAX_TOKENS
+                : FREE_LLM_LONG_PROMPT_MAX_TOKENS
+            ),
+            temperature: FREE_LLM_TEMPERATURE
+          }),
         signal: controller.signal
       })
     } catch (error) {
@@ -284,6 +371,8 @@ const callFreeQuestionLlmOnce = async (prompt: string): Promise<string> => {
 
     let data: {
       choices?: Array<{ message?: { content?: unknown }, text?: unknown }>
+      answer?: unknown
+      response?: unknown
       content?: unknown
     }
 
@@ -292,9 +381,9 @@ const callFreeQuestionLlmOnce = async (prompt: string): Promise<string> => {
     } catch {
       throw new FreeLlmRequestError('parse', 'Failed to parse Free LLM response as JSON')
     }
-    const content = data.choices?.[0]?.message?.content ?? data.choices?.[0]?.text ?? data.content
+    const content = extractLlmContent(data)
 
-    if (typeof content !== 'string' || !content.trim()) {
+    if (!content) {
       throw new FreeLlmRequestError('invalid_response', 'Free LLM returned an empty response')
     }
 
@@ -305,11 +394,19 @@ const callFreeQuestionLlmOnce = async (prompt: string): Promise<string> => {
 }
 
 const callFreeQuestionLlm = async (prompt: string): Promise<string> => {
+  const cacheKey = getPromptCacheKey(prompt)
+  const cachedResponse = getCachedPromptResponse(cacheKey)
+  if (cachedResponse) {
+    return cachedResponse
+  }
+
   let lastError: unknown
 
   for (let attempt = 0; attempt <= FREE_LLM_MAX_RETRIES; attempt++) {
     try {
-      return await callFreeQuestionLlmOnce(prompt)
+      const response = await callFreeQuestionLlmOnce(prompt)
+      setCachedPromptResponse(cacheKey, response)
+      return response
     } catch (error) {
       lastError = error
       if (attempt < FREE_LLM_MAX_RETRIES && isRetryableFreeLlmError(error)) {
