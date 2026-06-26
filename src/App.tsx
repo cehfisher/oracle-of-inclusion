@@ -1109,16 +1109,25 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         aria-valuenow={questionCount}
                         aria-valuetext={`${questionCount} question${questionCount === 1 ? '' : 's'}`}
                       />
-                      <div className="relative h-7 mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
-                        {Array.from({ length: 10 }, (_, index) => (
-                          <span
-                            key={index + 1}
-                            className="absolute top-0 -translate-x-1/2"
-                            style={{ left: `${(index / 9) * 100}%` }}
-                          >
-                            {index + 1}
-                          </span>
-                        ))}
+                      <div className="relative h-7 mt-2 text-base text-foreground font-medium form-field" role="group" aria-label="Question count options">
+                        {Array.from({ length: 10 }, (_, index) => {
+                          const count = index + 1
+                          const position = index / 9
+
+                          return (
+                            <button
+                              key={count}
+                              type="button"
+                              className="absolute top-0 -translate-x-1/2 rounded-full bg-transparent px-1 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                              style={{ left: `calc(${position * 100}% + ${0.5 - position}rem)` }}
+                              onClick={() => setQuestionCount(count)}
+                              aria-label={`Set number of questions to ${count}`}
+                              aria-pressed={questionCount === count}
+                            >
+                              {count}
+                            </button>
+                          )
+                        })}
                       </div>
                     </div>
                   </div>
