@@ -1,13 +1,9 @@
 "use client"
 
-import { ComponentProps, ReactNode, useMemo } from "react"
+import { ComponentProps, useMemo } from "react"
 import * as SliderPrimitive from "@radix-ui/react-slider"
 
 import { cn } from "@/lib/utils"
-
-type SliderProps = ComponentProps<typeof SliderPrimitive.Root> & {
-  thumbLabel?: (value: number, index: number) => ReactNode
-}
 
 function Slider({
   className,
@@ -15,9 +11,8 @@ function Slider({
   value,
   min = 0,
   max = 100,
-  thumbLabel,
   ...props
-}: SliderProps) {
+}: ComponentProps<typeof SliderPrimitive.Root>) {
   const _values = useMemo(
     () =>
       Array.isArray(value)
@@ -59,9 +54,7 @@ function Slider({
           data-slot="slider-thumb"
           key={index}
           className="border-primary bg-background ring-ring/50 block size-4 shrink-0 rounded-full border shadow-sm transition-[color,box-shadow] hover:ring-4 focus-visible:ring-4 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50"
-        >
-          {thumbLabel?.(_values[index], index)}
-        </SliderPrimitive.Thumb>
+        />
       ))}
     </SliderPrimitive.Root>
   )
