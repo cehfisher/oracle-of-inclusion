@@ -696,7 +696,7 @@ Rules:
 - Mix personal story questions with big picture questions
 - Center the disability community voice
 - CRITICAL: Keep each question to 1-2 SHORT sentences max (under 25 words total)
-- CRITICAL: Match the selected question type. ${toneVibeInstruction}
+- CRITICAL: Match the selected tone. ${toneVibeInstruction}
 - Randomize the order of vibes when more than one vibe is used - do NOT group same vibes together
 - If guest has lived experience, include questions that honor their perspective as an expert
 - If audience is technical (developers/designers), include questions about practical implementation
