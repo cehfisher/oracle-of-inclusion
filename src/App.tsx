@@ -316,6 +316,10 @@ const getRandomVibe = (): string => {
   return VIBE_TYPES[Math.floor(Math.random() * VIBE_TYPES.length)]
 }
 
+const getQuestionHistory = (value: unknown): string[] => {
+  return Array.isArray(value) ? value.filter((question): question is string => typeof question === 'string') : []
+}
+
 const FOCUS_AREAS = [
   { id: 'frontend', label: '🖥️ Front-end dev' },
   { id: 'backend', label: '⚙️ Back-end dev' },
@@ -588,7 +592,7 @@ export default function App() {
           return `${count} ${vibe.split(' ')[1]}`
         }).join(', ')
 
-    const recentQuestions = Array.isArray(previousQuestions) ? previousQuestions : []
+    const recentQuestions = getQuestionHistory(previousQuestions)
     const avoidList = recentQuestions.slice(-50).join('\n- ')
 
     const topicEmphasis = hasCustomTopics 
@@ -664,7 +668,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
       setQuestions(generatedQuestions)
       
       const newQuestionTexts = generatedQuestions.map(q => q.text)
-      setPreviousQuestions((prev) => [...(prev ?? []).slice(-100), ...newQuestionTexts])
+      setPreviousQuestions((prev) => [...getQuestionHistory(prev).slice(-100), ...newQuestionTexts])
       
       playSound(sounds.playMagic)
     } catch (error) {
@@ -672,7 +676,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
       const fallbackQuestions = buildFallbackQuestions()
       setQuestions(fallbackQuestions)
       const fallbackTexts = fallbackQuestions.map(q => q.text)
-      setPreviousQuestions((prev) => [...(Array.isArray(prev) ? prev : []).slice(-100), ...fallbackTexts])
+      setPreviousQuestions((prev) => [...getQuestionHistory(prev).slice(-100), ...fallbackTexts])
       toast.info('The oracle used backup wisdom. Try Shuffle for fresh magic.')
       playSound(sounds.playMagic)
     } finally {
