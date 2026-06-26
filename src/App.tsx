@@ -115,9 +115,10 @@ interface GeneratedQuestion {
 const parseQuestionResponse = (result: string): GeneratedQuestion[] => {
   const parse = (value: string) => JSON.parse(value) as { questions?: GeneratedQuestion[] }
   
-  let parsed = parse(result)
-  
-  if (!Array.isArray(parsed.questions)) {
+  let parsed: { questions?: GeneratedQuestion[] }
+  try {
+    parsed = parse(result)
+  } catch {
     const jsonObject = result.match(/\{[\s\S]*\}/)?.[0]
     if (!jsonObject) {
       throw new Error('LLM response did not include questions')
