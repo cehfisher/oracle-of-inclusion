@@ -273,6 +273,8 @@ const MYSTIC_THINKING_QUESTIONS = [
   "What does inclusive innovation mean?",
   "Where is the magic in accessibility?",
 ]
+const THINKING_QUESTION_LIMIT = 4
+const THINKING_QUESTION_INTERVAL_MS = 800
 
 const MYSTICAL_GREETINGS = [
   "The oracle senses your need ✨",
@@ -475,17 +477,20 @@ export default function App() {
   useEffect(() => {
     if (isGenerating) {
       setLoadingProgress(0)
-      setThinkingQuestions([])
       
       const shuffled = shuffleArray([...MYSTIC_THINKING_QUESTIONS])
-      let questionIndex = 0
+      const maxThinkingQuestions = Math.min(THINKING_QUESTION_LIMIT, shuffled.length)
+      let questionIndex = 1
+      setThinkingQuestions(shuffled.slice(0, 1))
       
       const questionInterval = setInterval(() => {
-        if (questionIndex < 4) {
+        if (questionIndex < maxThinkingQuestions) {
           setThinkingQuestions(prev => [...prev, shuffled[questionIndex]])
           questionIndex++
+        } else {
+          clearInterval(questionInterval)
         }
-      }, 800)
+      }, THINKING_QUESTION_INTERVAL_MS)
       
       const progressInterval = setInterval(() => {
         setLoadingProgress(prev => {
@@ -645,9 +650,9 @@ export default function App() {
         { duration: 3000 }
       )
     } else {
-      setIsGenerating(true)
       setQuestions([])
     }
+    setIsGenerating(true)
     setCurrentQuestionIndex(0)
     setLoadingPhrase(getRandomLoadingPhrase())
     playSound(sounds.playTwinkle)
@@ -750,9 +755,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
     } catch {
       toast.error('The oracle needs a moment... Please try again.')
     } finally {
-      if (!isShuffle) {
-        setIsGenerating(false)
-      }
+      setIsGenerating(false)
       setIsShuffling(false)
     }
   }, [focusAreas, otherFocusArea, questionCount, questionTone, topics, experience, audience, soundEnabled, sounds, reshuffleTopics, previousQuestions, setPreviousQuestions])
@@ -1034,7 +1037,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
         </motion.header>
 
         <main id="main-content" className="relative z-10">
-          {questions.length === 0 && !isShuffling ? (
+          {questions.length === 0 && !isGenerating && !isShuffling ? (
             <motion.div
               initial={animationsEnabled ? { opacity: 0, y: 20 } : {}}
               animate={{ opacity: 1, y: 0 }}
