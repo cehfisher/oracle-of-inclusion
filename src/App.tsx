@@ -384,6 +384,12 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 }
 
 const VIBE_TYPES = ['😜 Whimsical', '🤗 Warm', '🤔 Thoughtful', '🧘 Deep']
+const QUESTION_COUNT_MIN = 1
+const QUESTION_COUNT_MAX = 7
+const QUESTION_COUNT_OPTIONS = Array.from(
+  { length: QUESTION_COUNT_MAX - QUESTION_COUNT_MIN + 1 },
+  (_, index) => QUESTION_COUNT_MIN + index
+)
 
 const FOCUS_AREAS = [
   { id: 'frontend', label: '🖥️ Front-end dev' },
@@ -1191,18 +1197,25 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         id="question-count-slider"
                         value={[questionCount]}
                         onValueChange={(value) => setQuestionCount(value[0])}
-                        min={1}
-                        max={10}
+                        min={QUESTION_COUNT_MIN}
+                        max={QUESTION_COUNT_MAX}
                         step={1}
                         className="w-full [&_[data-radix-slider-track]]:bg-muted [&_[data-radix-slider-range]]:bg-accent [&_[data-radix-slider-thumb]]:bg-accent [&_[data-radix-slider-thumb]]:border-2 [&_[data-radix-slider-thumb]]:border-foreground"
-                        aria-valuemin={1}
-                        aria-valuemax={10}
+                        aria-valuemin={QUESTION_COUNT_MIN}
+                        aria-valuemax={QUESTION_COUNT_MAX}
                         aria-valuenow={questionCount}
                         aria-valuetext={`${questionCount} question${questionCount === 1 ? '' : 's'}`}
                       />
-                      <div className="flex justify-between mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
-                        <span>1</span>
-                        <span>10</span>
+                      <div className="relative mt-2 h-6 text-base text-foreground font-medium form-field" aria-hidden="true">
+                        {QUESTION_COUNT_OPTIONS.map((count) => (
+                          <span
+                            key={count}
+                            className="absolute top-0 -translate-x-1/2"
+                            style={{ left: `${((count - QUESTION_COUNT_MIN) / (QUESTION_COUNT_MAX - QUESTION_COUNT_MIN)) * 100}%` }}
+                          >
+                            {count}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   </div>
