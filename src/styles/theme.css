@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+@import '@radix-ui/colors/sage.css' layer(base);
 @import '@radix-ui/colors/sage-dark.css' layer(base);
 @import '@radix-ui/colors/olive.css' layer(base);
 @import '@radix-ui/colors/olive-dark.css' layer(base);
@@ -121,15 +122,15 @@
     --sand-contrast: #fff;
 
     /**
-   * Spacing scale
-   *
-   * These variables define a spacing scale based on Tailwind's default.
-   * We've introduced a --size-scale variable as a multiplier.
-   * By adjusting this single value, we can proportionally
-   * scale all spacing throughout the entire application.
-   *
-   * https://tailwindcss.com/docs/customizing-spacing#default-spacing-scale
-   */
+     * Spacing scale
+     *
+     * These variables define a spacing scale based on Tailwind's default.
+     * We've introduced a --size-scale variable as a multiplier.
+     * By adjusting this single value, we can proportionally
+     * scale all spacing throughout the entire application.
+     *
+     * https://tailwindcss.com/docs/customizing-spacing#default-spacing-scale
+     */
     --size-scale: 1;
     --size-0: 0px;
     --size-px: 1px;
