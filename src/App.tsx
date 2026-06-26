@@ -116,6 +116,8 @@ const FREE_LLM_TIMEOUT_MS = 12000
 const FREE_LLM_MAX_RETRIES = 2
 const FREE_LLM_RETRY_BASE_DELAY_MS = 600
 const FREE_LLM_RETRY_MAX_DELAY_MS = 2400
+const FREE_LLM_RETRY_JITTER_MS = 200
+const FREE_LLM_RETRY_ATTEMPT_CAP = 8
 const FREE_LLM_TEMPERATURE = 0.9
 const FREE_LLM_SHORT_PROMPT_LIMIT = 2500
 const FREE_LLM_SHORT_PROMPT_MAX_TOKENS = 700
@@ -205,15 +207,17 @@ const wait = (delayMs: number): Promise<void> =>
   new Promise((resolve) => window.setTimeout(resolve, delayMs))
 
 const getRetryDelay = (attempt: number): number => {
-  const exponentialDelay = FREE_LLM_RETRY_BASE_DELAY_MS * (2 ** attempt)
-  const jitter = Math.floor(Math.random() * 200)
+  const safeAttempt = Math.min(Math.max(attempt, 0), FREE_LLM_RETRY_ATTEMPT_CAP)
+  const exponentialDelay = FREE_LLM_RETRY_BASE_DELAY_MS * (2 ** safeAttempt)
+  const jitter = Math.floor(Math.random() * FREE_LLM_RETRY_JITTER_MS)
   return Math.min(exponentialDelay + jitter, FREE_LLM_RETRY_MAX_DELAY_MS)
 }
 
 const isRetryableFreeLlmError = (error: unknown): boolean => {
   if (!(error instanceof FreeLlmRequestError)) return false
 
-  if (error.code === 'timeout' || error.code === 'network' || error.code === 'parse' || error.code === 'invalid_response') {
+  const retryableCodes: FreeLlmErrorCode[] = ['timeout', 'network', 'parse', 'invalid_response']
+  if (retryableCodes.includes(error.code)) {
     return true
   }
 
@@ -308,11 +312,11 @@ const callFreeQuestionLlm = async (prompt: string): Promise<string> => {
       return await callFreeQuestionLlmOnce(prompt)
     } catch (error) {
       lastError = error
-      if (attempt === FREE_LLM_MAX_RETRIES || !isRetryableFreeLlmError(error)) {
-        throw error
+      if (attempt < FREE_LLM_MAX_RETRIES && isRetryableFreeLlmError(error)) {
+        await wait(getRetryDelay(attempt))
+        continue
       }
-
-      await wait(getRetryDelay(attempt))
+      break
     }
   }
 
@@ -457,14 +461,23 @@ const generateFallbackQuestions = (
   experience: string,
   questionTone: number
 ): GeneratedQuestion[] => {
-  const topic = topics[0]?.trim()
-  const focusArea = focusAreasText.split(',')[0]?.trim() ?? 'accessibility and inclusion'
+  const topicSummary = topics
+    .map((topic) => topic.trim())
+    .filter(Boolean)
+    .slice(0, 3)
+    .join(', ')
+  const focusArea = focusAreasText
+    .split(',')
+    .map((focus) => focus.trim())
+    .filter(Boolean)
+    .slice(0, 2)
+    .join(' and ') || 'accessibility and inclusion'
   const audienceText = audience.trim() || 'your audience'
   const experienceText = experience.trim() ? `${experience.trim()} years` : 'your journey'
 
   const fallbackPool: GeneratedQuestion[] = [
-    { text: topic ? `What is one thing people misunderstand about ${topic}?` : 'What is one thing people misunderstand about disability and inclusion in tech?', vibe: '🤔 Thoughtful' },
-    { text: topic ? `How could a team make ${topic} easier to apply this quarter?` : 'How could a team make accessibility easier to apply this quarter?', vibe: '🧘 Deep' },
+    { text: topicSummary ? `What is one thing people misunderstand about ${topicSummary}?` : 'What is one thing people misunderstand about accessibility and inclusion?', vibe: '🤔 Thoughtful' },
+    { text: topicSummary ? `How could a team make ${topicSummary} easier to apply this quarter?` : 'How could a team make accessibility easier to apply this quarter?', vibe: '🧘 Deep' },
     { text: `What practical change in ${focusArea} creates the biggest inclusion win?`, vibe: '🤔 Thoughtful' },
     { text: `What would you ask ${audienceText} to stop doing and start doing instead?`, vibe: '🧘 Deep' },
     { text: `How has ${experienceText} in this work changed how you define inclusion?`, vibe: '🤗 Warm' },
@@ -477,13 +490,16 @@ const generateFallbackQuestions = (
     { text: 'If you could wave a wand over one process, what would become more inclusive?', vibe: '😜 Whimsical' }
   ]
 
-  const preferredVibes = questionTone <= 25
-    ? ['🤔 Thoughtful', '🧘 Deep']
-    : questionTone <= 50
-    ? ['🤔 Thoughtful', '🧘 Deep', '🤗 Warm', '😜 Whimsical']
-    : questionTone <= 75
-    ? ['🤗 Warm', '😜 Whimsical', '🤔 Thoughtful']
-    : ['😜 Whimsical', '🤗 Warm']
+  let preferredVibes: string[]
+  if (questionTone <= 25) {
+    preferredVibes = ['🤔 Thoughtful', '🧘 Deep']
+  } else if (questionTone <= 50) {
+    preferredVibes = ['🤔 Thoughtful', '🧘 Deep', '🤗 Warm', '😜 Whimsical']
+  } else if (questionTone <= 75) {
+    preferredVibes = ['🤗 Warm', '😜 Whimsical', '🤔 Thoughtful']
+  } else {
+    preferredVibes = ['😜 Whimsical', '🤗 Warm']
+  }
 
   const prioritized = shuffleArray(fallbackPool.filter((q) => preferredVibes.includes(q.vibe)))
   const remaining = shuffleArray(fallbackPool.filter((q) => !preferredVibes.includes(q.vibe)))
@@ -729,6 +745,14 @@ export default function App() {
     return VIBE_TYPES[Math.floor(Math.random() * VIBE_TYPES.length)]
   }
 
+  const createQuestionId = (index: number): string => {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return `q-${crypto.randomUUID()}-${index}`
+    }
+
+    return `q-${Date.now()}-${index}-${Math.random().toString(16).slice(2, 8)}`
+  }
+
   const generateQuestions = useCallback(async (isShuffle = false) => {
     if (isShuffle) {
       setIsShuffling(true)
@@ -857,7 +881,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
     try {
       const parsedQuestions = await generateQuestionsFromLlm(prompt, questionCount)
       const generatedQuestions: Question[] = shuffleArray(parsedQuestions.map((q, i) => ({
-        id: `q-${Date.now()}-${i}`,
+        id: createQuestionId(i),
         text: q.text,
         vibe: q.vibe ?? getRandomVibe()
       })))
@@ -878,7 +902,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
       )
 
       const generatedQuestions: Question[] = shuffleArray(fallbackQuestions.map((q, i) => ({
-        id: `q-${Date.now()}-${i}`,
+        id: createQuestionId(i),
         text: q.text,
         vibe: q.vibe ?? getRandomVibe()
       })))
