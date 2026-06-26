@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 import { useKV } from '@github/spark/hooks'
+import { llm, llmPrompt } from '@github/spark/llm'
 import { toast, Toaster } from 'sonner'
 
 const useSound = () => {
@@ -111,14 +112,6 @@ interface GeneratedQuestion {
   vibe?: string
 }
 
-interface LlmResponse {
-  choices?: Array<{
-    message?: {
-      content?: string | { questions?: GeneratedQuestion[] }
-    }
-  }>
-}
-
 const parseQuestionResponse = (result: string): GeneratedQuestion[] => {
   const parse = (value: string) => JSON.parse(value) as { questions?: GeneratedQuestion[] }
   
@@ -146,47 +139,6 @@ const parseQuestionResponse = (result: string): GeneratedQuestion[] => {
   }
   
   return questions
-}
-
-const requestGeneratedQuestions = async (prompt: string): Promise<GeneratedQuestion[]> => {
-  const response = await fetch('/_spark/llm', {
-    method: 'POST',
-    body: JSON.stringify({
-      messages: [
-        { role: 'system', content: 'You are a helpful assistant.' },
-        { role: 'user', content: prompt },
-      ],
-      temperature: 1.0,
-      top_p: 1.0,
-      max_tokens: 1000,
-      model: 'openai/gpt-4o',
-      response_format: { type: 'json_object' },
-    }),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  })
-
-  if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`LLM request failed: ${response.status} ${response.statusText} - ${errorText}`)
-  }
-
-  const data = (await response.json()) as LlmResponse
-  const content = data.choices?.[0]?.message?.content
-  if (!content) {
-    throw new Error('LLM response did not include content')
-  }
-
-  if (typeof content === 'string') {
-    return parseQuestionResponse(content)
-  }
-
-  if (Array.isArray(content.questions)) {
-    return parseQuestionResponse(JSON.stringify(content))
-  }
-
-  throw new Error('LLM response content was not a usable questions object')
 }
 
 const MYSTICAL_LOADING_PHRASES = [
@@ -619,7 +571,7 @@ export default function App() {
       ? 'lighter and engaging - lean toward fun, creative, and personal questions while still being meaningful'
       : 'fun and playful - prioritize creative, surprising, and delightful questions that spark joy and interesting stories'
 
-    const prompt = `Generate ${questionCount} simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
+    const prompt = llmPrompt`Generate ${questionCount} simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
 
 Context:
 ${topicEmphasis}
@@ -662,7 +614,8 @@ IMPORTANT - Be respectful and inclusive:
 
 Return a JSON object with a "questions" array containing exactly ${questionCount} objects, each with "text" (the question) and "vibe" (one of: "😜 Whimsical", "🤗 Warm", "🤔 Thoughtful", "🧘 Deep").`
     try {
-      const generatedResponse = await requestGeneratedQuestions(prompt)
+      const result = await llm(prompt, 'gpt-4o', true)
+      const generatedResponse = parseQuestionResponse(result)
       if (generatedResponse.length !== questionCount) {
         throw new Error(`Expected ${questionCount} questions, received ${generatedResponse.length}`)
       }
