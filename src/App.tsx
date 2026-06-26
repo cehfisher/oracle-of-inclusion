@@ -113,11 +113,30 @@ interface GeneratedQuestion {
 const FREE_LLM_ENDPOINT = import.meta.env.VITE_FREE_LLM_ENDPOINT ?? 'https://text.pollinations.ai/openai'
 const FREE_LLM_MODEL = 'openai'
 const FREE_LLM_TIMEOUT_MS = 12000
+const FREE_LLM_MAX_RETRIES = 2
+const FREE_LLM_RETRY_BASE_DELAY_MS = 600
+const FREE_LLM_RETRY_MAX_DELAY_MS = 2400
+const FREE_LLM_RETRY_JITTER_MS = 200
+const FREE_LLM_RETRY_ATTEMPT_CAP = 8
 const FREE_LLM_TEMPERATURE = 0.9
 const FREE_LLM_SHORT_PROMPT_LIMIT = 2500
 const FREE_LLM_SHORT_PROMPT_MAX_TOKENS = 700
 const FREE_LLM_LONG_PROMPT_MAX_TOKENS = 900
 const FREE_LLM_MIN_MAX_TOKENS = 350
+
+type FreeLlmErrorCode = 'timeout' | 'http' | 'network' | 'parse' | 'invalid_response'
+
+class FreeLlmRequestError extends Error {
+  code: FreeLlmErrorCode
+  status?: number
+
+  constructor(code: FreeLlmErrorCode, message: string, status?: number) {
+    super(message)
+    this.name = 'FreeLlmRequestError'
+    this.code = code
+    this.status = status
+  }
+}
 
 const getFreeLlmEndpoint = (): string => {
   const endpoint = new URL(FREE_LLM_ENDPOINT)
@@ -184,40 +203,83 @@ const parseGeneratedQuestions = (content: string, expectedCount: number): Genera
   return questions.slice(0, expectedCount)
 }
 
-const callFreeQuestionLlm = async (prompt: string): Promise<string> => {
+const wait = (delayMs: number): Promise<void> =>
+  new Promise((resolve) => window.setTimeout(resolve, delayMs))
+
+const getRetryDelay = (attempt: number): number => {
+  const safeAttempt = Math.min(Math.max(attempt, 0), FREE_LLM_RETRY_ATTEMPT_CAP)
+  const exponentialDelay = FREE_LLM_RETRY_BASE_DELAY_MS * (2 ** safeAttempt)
+  const jitter = Math.floor(Math.random() * FREE_LLM_RETRY_JITTER_MS)
+  return Math.min(exponentialDelay + jitter, FREE_LLM_RETRY_MAX_DELAY_MS)
+}
+
+const isRetryableFreeLlmError = (error: unknown): boolean => {
+  if (!(error instanceof FreeLlmRequestError)) return false
+
+  const retryableCodes: FreeLlmErrorCode[] = ['timeout', 'network', 'parse', 'invalid_response']
+  if (retryableCodes.includes(error.code)) {
+    return true
+  }
+
+  if (error.code === 'http') {
+    return error.status === 408 || error.status === 429 || (error.status !== undefined && error.status >= 500)
+  }
+
+  return false
+}
+
+const getFallbackToastMessage = (error: unknown): string => {
+  if (error instanceof FreeLlmRequestError && error.code === 'timeout') {
+    return 'The oracle timed out, so backup questions stepped in.'
+  }
+
+  return 'The oracle signal was faint, so backup questions stepped in.'
+}
+
+const callFreeQuestionLlmOnce = async (prompt: string): Promise<string> => {
   const controller = new AbortController()
   const timeout = window.setTimeout(() => controller.abort(), FREE_LLM_TIMEOUT_MS)
 
   try {
-    const response = await fetch(getFreeLlmEndpoint(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        model: FREE_LLM_MODEL,
-        messages: [
-          {
-            role: 'system',
-            content: 'You generate inclusive fireside chat questions. Return only valid JSON matching the requested schema.'
-          },
-          { role: 'user', content: prompt }
-        ],
-        response_format: { type: 'json_object' },
-        max_tokens: Math.max(
-          FREE_LLM_MIN_MAX_TOKENS,
-          prompt.length < FREE_LLM_SHORT_PROMPT_LIMIT
-            ? FREE_LLM_SHORT_PROMPT_MAX_TOKENS
-            : FREE_LLM_LONG_PROMPT_MAX_TOKENS
-        ),
-        temperature: FREE_LLM_TEMPERATURE
-      }),
-      signal: controller.signal
-    })
+    let response: Response
+
+    try {
+      response = await fetch(getFreeLlmEndpoint(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          model: FREE_LLM_MODEL,
+          messages: [
+            {
+              role: 'system',
+              content: 'You generate inclusive fireside chat questions. Return only valid JSON matching the requested schema.'
+            },
+            { role: 'user', content: prompt }
+          ],
+          response_format: { type: 'json_object' },
+          max_tokens: Math.max(
+            FREE_LLM_MIN_MAX_TOKENS,
+            prompt.length < FREE_LLM_SHORT_PROMPT_LIMIT
+              ? FREE_LLM_SHORT_PROMPT_MAX_TOKENS
+              : FREE_LLM_LONG_PROMPT_MAX_TOKENS
+          ),
+          temperature: FREE_LLM_TEMPERATURE
+        }),
+        signal: controller.signal
+      })
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw new FreeLlmRequestError('timeout', 'Free LLM request timed out')
+      }
+
+      throw new FreeLlmRequestError('network', 'Free LLM network request failed')
+    }
 
     if (!response.ok) {
-      throw new Error(`Free LLM request failed with ${response.status}`)
+      throw new FreeLlmRequestError('http', `Free LLM request failed with ${response.status}`, response.status)
     }
 
     let data: {
@@ -228,18 +290,37 @@ const callFreeQuestionLlm = async (prompt: string): Promise<string> => {
     try {
       data = await response.json() as typeof data
     } catch {
-      throw new Error('Failed to parse Free LLM response as JSON')
+      throw new FreeLlmRequestError('parse', 'Failed to parse Free LLM response as JSON')
     }
     const content = data.choices?.[0]?.message?.content ?? data.choices?.[0]?.text ?? data.content
 
     if (typeof content !== 'string' || !content.trim()) {
-      throw new Error('Free LLM returned an empty response')
+      throw new FreeLlmRequestError('invalid_response', 'Free LLM returned an empty response')
     }
 
     return content
   } finally {
     window.clearTimeout(timeout)
   }
+}
+
+const callFreeQuestionLlm = async (prompt: string): Promise<string> => {
+  let lastError: unknown
+
+  for (let attempt = 0; attempt <= FREE_LLM_MAX_RETRIES; attempt++) {
+    try {
+      return await callFreeQuestionLlmOnce(prompt)
+    } catch (error) {
+      lastError = error
+      if (attempt < FREE_LLM_MAX_RETRIES && isRetryableFreeLlmError(error)) {
+        await wait(getRetryDelay(attempt))
+        continue
+      }
+      break
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error('Free LLM request failed')
 }
 
 const generateQuestionsFromLlm = async (prompt: string, expectedCount: number): Promise<GeneratedQuestion[]> => {
@@ -371,6 +452,61 @@ const QUESTION_COUNT_OPTIONS = Array.from(
 )
 const getQuestionCountLabelPosition = (count: number): string =>
   `${((count - QUESTION_COUNT_MIN) / (QUESTION_COUNT_MAX - QUESTION_COUNT_MIN)) * 100}%`
+
+const generateFallbackQuestions = (
+  questionCount: number,
+  topics: string[],
+  focusAreasText: string,
+  audience: string,
+  experience: string,
+  questionTone: number
+): GeneratedQuestion[] => {
+  const topicSummary = topics
+    .map((topic) => topic.trim())
+    .filter(Boolean)
+    .slice(0, 3)
+    .join(', ')
+  const focusArea = focusAreasText
+    .split(',')
+    .map((focus) => focus.trim())
+    .filter(Boolean)
+    .slice(0, 2)
+    .join(' and ') || 'accessibility and inclusion'
+  const audienceText = audience.trim() || 'your audience'
+  const experienceText = experience.trim() ? `${experience.trim()} years` : 'your journey'
+
+  const fallbackPool: GeneratedQuestion[] = [
+    { text: topicSummary ? `What is one thing people misunderstand about ${topicSummary}?` : 'What is one thing people misunderstand about accessibility and inclusion?', vibe: '🤔 Thoughtful' },
+    { text: topicSummary ? `How could a team make ${topicSummary} easier to apply this quarter?` : 'How could a team make accessibility easier to apply this quarter?', vibe: '🧘 Deep' },
+    { text: `What practical change in ${focusArea} creates the biggest inclusion win?`, vibe: '🤔 Thoughtful' },
+    { text: `What would you ask ${audienceText} to stop doing and start doing instead?`, vibe: '🧘 Deep' },
+    { text: `How has ${experienceText} in this work changed how you define inclusion?`, vibe: '🤗 Warm' },
+    { text: 'What is one small action people can take this week to improve access?', vibe: '🤗 Warm' },
+    { text: 'Which accessibility tradeoff is most misunderstood in real projects?', vibe: '🧘 Deep' },
+    { text: 'When does inclusive design feel joyful, not just compliant?', vibe: '😜 Whimsical' },
+    { text: 'What question should teams ask before they ship any new feature?', vibe: '🤔 Thoughtful' },
+    { text: 'What story from your work still shapes how you lead conversations today?', vibe: '🤗 Warm' },
+    { text: 'What assumption about disability in tech would you retire today?', vibe: '🧘 Deep' },
+    { text: 'If you could wave a wand over one process, what would become more inclusive?', vibe: '😜 Whimsical' }
+  ]
+
+  let preferredVibes: string[]
+  if (questionTone <= 25) {
+    preferredVibes = ['🤔 Thoughtful', '🧘 Deep']
+  } else if (questionTone <= 50) {
+    preferredVibes = ['🤔 Thoughtful', '🧘 Deep', '🤗 Warm', '😜 Whimsical']
+  } else if (questionTone <= 75) {
+    preferredVibes = ['🤗 Warm', '😜 Whimsical', '🤔 Thoughtful']
+  } else {
+    preferredVibes = ['😜 Whimsical', '🤗 Warm']
+  }
+
+  const prioritized = shuffleArray(fallbackPool.filter((q) => preferredVibes.includes(q.vibe)))
+  const remaining = shuffleArray(fallbackPool.filter((q) => !preferredVibes.includes(q.vibe)))
+  const orderedQuestions = [...prioritized, ...remaining]
+
+  return orderedQuestions.slice(0, questionCount)
+}
 
 const FOCUS_AREAS = [
   { id: 'frontend', label: '🖥️ Front-end dev' },
@@ -609,6 +745,14 @@ export default function App() {
     return VIBE_TYPES[Math.floor(Math.random() * VIBE_TYPES.length)]
   }
 
+  const createQuestionId = (index: number): string => {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return `q-${crypto.randomUUID()}-${index}`
+    }
+
+    return `q-${Date.now()}-${index}-${Math.random().toString(16).slice(2, 8)}`
+  }
+
   const generateQuestions = useCallback(async (isShuffle = false) => {
     if (isShuffle) {
       setIsShuffling(true)
@@ -737,7 +881,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
     try {
       const parsedQuestions = await generateQuestionsFromLlm(prompt, questionCount)
       const generatedQuestions: Question[] = shuffleArray(parsedQuestions.map((q, i) => ({
-        id: `q-${Date.now()}-${i}`,
+        id: createQuestionId(i),
         text: q.text,
         vibe: q.vibe ?? getRandomVibe()
       })))
@@ -747,8 +891,26 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
       setPreviousQuestions((prev) => [...(prev ?? []).slice(-100), ...newQuestionTexts])
       
       playSound(sounds.playMagic)
-    } catch {
-      toast.error('The oracle needs a moment... Please try again.')
+    } catch (error) {
+      const fallbackQuestions = generateFallbackQuestions(
+        questionCount,
+        topics,
+        focusAreasText,
+        audience,
+        experience,
+        questionTone
+      )
+
+      const generatedQuestions: Question[] = shuffleArray(fallbackQuestions.map((q, i) => ({
+        id: createQuestionId(i),
+        text: q.text,
+        vibe: q.vibe ?? getRandomVibe()
+      })))
+      setQuestions(generatedQuestions)
+
+      const newQuestionTexts = generatedQuestions.map(q => q.text)
+      setPreviousQuestions((prev) => [...(prev ?? []).slice(-100), ...newQuestionTexts])
+      toast.warning(getFallbackToastMessage(error))
     } finally {
       if (!isShuffle) {
         setIsGenerating(false)
