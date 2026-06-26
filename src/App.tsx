@@ -11,12 +11,8 @@ import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 import { useKV } from '@github/spark/hooks'
+import { llm, llmPrompt } from '@github/spark/llm'
 import { toast, Toaster } from 'sonner'
-
-declare const spark: {
-  llmPrompt: (strings: TemplateStringsArray, ...values: unknown[]) => string
-  llm: (prompt: string, model?: string, jsonMode?: boolean) => Promise<string>
-}
 
 const useSound = () => {
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -109,6 +105,40 @@ interface Question {
   id: string
   text: string
   vibe: string
+}
+
+interface GeneratedQuestion {
+  text: string
+  vibe?: string
+}
+
+const parseQuestionResponse = (result: string): GeneratedQuestion[] => {
+  const parse = (value: string) => JSON.parse(value) as { questions?: GeneratedQuestion[] }
+  
+  let parsed: { questions?: GeneratedQuestion[] }
+  try {
+    parsed = parse(result)
+  } catch {
+    const jsonObject = result.match(/\{[\s\S]*\}/)?.[0]
+    if (!jsonObject) {
+      throw new Error('LLM response did not include questions')
+    }
+    parsed = parse(jsonObject)
+  }
+  
+  if (!Array.isArray(parsed.questions)) {
+    throw new Error('LLM response questions were not an array')
+  }
+  
+  const questions = parsed.questions.filter((question): question is GeneratedQuestion => 
+    typeof question?.text === 'string' && question.text.trim().length > 0
+  )
+  
+  if (questions.length === 0) {
+    throw new Error('LLM response did not include usable questions')
+  }
+  
+  return questions
 }
 
 const MYSTICAL_LOADING_PHRASES = [
@@ -516,7 +546,7 @@ export default function App() {
       ? 'lighter and engaging - lean toward fun, creative, and personal questions while still being meaningful'
       : 'fun and playful - prioritize creative, surprising, and delightful questions that spark joy and interesting stories'
 
-    const prompt = spark.llmPrompt`Generate ${questionCount} simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
+    const prompt = llmPrompt`Generate ${questionCount} simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
 
 Context:
 ${topicEmphasis}
@@ -560,20 +590,26 @@ IMPORTANT - Be respectful and inclusive:
 Return a JSON object with a "questions" array containing exactly ${questionCount} objects, each with "text" (the question) and "vibe" (one of: "😜 Whimsical", "🤗 Warm", "🤔 Thoughtful", "🧘 Deep").`
 
     try {
-      const result = await spark.llm(prompt, 'gpt-4o', true)
-      const parsed = JSON.parse(result)
-      const generatedQuestions: Question[] = shuffleArray(parsed.questions.map((q: { text: string; vibe: string }, i: number) => ({
+      const result = await llm(prompt, 'gpt-4o', true)
+      const generatedResponse = parseQuestionResponse(result)
+      if (generatedResponse.length !== questionCount) {
+        throw new Error(`Expected ${questionCount} questions, received ${generatedResponse.length}`)
+      }
+      
+      const generatedQuestions: Question[] = shuffleArray(generatedResponse.map((q, i) => ({
         id: `q-${Date.now()}-${i}`,
-        text: q.text,
-        vibe: q.vibe || getRandomVibe()
+        text: q.text.trim(),
+        vibe: q.vibe && VIBE_TYPES.includes(q.vibe) ? q.vibe : getRandomVibe()
       })))
+      
       setQuestions(generatedQuestions)
       
       const newQuestionTexts = generatedQuestions.map(q => q.text)
       setPreviousQuestions((prev) => [...(prev ?? []).slice(-100), ...newQuestionTexts])
       
       playSound(sounds.playMagic)
-    } catch {
+    } catch (error) {
+      console.error('Question generation failed:', error)
       toast.error('The oracle needs a moment... Please try again.')
     } finally {
       if (!isShuffle) {
@@ -581,7 +617,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
       }
       setIsShuffling(false)
     }
-  }, [focusAreas, otherFocusArea, questionCount, topics, experience, audience, soundEnabled, sounds, reshuffleTopics, previousQuestions, setPreviousQuestions])
+  }, [focusAreas, otherFocusArea, questionCount, questionTone, topics, experience, audience, soundEnabled, sounds, reshuffleTopics, previousQuestions, setPreviousQuestions])
 
   const handleGenerateClick = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -1280,7 +1316,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
               href="https://github.com/cehfisher"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center pt-2 gap-1 text-primary hover:text-primary/80 underline underline-offset-2 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded"
+              className="inline-flex items-center mt-2 gap-1 text-primary hover:text-primary/80 underline underline-offset-2 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded"
               aria-label="Created by cehfisher (opens GitHub in new tab)"
             >
               <svg
