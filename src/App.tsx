@@ -1274,12 +1274,13 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           role="contentinfo"
         >
           <p className="text-sm text-muted-foreground/70 border-t border-border/50 pt-4">
-            This is an experiment. Questions are AI-generated. This app may not be fully accessible.{' '}
+            Questions are AI-generated. This app may not be fully accessible.
+            <br />
             <a
               href="https://github.com/cehfisher"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-primary hover:text-primary/80 underline underline-offset-2 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded"
+              className="mt-3 inline-flex items-center gap-1 text-primary hover:text-primary/80 underline underline-offset-2 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded"
               aria-label="Created by cehfisher (opens GitHub in new tab)"
             >
               <svg
