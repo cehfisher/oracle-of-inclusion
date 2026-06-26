@@ -115,7 +115,7 @@ interface GeneratedQuestion {
   vibe?: string
 }
 
-const FREE_LLM_ENDPOINT = 'https://text.pollinations.ai/openai'
+const FREE_LLM_ENDPOINT = import.meta.env.VITE_FREE_LLM_ENDPOINT ?? 'https://text.pollinations.ai/openai'
 const FREE_LLM_MODEL = 'openai'
 const FREE_LLM_TIMEOUT_MS = 30000
 const FREE_LLM_TEMPERATURE = 0.9
@@ -148,14 +148,27 @@ const extractJsonObject = (content: string): string => {
   return candidate.slice(start, end + 1)
 }
 
-const parseGeneratedQuestions = (content: string, expectedCount: number): GeneratedQuestion[] => {
-  const parsed = JSON.parse(extractJsonObject(content)) as { questions?: unknown }
+const describeValue = (value: unknown): string => {
+  if (typeof value === 'string') return value.slice(0, 120)
 
-  if (!Array.isArray(parsed.questions)) {
-    throw new Error('LLM response did not include a questions array')
+  try {
+    return JSON.stringify(value)?.slice(0, 120) ?? String(value)
+  } catch {
+    return String(value)
+  }
+}
+
+const parseGeneratedQuestions = (content: string, expectedCount: number): GeneratedQuestion[] => {
+  const parsed = JSON.parse(extractJsonObject(content)) as unknown
+  const questionsValue = parsed && typeof parsed === 'object'
+    ? (parsed as { questions?: unknown }).questions
+    : undefined
+
+  if (!Array.isArray(questionsValue)) {
+    throw new Error(`LLM response did not include a questions array, received: ${describeValue(parsed)}`)
   }
 
-  const questions = parsed.questions
+  const questions = questionsValue
     .map((question) => {
       if (!question || typeof question !== 'object') return null
 
@@ -206,9 +219,15 @@ const callFreeQuestionLlm = async (prompt: string): Promise<string> => {
       throw new Error(`Free LLM request failed with ${response.status}`)
     }
 
-    const data = await response.json() as {
+    let data: {
       choices?: Array<{ message?: { content?: unknown }, text?: unknown }>
       content?: unknown
+    }
+
+    try {
+      data = await response.json() as typeof data
+    } catch {
+      throw new Error('Failed to parse Free LLM response as JSON')
     }
     const content = data.choices?.[0]?.message?.content ?? data.choices?.[0]?.text ?? data.content
 
@@ -233,6 +252,7 @@ const callSparkQuestionLlm = async (prompt: string): Promise<string> => {
 }
 
 const generateQuestionsFromLlm = async (prompt: string, expectedCount: number): Promise<GeneratedQuestion[]> => {
+  // Prefer the independent free provider because Spark LLM is the path currently failing in production.
   const providers = [callFreeQuestionLlm, callSparkQuestionLlm]
   let lastError: unknown
 
@@ -700,7 +720,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
       const generatedQuestions: Question[] = shuffleArray(parsedQuestions.map((q, i) => ({
         id: `q-${Date.now()}-${i}`,
         text: q.text,
-        vibe: q.vibe || getRandomVibe()
+        vibe: q.vibe ?? getRandomVibe()
       })))
       setQuestions(generatedQuestions)
       
