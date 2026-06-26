@@ -277,7 +277,7 @@ const stripEmoji = (value: string): string => {
   return value.replace(/[^\p{L}\p{N}\s&/-]/gu, '').replace(/\s+/g, ' ').trim()
 }
 
-const uniqueValues = <T,>(values: T[], getKey: (value: T) => string): T[] => {
+const uniqueByKey = <T,>(values: T[], getKey: (value: T) => string): T[] => {
   const seen = new Set<string>()
   return values.filter((value) => {
     const key = getKey(value).toLowerCase()
@@ -305,7 +305,7 @@ const buildFreeContentSearchTerms = (topics: string[], focusAreaLabels: string[]
   const topicSearches = topicTerms.map(topic => `${topic} accessibility inclusion disability technology`)
   const focusSearches = focusTerms.map(focus => `${focus} accessibility inclusion disability`)
 
-  return uniqueValues(
+  return uniqueByKey(
     [...topicSearches, ...focusSearches, ...FREE_CONTENT_BASE_SEARCHES],
     (term) => term
   ).slice(0, 6)
@@ -329,7 +329,7 @@ const fetchFreeContentArticles = async (searchTerm: string): Promise<FreeContent
 
   const response = await fetch(`${WIKIPEDIA_API_ENDPOINT}?${params.toString()}`)
   if (!response.ok) {
-    console.warn('Free content request failed', { status: response.status, statusText: response.statusText })
+    console.warn('Free content request failed', { searchTerm, status: response.status, statusText: response.statusText })
     throw new Error('Unable to fetch content. Please try again later.')
   }
 
@@ -357,8 +357,12 @@ const fetchFreeContentArticles = async (searchTerm: string): Promise<FreeContent
     }))
 }
 
+const TONE_SERIOUS_MAX = 25
+const TONE_BALANCED_MAX = 50
+const TONE_LIGHT_MAX = 75
+
 const getQuestionTemplates = (questionTone: number): Array<(article: FreeContentArticle, focusAreasText: string) => string> => {
-  if (questionTone <= 25) {
+  if (questionTone <= TONE_SERIOUS_MAX) {
     return [
       (article, focusAreasText) => `What should teams learn from ${article.title} when making ${focusAreasText} more inclusive?`,
       (article) => `What barrier connected to ${article.title} should technology teams address first?`,
@@ -367,7 +371,7 @@ const getQuestionTemplates = (questionTone: number): Array<(article: FreeContent
     ]
   }
 
-  if (questionTone <= 50) {
+  if (questionTone <= TONE_BALANCED_MAX) {
     return [
       (article, focusAreasText) => `What does ${article.title} teach us about inclusion in ${focusAreasText}?`,
       (article) => `How could a story about ${article.title} change the way teams build technology?`,
@@ -376,7 +380,7 @@ const getQuestionTemplates = (questionTone: number): Array<(article: FreeContent
     ]
   }
 
-  if (questionTone <= 75) {
+  if (questionTone <= TONE_LIGHT_MAX) {
     return [
       (article) => `What surprising idea from ${article.title} could spark a better product decision?`,
       (article) => `If ${article.title} could teach one accessibility lesson, what would it be?`,
@@ -400,7 +404,7 @@ const buildQuestionsFromFreeContent = (
   focusAreasText: string,
 ): GeneratedQuestion[] => {
   const templates = getQuestionTemplates(questionTone)
-  const questions = shuffleArray(articles).flatMap((article, articleIndex) => {
+  const questions = shuffleArray(articles).map((article, articleIndex) => {
     const template = templates[articleIndex % templates.length]
     return {
       text: template(article, focusAreasText),
@@ -408,7 +412,7 @@ const buildQuestionsFromFreeContent = (
     }
   })
 
-  return uniqueValues(questions, question => question.text).slice(0, questionCount)
+  return uniqueByKey(questions, question => question.text).slice(0, questionCount)
 }
 
 const generateFreeContentQuestions = async (
@@ -421,8 +425,9 @@ const generateFreeContentQuestions = async (
     ? focusAreaLabels.join(', ')
     : 'accessibility and inclusion in technology'
   const searchTerms = buildFreeContentSearchTerms(topics, focusAreaLabels)
+  // Partial results are enough; failed searches fall back to articles from the remaining terms.
   const articleResults = await Promise.allSettled(searchTerms.map(fetchFreeContentArticles))
-  const articles = uniqueValues(
+  const articles = uniqueByKey(
     articleResults.flatMap(result => result.status === 'fulfilled' ? result.value : []),
     article => article.title
   )
@@ -430,7 +435,7 @@ const generateFreeContentQuestions = async (
   const generatedQuestions = buildQuestionsFromFreeContent(articles, questionCount, questionTone, focusAreasText)
 
   if (generatedQuestions.length !== questionCount) {
-    throw new Error('Could not generate enough questions from available content. Try adjusting your topics or focus areas, or try again later.')
+    throw new Error(`Could not generate enough questions from available content (got ${generatedQuestions.length} of ${questionCount}). Try adjusting your topics or focus areas, or try again later.`)
   }
 
   return generatedQuestions
