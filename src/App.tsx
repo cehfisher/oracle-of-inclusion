@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 import { useLocalStorageState } from '@/hooks/use-local-storage-state'
+import { generateOracleQuestions, type GeneratedQuestion } from '@/lib/llm'
 import { toast, Toaster } from 'sonner'
 
 const useSound = () => {
@@ -104,11 +105,6 @@ interface Question {
   id: string
   text: string
   vibe: string
-}
-
-interface GeneratedQuestion {
-  text: string
-  vibe?: string
 }
 
 interface FreeContentArticle {
@@ -685,7 +681,15 @@ export default function App() {
     const focusAreasLabels = getFocusAreaLabels(focusAreas, otherFocusArea)
 
     try {
-      const generatedResponse = await generateFreeContentQuestions(topics, focusAreasLabels, questionCount, questionTone)
+      const generatedResponse = await generateOracleQuestions({
+        topics,
+        focusAreaLabels: focusAreasLabels,
+        experience,
+        audience,
+        questionCount,
+        questionTone,
+        vibeTypes: VIBE_TYPES,
+      })
       
       const generatedQuestions: Question[] = shuffleArray(generatedResponse.map((q, i) => ({
         id: `q-${Date.now()}-${i}`,
@@ -708,7 +712,7 @@ export default function App() {
       }
       setIsShuffling(false)
     }
-  }, [focusAreas, otherFocusArea, questionCount, questionTone, topics, soundEnabled, sounds, reshuffleTopics, buildFallbackQuestions])
+  }, [audience, experience, focusAreas, otherFocusArea, questionCount, questionTone, topics, soundEnabled, sounds, reshuffleTopics, buildFallbackQuestions])
 
   const handleGenerateClick = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })

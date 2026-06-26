@@ -1,0 +1,101 @@
+import { llm, llmPrompt } from '@github/spark/llm'
+
+export interface GeneratedQuestion {
+  text: string
+  vibe?: string
+}
+
+interface GenerateOracleQuestionsInput {
+  topics: string[]
+  focusAreaLabels: string[]
+  experience: string
+  audience: string
+  questionCount: number
+  questionTone: number
+  vibeTypes: string[]
+}
+
+interface LlmQuestionResponse {
+  questions?: Array<{
+    text?: unknown
+    vibe?: unknown
+  }>
+}
+
+const getToneDescription = (questionTone: number): string => {
+  if (questionTone <= 25) return 'serious, reflective, and grounded'
+  if (questionTone <= 50) return 'balanced, warm, and thoughtful'
+  if (questionTone <= 75) return 'light, curious, and conversational'
+  return 'whimsical, playful, and mystical without becoming silly'
+}
+
+const parseJsonResponse = (response: string): LlmQuestionResponse => {
+  const trimmed = response.trim()
+  const fencedJson = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i)?.[1]
+  const jsonText = fencedJson ?? trimmed.slice(trimmed.indexOf('{'), trimmed.lastIndexOf('}') + 1)
+
+  return JSON.parse(jsonText) as LlmQuestionResponse
+}
+
+const normalizeQuestion = (
+  question: { text?: unknown; vibe?: unknown },
+  vibeTypes: string[],
+): GeneratedQuestion | null => {
+  if (typeof question.text !== 'string') return null
+
+  const text = question.text.trim()
+  if (!text.endsWith('?')) return null
+
+  const vibe = typeof question.vibe === 'string' && vibeTypes.includes(question.vibe)
+    ? question.vibe
+    : undefined
+
+  return { text, vibe }
+}
+
+export const generateOracleQuestions = async ({
+  topics,
+  focusAreaLabels,
+  experience,
+  audience,
+  questionCount,
+  questionTone,
+  vibeTypes,
+}: GenerateOracleQuestionsInput): Promise<GeneratedQuestion[]> => {
+  const requestedCount = Math.max(1, Math.min(questionCount, 8))
+  const prompt = llmPrompt`
+Generate ${requestedCount} original fireside-chat questions as JSON for "Oracle of Inclusion", a mystical Magic 8-Ball style accessibility and inclusion conversation starter.
+
+Return only a JSON object in this exact shape:
+{
+  "questions": [
+    { "text": "A single open-ended question?", "vibe": "one of: ${vibeTypes.join(', ')}" }
+  ]
+}
+
+Requirements:
+- Every question must focus on accessibility, disability inclusion, inclusive technology, or belonging.
+- Match this tone: ${getToneDescription(questionTone)}.
+- Make the questions open-ended, human, specific, and useful for a live discussion.
+- Avoid yes/no questions, duplicate ideas, jargon, and generic team-building prompts.
+- Keep each question under 24 words.
+- Use only the provided vibe values.
+
+Audience: ${audience.trim() || 'technology and inclusion practitioners'}
+Experience or context: ${experience.trim() || 'not specified'}
+Topics: ${topics.length > 0 ? topics.join(', ') : 'accessibility, disability inclusion, and inclusive technology'}
+Focus areas: ${focusAreaLabels.length > 0 ? focusAreaLabels.join(', ') : 'accessibility and inclusion in technology'}
+`
+
+  const response = await llm(prompt, 'openai/gpt-4o-mini', true)
+  const parsed = parseJsonResponse(response)
+  const questions = (parsed.questions ?? [])
+    .map(question => normalizeQuestion(question, vibeTypes))
+    .filter((question): question is GeneratedQuestion => question !== null)
+
+  if (questions.length !== requestedCount) {
+    throw new Error(`LLM returned ${questions.length} usable questions; expected ${requestedCount}.`)
+  }
+
+  return questions
+}
