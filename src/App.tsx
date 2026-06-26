@@ -13,8 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useKV } from '@github/spark/hooks'
 import { toast, Toaster } from 'sonner'
 
-declare const spark: {
-  llmPrompt: (strings: TemplateStringsArray, ...values: unknown[]) => string
+interface SparkApi {
   llm: (prompt: string, model?: string, jsonMode?: boolean) => Promise<string>
 }
 
@@ -109,6 +108,131 @@ interface Question {
   id: string
   text: string
   vibe: string
+}
+
+interface GeneratedQuestion {
+  text: string
+  vibe?: string
+}
+
+const FREE_LLM_ENDPOINT = 'https://text.pollinations.ai/openai'
+const FREE_LLM_MODEL = 'openai'
+
+const getSparkApi = (): SparkApi | undefined => {
+  return (globalThis as { spark?: SparkApi }).spark
+}
+
+const extractJsonObject = (content: string): string => {
+  const trimmed = content.trim()
+  const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i)
+  const candidate = fenced?.[1]?.trim() ?? trimmed
+  const start = candidate.indexOf('{')
+  const end = candidate.lastIndexOf('}')
+
+  if (start === -1 || end === -1 || end <= start) {
+    throw new Error('LLM response did not include a JSON object')
+  }
+
+  return candidate.slice(start, end + 1)
+}
+
+const parseGeneratedQuestions = (content: string, expectedCount: number): GeneratedQuestion[] => {
+  const parsed = JSON.parse(extractJsonObject(content)) as { questions?: unknown }
+
+  if (!Array.isArray(parsed.questions)) {
+    throw new Error('LLM response did not include a questions array')
+  }
+
+  const questions = parsed.questions
+    .map((question) => {
+      if (!question || typeof question !== 'object') return null
+
+      const { text, vibe } = question as { text?: unknown; vibe?: unknown }
+      if (typeof text !== 'string' || !text.trim()) return null
+
+      return {
+        text: text.trim(),
+        vibe: typeof vibe === 'string' && vibe.trim() ? vibe.trim() : undefined
+      }
+    })
+    .filter((question): question is GeneratedQuestion => question !== null)
+
+  if (questions.length < expectedCount) {
+    throw new Error(`LLM returned ${questions.length} usable questions, expected ${expectedCount}`)
+  }
+
+  return questions.slice(0, expectedCount)
+}
+
+const callFreeQuestionLlm = async (prompt: string): Promise<string> => {
+  const controller = new AbortController()
+  const timeout = window.setTimeout(() => controller.abort(), 30000)
+
+  try {
+    const response = await fetch(FREE_LLM_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        model: FREE_LLM_MODEL,
+        messages: [
+          {
+            role: 'system',
+            content: 'You generate inclusive fireside chat questions. Return only valid JSON matching the requested schema.'
+          },
+          { role: 'user', content: prompt }
+        ],
+        response_format: { type: 'json_object' },
+        temperature: 0.9
+      }),
+      signal: controller.signal
+    })
+
+    if (!response.ok) {
+      throw new Error(`Free LLM request failed with ${response.status}`)
+    }
+
+    const data = await response.json() as {
+      choices?: Array<{ message?: { content?: unknown }, text?: unknown }>
+      content?: unknown
+    }
+    const content = data.choices?.[0]?.message?.content ?? data.choices?.[0]?.text ?? data.content
+
+    if (typeof content !== 'string' || !content.trim()) {
+      throw new Error('Free LLM returned an empty response')
+    }
+
+    return content
+  } finally {
+    window.clearTimeout(timeout)
+  }
+}
+
+const callSparkQuestionLlm = async (prompt: string): Promise<string> => {
+  const sparkApi = getSparkApi()
+
+  if (!sparkApi?.llm) {
+    throw new Error('Spark LLM is unavailable')
+  }
+
+  return sparkApi.llm(prompt, 'gpt-4o', true)
+}
+
+const generateQuestionsFromLlm = async (prompt: string, expectedCount: number): Promise<GeneratedQuestion[]> => {
+  const providers = [callFreeQuestionLlm, callSparkQuestionLlm]
+  let lastError: unknown
+
+  for (const provider of providers) {
+    try {
+      return parseGeneratedQuestions(await provider(prompt), expectedCount)
+    } catch (error) {
+      lastError = error
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error('Unable to generate questions')
 }
 
 const MYSTICAL_LOADING_PHRASES = [
@@ -516,7 +640,7 @@ export default function App() {
       ? 'lighter and engaging - lean toward fun, creative, and personal questions while still being meaningful'
       : 'fun and playful - prioritize creative, surprising, and delightful questions that spark joy and interesting stories'
 
-    const prompt = spark.llmPrompt`Generate ${questionCount} simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
+    const prompt = `Generate ${questionCount} simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
 
 Context:
 ${topicEmphasis}
@@ -560,9 +684,8 @@ IMPORTANT - Be respectful and inclusive:
 Return a JSON object with a "questions" array containing exactly ${questionCount} objects, each with "text" (the question) and "vibe" (one of: "😜 Whimsical", "🤗 Warm", "🤔 Thoughtful", "🧘 Deep").`
 
     try {
-      const result = await spark.llm(prompt, 'gpt-4o', true)
-      const parsed = JSON.parse(result)
-      const generatedQuestions: Question[] = shuffleArray(parsed.questions.map((q: { text: string; vibe: string }, i: number) => ({
+      const parsedQuestions = await generateQuestionsFromLlm(prompt, questionCount)
+      const generatedQuestions: Question[] = shuffleArray(parsedQuestions.map((q, i) => ({
         id: `q-${Date.now()}-${i}`,
         text: q.text,
         vibe: q.vibe || getRandomVibe()
