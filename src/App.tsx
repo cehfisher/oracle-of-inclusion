@@ -390,6 +390,8 @@ const QUESTION_COUNT_OPTIONS = Array.from(
   { length: QUESTION_COUNT_MAX - QUESTION_COUNT_MIN + 1 },
   (_, index) => QUESTION_COUNT_MIN + index
 )
+const getQuestionCountLabelPosition = (count: number): string =>
+  `${((count - QUESTION_COUNT_MIN) / (QUESTION_COUNT_MAX - QUESTION_COUNT_MIN)) * 100}%`
 
 const FOCUS_AREAS = [
   { id: 'frontend', label: '🖥️ Front-end dev' },
@@ -1211,7 +1213,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                           <span
                             key={count}
                             className="absolute top-0 -translate-x-1/2"
-                            style={{ left: `${((count - QUESTION_COUNT_MIN) / (QUESTION_COUNT_MAX - QUESTION_COUNT_MIN)) * 100}%` }}
+                            style={{ left: getQuestionCountLabelPosition(count) }}
                           >
                             {count}
                           </span>
