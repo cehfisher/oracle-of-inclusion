@@ -10,7 +10,7 @@ import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
-import { useKV } from '@github/spark/hooks'
+import { useLocalStorageState } from '@/hooks/use-local-storage-state'
 import { toast, Toaster } from 'sonner'
 
 const useSound = () => {
@@ -461,9 +461,9 @@ export default function App() {
   const [loadingProgress, setLoadingProgress] = useState(0)
   const [thinkingQuestions, setThinkingQuestions] = useState<string[]>([])
   const [isShuffling, setIsShuffling] = useState(false)
-  const [soundEnabled, setSoundEnabled] = useKV<boolean>('oracle-sound-enabled-v2', true)
-  const [animationsEnabled, setAnimationsEnabled] = useKV<boolean>('oracle-animations-enabled-v2', true)
-  const [darkMode, setDarkMode] = useKV<boolean>('oracle-dark-mode-v2', false)
+  const [soundEnabled, setSoundEnabled] = useLocalStorageState<boolean>('oracle-sound-enabled-v2', true)
+  const [animationsEnabled, setAnimationsEnabled] = useLocalStorageState<boolean>('oracle-animations-enabled-v2', true)
+  const [darkMode, setDarkMode] = useLocalStorageState<boolean>('oracle-dark-mode-v2', false)
 
   const [shuffledTopicSuggestions, setShuffledTopicSuggestions] = useState(() => shuffleArray(TOPIC_SUGGESTIONS))
   const [mysticalGreeting, setMysticalGreeting] = useState(() => getRandomGreeting())
