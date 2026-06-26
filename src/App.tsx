@@ -1010,22 +1010,24 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
             
             <div className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border text-foreground">
               <Sparkle size={18} className="text-primary" aria-hidden="true" />
-              <Label htmlFor="animations-toggle" className="text-sm font-medium cursor-pointer">Animations</Label>
+              <Label id="animations-toggle-label" htmlFor="animations-toggle" className="text-sm font-medium cursor-pointer">Animations</Label>
               <Switch 
                 id="animations-toggle"
                 checked={animationsEnabled}
                 onCheckedChange={setAnimationsEnabled}
+                aria-labelledby="animations-toggle-label"
                 aria-describedby="animations-desc"
               />
               <span id="animations-desc" className="sr-only">Toggle animations on or off</span>
             </div>
             <div className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border text-foreground">
               {soundEnabled ? <SpeakerHigh size={18} className="text-primary" aria-hidden="true" /> : <SpeakerSlash size={18} className="text-muted-foreground" aria-hidden="true" />}
-              <Label htmlFor="sound-toggle" className="text-sm font-medium cursor-pointer">Sound</Label>
+              <Label id="sound-toggle-label" htmlFor="sound-toggle" className="text-sm font-medium cursor-pointer">Sound</Label>
               <Switch 
                 id="sound-toggle"
                 checked={soundEnabled ?? true}
                 onCheckedChange={setSoundEnabled}
+                aria-labelledby="sound-toggle-label"
                 aria-describedby="sound-desc"
               />
               <span id="sound-desc" className="sr-only">Toggle sound effects on or off</span>
