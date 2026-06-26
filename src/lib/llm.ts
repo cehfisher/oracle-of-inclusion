@@ -36,7 +36,17 @@ const getToneDescription = (questionTone: number): string => {
 const parseJsonResponse = (response: string): LlmQuestionResponse => {
   const trimmed = response.trim()
   const fencedJson = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i)?.[1]
-  const jsonText = fencedJson ?? trimmed.slice(trimmed.indexOf('{'), trimmed.lastIndexOf('}') + 1)
+  const firstBraceIndex = trimmed.indexOf('{')
+  const lastBraceIndex = trimmed.lastIndexOf('}')
+  const jsonText = fencedJson ?? (
+    firstBraceIndex >= 0 && lastBraceIndex > firstBraceIndex
+      ? trimmed.slice(firstBraceIndex, lastBraceIndex + 1)
+      : ''
+  )
+
+  if (!jsonText) {
+    throw new Error('LLM response did not include a JSON object.')
+  }
 
   return JSON.parse(jsonText) as LlmQuestionResponse
 }
@@ -97,8 +107,9 @@ Focus areas: ${focusAreaLabels.length > 0 ? focusAreaLabels.join(', ') : 'access
     .map(question => normalizeQuestion(question, vibeTypes))
     .filter((question): question is GeneratedQuestion => question !== null)
 
+  const generatedCount = parsed.questions?.length ?? 0
   if (questions.length !== requestedCount) {
-    throw new Error(`LLM returned ${questions.length} usable questions; expected ${requestedCount}.`)
+    throw new Error(`LLM generated ${generatedCount} questions, but only ${questions.length} passed validation; expected ${requestedCount}.`)
   }
 
   return questions
