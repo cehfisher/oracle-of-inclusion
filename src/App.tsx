@@ -114,7 +114,7 @@ interface GeneratedQuestion {
 interface LlmResponse {
   choices?: Array<{
     message?: {
-      content?: string | object
+      content?: string | { questions?: GeneratedQuestion[] }
     }
   }>
 }
@@ -178,7 +178,15 @@ const requestGeneratedQuestions = async (prompt: string): Promise<GeneratedQuest
     throw new Error('LLM response did not include content')
   }
 
-  return parseQuestionResponse(typeof content === 'string' ? content : JSON.stringify(content))
+  if (typeof content === 'string') {
+    return parseQuestionResponse(content)
+  }
+
+  if (Array.isArray(content.questions)) {
+    return parseQuestionResponse(JSON.stringify(content))
+  }
+
+  throw new Error('LLM response content was not a usable questions object')
 }
 
 const MYSTICAL_LOADING_PHRASES = [
@@ -588,7 +596,7 @@ export default function App() {
     const vibeDistribution = questionCount < VIBE_TYPES.length
       ? `Use ${questionCount} distinct vibe type${questionCount === 1 ? '' : 's'} selected from: ${VIBE_TYPES.join(', ')}.`
       : VIBE_TYPES.map((vibe, idx) => {
-          const count = Math.floor(questionCount / 4) + (idx < questionCount % 4 ? 1 : 0)
+          const count = Math.floor(questionCount / VIBE_TYPES.length) + (idx < questionCount % VIBE_TYPES.length ? 1 : 0)
           return `${count} ${vibe.split(' ')[1]}`
         }).join(', ')
 
@@ -677,7 +685,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
       setQuestions(fallbackQuestions)
       const fallbackTexts = fallbackQuestions.map(q => q.text)
       setPreviousQuestions((prev) => [...getQuestionHistory(prev).slice(-100), ...fallbackTexts])
-      toast.info('The oracle used backup wisdom. Try Shuffle for fresh magic.')
+      toast.info('Generation failed, showing backup questions. Try Shuffle for fresh magic.')
       playSound(sounds.playMagic)
     } finally {
       if (!isShuffle) {
