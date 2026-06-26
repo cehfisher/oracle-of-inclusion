@@ -11,7 +11,6 @@ import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 import { useKV } from '@github/spark/hooks'
-import { llm, llmPrompt } from '@github/spark/llm'
 import { toast, Toaster } from 'sonner'
 
 const useSound = () => {
@@ -112,6 +111,14 @@ interface GeneratedQuestion {
   vibe?: string
 }
 
+interface LlmResponse {
+  choices?: Array<{
+    message?: {
+      content?: string | object
+    }
+  }>
+}
+
 const parseQuestionResponse = (result: string): GeneratedQuestion[] => {
   const parse = (value: string) => JSON.parse(value) as { questions?: GeneratedQuestion[] }
   
@@ -139,6 +146,39 @@ const parseQuestionResponse = (result: string): GeneratedQuestion[] => {
   }
   
   return questions
+}
+
+const requestGeneratedQuestions = async (prompt: string): Promise<GeneratedQuestion[]> => {
+  const response = await fetch('/_spark/llm', {
+    method: 'POST',
+    body: JSON.stringify({
+      messages: [
+        { role: 'system', content: 'You are a helpful assistant.' },
+        { role: 'user', content: prompt },
+      ],
+      temperature: 1.0,
+      top_p: 1.0,
+      max_tokens: 1000,
+      model: 'openai/gpt-4o',
+      response_format: { type: 'json_object' },
+    }),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`LLM request failed: ${response.status} ${response.statusText} - ${errorText}`)
+  }
+
+  const data = (await response.json()) as LlmResponse
+  const content = data.choices?.[0]?.message?.content
+  if (!content) {
+    throw new Error('LLM response did not include content')
+  }
+
+  return parseQuestionResponse(typeof content === 'string' ? content : JSON.stringify(content))
 }
 
 const MYSTICAL_LOADING_PHRASES = [
@@ -258,6 +298,23 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 }
 
 const VIBE_TYPES = ['😜 Whimsical', '🤗 Warm', '🤔 Thoughtful', '🧘 Deep']
+
+const FALLBACK_QUESTIONS: GeneratedQuestion[] = [
+  { text: 'What does inclusion mean in your everyday work?', vibe: '🤗 Warm' },
+  { text: 'Where can accessibility make technology better for everyone?', vibe: '🤔 Thoughtful' },
+  { text: 'What small design choice has made a big difference for people?', vibe: '🧘 Deep' },
+  { text: 'What is one accessibility win that made you smile?', vibe: '😜 Whimsical' },
+  { text: 'How can teams listen better to disabled people?', vibe: '🤗 Warm' },
+  { text: 'What barrier should tech teams stop accepting as normal?', vibe: '🤔 Thoughtful' },
+  { text: 'What does respectful innovation look like to you?', vibe: '🧘 Deep' },
+  { text: 'If accessibility had a superpower, what would it be?', vibe: '😜 Whimsical' },
+  { text: 'What helps people feel like they truly belong?', vibe: '🤗 Warm' },
+  { text: 'How can leaders make inclusion part of everyday decisions?', vibe: '🤔 Thoughtful' },
+]
+
+const getRandomVibe = (): string => {
+  return VIBE_TYPES[Math.floor(Math.random() * VIBE_TYPES.length)]
+}
 
 const FOCUS_AREAS = [
   { id: 'frontend', label: '🖥️ Front-end dev' },
@@ -461,9 +518,13 @@ export default function App() {
     }, 800)
   }, [isExploding, resetForm, sounds, playSound])
 
-  const getRandomVibe = (): string => {
-    return VIBE_TYPES[Math.floor(Math.random() * VIBE_TYPES.length)]
-  }
+  const buildFallbackQuestions = useCallback((): Question[] => {
+    return shuffleArray([...FALLBACK_QUESTIONS]).slice(0, questionCount).map((question, i) => ({
+      id: `fallback-${Date.now()}-${i}`,
+      text: question.text,
+      vibe: question.vibe && VIBE_TYPES.includes(question.vibe) ? question.vibe : getRandomVibe()
+    }))
+  }, [questionCount])
 
   const generateQuestions = useCallback(async (isShuffle = false) => {
     if (isShuffle) {
@@ -520,8 +581,8 @@ export default function App() {
     const hasCustomTopics = topics.length > 0
     const hasCustomFocusAreas = focusAreas.length > 0
 
-    const vibeDistribution = questionCount === 1 
-      ? 'any vibe of your choice'
+    const vibeDistribution = questionCount < VIBE_TYPES.length
+      ? `Use ${questionCount} distinct vibe type${questionCount === 1 ? '' : 's'} selected from: ${VIBE_TYPES.join(', ')}.`
       : VIBE_TYPES.map((vibe, idx) => {
           const count = Math.floor(questionCount / 4) + (idx < questionCount % 4 ? 1 : 0)
           return `${count} ${vibe.split(' ')[1]}`
@@ -546,7 +607,7 @@ export default function App() {
       ? 'lighter and engaging - lean toward fun, creative, and personal questions while still being meaningful'
       : 'fun and playful - prioritize creative, surprising, and delightful questions that spark joy and interesting stories'
 
-    const prompt = llmPrompt`Generate ${questionCount} simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
+    const prompt = `Generate ${questionCount} simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
 
 Context:
 ${topicEmphasis}
@@ -569,7 +630,7 @@ Rules:
 - Mix personal story questions with big picture questions
 - Center the disability community voice
 - CRITICAL: Keep each question to 1-2 SHORT sentences max (under 25 words total)
-- CRITICAL: Generate an even mix of vibes: ${vibeDistribution}. Each vibe type MUST be represented.
+- CRITICAL: Generate the requested vibe mix: ${vibeDistribution}
 - Randomize the order of vibes - do NOT group same vibes together
 - If guest has lived experience, include questions that honor their perspective as an expert
 - If audience is technical (developers/designers), include questions about practical implementation
@@ -588,10 +649,9 @@ IMPORTANT - Be respectful and inclusive:
 - Questions should empower, not objectify or pity
 
 Return a JSON object with a "questions" array containing exactly ${questionCount} objects, each with "text" (the question) and "vibe" (one of: "😜 Whimsical", "🤗 Warm", "🤔 Thoughtful", "🧘 Deep").`
-
     try {
-      const result = await llm(prompt, 'gpt-4o', true)
-      const generatedResponse = parseQuestionResponse(result)
+    try {
+      const generatedResponse = await requestGeneratedQuestions(prompt)
       if (generatedResponse.length !== questionCount) {
         throw new Error(`Expected ${questionCount} questions, received ${generatedResponse.length}`)
       }
@@ -610,14 +670,19 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
       playSound(sounds.playMagic)
     } catch (error) {
       console.error('Question generation failed:', error)
-      toast.error('The oracle needs a moment... Please try again.')
+      const fallbackQuestions = buildFallbackQuestions()
+      setQuestions(fallbackQuestions)
+      const fallbackTexts = fallbackQuestions.map(q => q.text)
+      setPreviousQuestions((prev) => [...(Array.isArray(prev) ? prev : []).slice(-100), ...fallbackTexts])
+      toast.info('The oracle used backup wisdom. Try Shuffle for fresh magic.')
+      playSound(sounds.playMagic)
     } finally {
       if (!isShuffle) {
         setIsGenerating(false)
       }
       setIsShuffling(false)
     }
-  }, [focusAreas, otherFocusArea, questionCount, questionTone, topics, experience, audience, soundEnabled, sounds, reshuffleTopics, previousQuestions, setPreviousQuestions])
+  }, [focusAreas, otherFocusArea, questionCount, questionTone, topics, experience, audience, soundEnabled, sounds, reshuffleTopics, previousQuestions, setPreviousQuestions, buildFallbackQuestions])
 
   const handleGenerateClick = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
