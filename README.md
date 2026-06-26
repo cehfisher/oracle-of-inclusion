@@ -1,23 +1,29 @@
-# ✨ Welcome to Your Spark Template!
-You've just launched your brand-new Spark Template Codespace — everything’s fired up and ready for you to explore, build, and create with Spark!
+# Oracle of Inclusion
 
-This template is your blank canvas. It comes with a minimal setup to help you get started quickly with Spark development.
+Oracle of Inclusion is a Vite and React app that generates inclusive fireside-chat questions about accessibility, disability, inclusion, and technology.
 
-🚀 What's Inside?
-- A clean, minimal Spark environment
-- Pre-configured for local development
-- Ready to scale with your ideas
-  
-🧠 What Can You Do?
+## Features
 
-Right now, this is just a starting point — the perfect place to begin building and testing your Spark applications.
+- Guided question generation for accessibility and inclusion conversations
+- Topic, focus area, audience, and tone controls
+- Light/dark theme toggle with the initial theme matched to the user's OS setting
+- Optional animations and sound effects
+- Recent-question tracking to reduce duplicates
 
-🧹 Just Exploring?
-No problem! If you were just checking things out and don’t need to keep this code:
+## Getting started
 
-- Simply delete your Spark.
-- Everything will be cleaned up — no traces left behind.
+```bash
+npm ci
+npm run dev
+```
 
-📄 License For Spark Template Resources 
+## Available scripts
 
-The Spark Template files and resources from GitHub are licensed under the terms of the MIT license, Copyright GitHub, Inc.
+- `npm run dev` - start the local Vite development server
+- `npm run build` - build the production app
+- `npm run preview` - preview the production build locally
+- `npm run lint` - run ESLint
+
+## Deployment
+
+The app is configured for GitHub Pages through `.github/workflows/deploy.yml`. Pushes to `main` build and deploy the `dist` output.
