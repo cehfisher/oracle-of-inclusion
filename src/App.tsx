@@ -114,6 +114,10 @@ const FREE_LLM_ENDPOINT = import.meta.env.VITE_FREE_LLM_ENDPOINT ?? 'https://tex
 const FREE_LLM_MODEL = 'openai'
 const FREE_LLM_TIMEOUT_MS = 12000
 const FREE_LLM_TEMPERATURE = 0.9
+const FREE_LLM_SHORT_PROMPT_LIMIT = 2500
+const FREE_LLM_SHORT_PROMPT_MAX_TOKENS = 700
+const FREE_LLM_LONG_PROMPT_MAX_TOKENS = 900
+const FREE_LLM_MIN_MAX_TOKENS = 350
 
 const getFreeLlmEndpoint = (): string => {
   const endpoint = new URL(FREE_LLM_ENDPOINT)
@@ -201,7 +205,12 @@ const callFreeQuestionLlm = async (prompt: string): Promise<string> => {
           { role: 'user', content: prompt }
         ],
         response_format: { type: 'json_object' },
-        max_tokens: Math.max(350, prompt.length < 2500 ? 700 : 900),
+        max_tokens: Math.max(
+          FREE_LLM_MIN_MAX_TOKENS,
+          prompt.length < FREE_LLM_SHORT_PROMPT_LIMIT
+            ? FREE_LLM_SHORT_PROMPT_MAX_TOKENS
+            : FREE_LLM_LONG_PROMPT_MAX_TOKENS
+        ),
         temperature: FREE_LLM_TEMPERATURE
       }),
       signal: controller.signal
