@@ -1201,12 +1201,13 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                   </div>
 
                   <div>
-                    <Label htmlFor="question-count-slider" className="text-foreground mb-3 block text-xl font-bold form-heading">
+                    <Label id="question-count-slider-label" className="text-foreground mb-3 block text-xl font-bold form-heading">
                       🔢 Number of questions
                     </Label>
                     <div className="px-2 py-4">
                       <Slider
                         id="question-count-slider"
+                        aria-labelledby="question-count-slider-label"
                         value={[questionCount]}
                         onValueChange={(value) => setQuestionCount(value[0])}
                         min={QUESTION_COUNT_MIN}
@@ -1233,12 +1234,13 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                   </div>
 
                   <div>
-                    <Label htmlFor="question-tone-slider" className="text-foreground mb-3 block text-xl font-bold form-heading">
+                    <Label id="question-tone-slider-label" className="text-foreground mb-3 block text-xl font-bold form-heading">
                       🎭 Question type
                     </Label>
                     <div className="px-2 py-4">
                       <Slider
                         id="question-tone-slider"
+                        aria-labelledby="question-tone-slider-label"
                         value={[questionTone]}
                         onValueChange={(value) => setQuestionTone(value[0])}
                         min={0}
