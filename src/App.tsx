@@ -10,8 +10,13 @@ import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
-import { useLocalStorageState } from '@/hooks/use-local-storage-state'
+import { useKV } from '@github/spark/hooks'
 import { toast, Toaster } from 'sonner'
+
+declare const spark: {
+  llmPrompt: (strings: TemplateStringsArray, ...values: unknown[]) => string
+  llm: (prompt: string, model?: string, jsonMode?: boolean) => Promise<string>
+}
 
 const useSound = () => {
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -104,17 +109,6 @@ interface Question {
   id: string
   text: string
   vibe: string
-}
-
-interface GeneratedQuestion {
-  text: string
-  vibe?: string
-}
-
-interface FreeContentArticle {
-  title: string
-  extract: string
-  url?: string
 }
 
 const MYSTICAL_LOADING_PHRASES = [
@@ -235,33 +229,6 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 
 const VIBE_TYPES = ['😜 Whimsical', '🤗 Warm', '🤔 Thoughtful', '🧘 Deep']
 
-const WIKIPEDIA_API_ENDPOINT = 'https://en.wikipedia.org/w/api.php'
-
-const FREE_CONTENT_BASE_SEARCHES = [
-  'web accessibility disability inclusion technology',
-  'universal design assistive technology disability',
-  'digital accessibility inclusive design disability rights',
-]
-
-const MIN_FREE_CONTENT_EXTRACT_LENGTH = 80
-
-const FALLBACK_QUESTIONS: GeneratedQuestion[] = [
-  { text: 'What does inclusion mean in your everyday work?', vibe: '🤗 Warm' },
-  { text: 'Where can accessibility make technology better for everyone?', vibe: '🤔 Thoughtful' },
-  { text: 'What small design choice has made a big difference for people?', vibe: '🧘 Deep' },
-  { text: 'What is one accessibility win that made you smile?', vibe: '😜 Whimsical' },
-  { text: 'How can teams listen better to disabled people?', vibe: '🤗 Warm' },
-  { text: 'What barrier should tech teams stop accepting as normal?', vibe: '🤔 Thoughtful' },
-  { text: 'What does respectful innovation look like to you?', vibe: '🧘 Deep' },
-  { text: 'If accessibility had a superpower, what would it be?', vibe: '😜 Whimsical' },
-  { text: 'What helps people feel like they truly belong?', vibe: '🤗 Warm' },
-  { text: 'How can leaders make inclusion part of everyday decisions?', vibe: '🤔 Thoughtful' },
-]
-
-const getRandomVibe = (): string => {
-  return VIBE_TYPES[Math.floor(Math.random() * VIBE_TYPES.length)]
-}
-
 const FOCUS_AREAS = [
   { id: 'frontend', label: '🖥️ Front-end dev' },
   { id: 'backend', label: '⚙️ Back-end dev' },
@@ -272,174 +239,6 @@ const FOCUS_AREAS = [
   { id: 'advocacy', label: '📣 Advocacy & community' },
   { id: 'other', label: '✏️ Other' },
 ]
-
-const stripEmoji = (value: string): string => {
-  return value.replace(/[^\p{L}\p{N}\s&/-]/gu, '').replace(/\s+/g, ' ').trim()
-}
-
-const uniqueByKey = <T,>(values: T[], getKey: (value: T) => string): T[] => {
-  const seen = new Set<string>()
-  return values.filter((value) => {
-    const key = getKey(value).toLowerCase()
-    if (!key || seen.has(key)) return false
-    seen.add(key)
-    return true
-  })
-}
-
-const getFocusAreaLabels = (focusAreas: string[], otherFocusArea: string): string[] => {
-  const labels = FOCUS_AREAS
-    .filter(a => focusAreas.includes(a.id) && a.id !== 'other')
-    .map(a => stripEmoji(a.label))
-
-  if (focusAreas.includes('other') && otherFocusArea.trim()) {
-    labels.push(otherFocusArea.trim())
-  }
-
-  return labels
-}
-
-const buildFreeContentSearchTerms = (topics: string[], focusAreaLabels: string[]): string[] => {
-  const topicTerms = topics.map(stripEmoji).filter(Boolean)
-  const focusTerms = focusAreaLabels.map(stripEmoji).filter(Boolean)
-  const topicSearches = topicTerms.map(topic => `${topic} accessibility inclusion disability technology`)
-  const focusSearches = focusTerms.map(focus => `${focus} accessibility inclusion disability`)
-
-  return uniqueByKey(
-    [...topicSearches, ...focusSearches, ...FREE_CONTENT_BASE_SEARCHES],
-    (term) => term
-  ).slice(0, 6)
-}
-
-const fetchFreeContentArticles = async (searchTerm: string): Promise<FreeContentArticle[]> => {
-  const params = new URLSearchParams({
-    action: 'query',
-    format: 'json',
-    origin: '*',
-    generator: 'search',
-    gsrsearch: searchTerm,
-    gsrlimit: '4',
-    prop: 'extracts|info',
-    exintro: '1',
-    explaintext: '1',
-    exchars: '650',
-    inprop: 'url',
-    redirects: '1',
-  })
-
-  const response = await fetch(`${WIKIPEDIA_API_ENDPOINT}?${params.toString()}`)
-  if (!response.ok) {
-    console.warn('Free content request failed', { searchTerm, status: response.status, statusText: response.statusText })
-    throw new Error('Unable to fetch content. Please try again later.')
-  }
-
-  const data = await response.json() as {
-    query?: {
-      pages?: Record<string, {
-        title?: string
-        extract?: string
-        fullurl?: string
-      }>
-    }
-  }
-
-  return Object.values(data.query?.pages ?? {})
-    .filter((page): page is { title: string; extract: string; fullurl?: string } =>
-      typeof page.title === 'string' &&
-      page.title.trim().length > 0 &&
-      typeof page.extract === 'string' &&
-      page.extract.trim().length > MIN_FREE_CONTENT_EXTRACT_LENGTH
-    )
-    .map(page => ({
-      title: page.title.trim(),
-      extract: page.extract.trim(),
-      url: page.fullurl,
-    }))
-}
-
-const TONE_SERIOUS_MAX = 25
-const TONE_BALANCED_MAX = 50
-const TONE_LIGHT_MAX = 75
-
-const getQuestionTemplates = (questionTone: number): Array<(article: FreeContentArticle, focusAreasText: string) => string> => {
-  if (questionTone <= TONE_SERIOUS_MAX) {
-    return [
-      (article, focusAreasText) => `What should teams learn from ${article.title} when making ${focusAreasText} more inclusive?`,
-      (article) => `What barrier connected to ${article.title} should technology teams address first?`,
-      (article) => `How can lessons from ${article.title} guide better accessibility decisions?`,
-      (article) => `What expertise should teams seek before designing around ${article.title}?`,
-    ]
-  }
-
-  if (questionTone <= TONE_BALANCED_MAX) {
-    return [
-      (article, focusAreasText) => `What does ${article.title} teach us about inclusion in ${focusAreasText}?`,
-      (article) => `How could a story about ${article.title} change the way teams build technology?`,
-      (article) => `What question should every team ask after learning about ${article.title}?`,
-      (article) => `Where do you see hope or progress in work related to ${article.title}?`,
-    ]
-  }
-
-  if (questionTone <= TONE_LIGHT_MAX) {
-    return [
-      (article) => `What surprising idea from ${article.title} could spark a better product decision?`,
-      (article) => `If ${article.title} could teach one accessibility lesson, what would it be?`,
-      (article) => `What story about ${article.title} would help people care more deeply?`,
-      (article) => `How might ${article.title} inspire a more joyful kind of inclusion?`,
-    ]
-  }
-
-  return [
-    (article) => `If ${article.title} had a magic accessibility spell, what would it change first?`,
-    (article) => `What playful lesson could teams borrow from ${article.title}?`,
-    (article) => `How would you explain ${article.title} to someone using only joy and curiosity?`,
-    (article) => `What tiny spark from ${article.title} could start a big inclusion breakthrough?`,
-  ]
-}
-
-const buildQuestionsFromFreeContent = (
-  articles: FreeContentArticle[],
-  questionCount: number,
-  questionTone: number,
-  focusAreasText: string,
-): GeneratedQuestion[] => {
-  const templates = getQuestionTemplates(questionTone)
-  const questions = shuffleArray(articles).map((article, articleIndex) => {
-    const template = templates[articleIndex % templates.length]
-    return {
-      text: template(article, focusAreasText),
-      vibe: VIBE_TYPES[articleIndex % VIBE_TYPES.length],
-    }
-  })
-
-  return uniqueByKey(questions, question => question.text).slice(0, questionCount)
-}
-
-const generateFreeContentQuestions = async (
-  topics: string[],
-  focusAreaLabels: string[],
-  questionCount: number,
-  questionTone: number,
-): Promise<GeneratedQuestion[]> => {
-  const focusAreasText = focusAreaLabels.length > 0
-    ? focusAreaLabels.join(', ')
-    : 'accessibility and inclusion in technology'
-  const searchTerms = buildFreeContentSearchTerms(topics, focusAreaLabels)
-  // Partial results are enough; failed searches fall back to articles from the remaining terms.
-  const articleResults = await Promise.allSettled(searchTerms.map(fetchFreeContentArticles))
-  const articles = uniqueByKey(
-    articleResults.flatMap(result => result.status === 'fulfilled' ? result.value : []),
-    article => article.title
-  )
-
-  const generatedQuestions = buildQuestionsFromFreeContent(articles, questionCount, questionTone, focusAreasText)
-
-  if (generatedQuestions.length !== questionCount) {
-    throw new Error(`Could not generate enough questions from available content (got ${generatedQuestions.length} of ${questionCount}). Try adjusting your topics or focus areas, or try again later.`)
-  }
-
-  return generatedQuestions
-}
 
 
 
@@ -461,10 +260,12 @@ export default function App() {
   const [loadingProgress, setLoadingProgress] = useState(0)
   const [thinkingQuestions, setThinkingQuestions] = useState<string[]>([])
   const [isShuffling, setIsShuffling] = useState(false)
-  const [soundEnabled, setSoundEnabled] = useLocalStorageState<boolean>('oracle-sound-enabled-v2', true)
-  const [animationsEnabled, setAnimationsEnabled] = useLocalStorageState<boolean>('oracle-animations-enabled-v2', true)
-  const [darkMode, setDarkMode] = useLocalStorageState<boolean>('oracle-dark-mode-v2', false)
+  const [soundEnabled, setSoundEnabled] = useKV<boolean>('oracle-sound-enabled-v2', true)
+  const [animationsEnabled, setAnimationsEnabled] = useKV<boolean>('oracle-animations-enabled-v2', true)
+  const [darkMode, setDarkMode] = useKV<boolean>('oracle-dark-mode-v2', false)
 
+  const [previousQuestions, setPreviousQuestions] = useKV<string[]>('oracle-previous-questions', [])
+  
   const [shuffledTopicSuggestions, setShuffledTopicSuggestions] = useState(() => shuffleArray(TOPIC_SUGGESTIONS))
   const [mysticalGreeting, setMysticalGreeting] = useState(() => getRandomGreeting())
   const [greetingKey, setGreetingKey] = useState(0)
@@ -630,13 +431,9 @@ export default function App() {
     }, 800)
   }, [isExploding, resetForm, sounds, playSound])
 
-  const buildFallbackQuestions = useCallback((): Question[] => {
-    return shuffleArray([...FALLBACK_QUESTIONS]).slice(0, questionCount).map((question, i) => ({
-      id: `fallback-${Date.now()}-${i}`,
-      text: question.text,
-      vibe: question.vibe && VIBE_TYPES.includes(question.vibe) ? question.vibe : getRandomVibe()
-    }))
-  }, [questionCount])
+  const getRandomVibe = (): string => {
+    return VIBE_TYPES[Math.floor(Math.random() * VIBE_TYPES.length)]
+  }
 
   const generateQuestions = useCallback(async (isShuffle = false) => {
     if (isShuffle) {
@@ -682,33 +479,109 @@ export default function App() {
     playSound(sounds.playTwinkle)
     reshuffleTopics()
 
-    const focusAreasLabels = getFocusAreaLabels(focusAreas, otherFocusArea)
+    const focusAreasLabels = FOCUS_AREAS.filter(a => focusAreas.includes(a.id) && a.id !== 'other').map(a => a.label)
+    if (focusAreas.includes('other') && otherFocusArea.trim()) {
+      focusAreasLabels.push(otherFocusArea.trim())
+    }
+    const focusAreasText = focusAreasLabels.length > 0 
+      ? focusAreasLabels.join(', ')
+      : 'accessibility and inclusion in technology'
+
+    const hasCustomTopics = topics.length > 0
+    const hasCustomFocusAreas = focusAreas.length > 0
+
+    const vibeDistribution = questionCount === 1 
+      ? 'any vibe of your choice'
+      : VIBE_TYPES.map((vibe, idx) => {
+          const count = Math.floor(questionCount / 4) + (idx < questionCount % 4 ? 1 : 0)
+          return `${count} ${vibe.split(' ')[1]}`
+        }).join(', ')
+
+    const recentQuestions = previousQuestions ?? []
+    const avoidList = recentQuestions.slice(-50).join('\n- ')
+
+    const topicEmphasis = hasCustomTopics 
+      ? `CRITICAL PRIORITY - The user specifically selected these topics: ${topics.join(', ')}. At least ${Math.ceil(questionCount * 0.7)} of the ${questionCount} questions (70%+) MUST directly relate to one or more of these specific topics. These are the primary focus areas the user cares about most.`
+      : `Topics: accessibility, inclusion, disability in tech, universal design, assistive technology`
+
+    const focusAreaEmphasis = hasCustomFocusAreas
+      ? `CRITICAL PRIORITY - The guest works in: ${focusAreasText}. Tailor questions to their specific expertise. At least ${Math.ceil(questionCount * 0.6)} of the ${questionCount} questions (60%+) should connect to their professional focus areas.`
+      : `Guest's work area: accessibility and inclusion in technology (general)`
+
+    const toneDescription = questionTone <= 25 
+      ? 'serious and professional - focus on deep, substantive questions about challenges, strategies, and expertise'
+      : questionTone <= 50
+      ? 'balanced mix - combine thoughtful professional questions with some lighter, more personal ones'
+      : questionTone <= 75
+      ? 'lighter and engaging - lean toward fun, creative, and personal questions while still being meaningful'
+      : 'fun and playful - prioritize creative, surprising, and delightful questions that spark joy and interesting stories'
+
+    const prompt = spark.llmPrompt`Generate ${questionCount} simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
+
+Context:
+${topicEmphasis}
+${focusAreaEmphasis}
+- Question tone/style: ${toneDescription}
+- Years in accessibility/inclusion work: ${experience || 'not specified'}
+- Audience type: ${audience || 'general / mixed'}
+
+${avoidList ? `IMPORTANT - Do NOT generate questions similar to these recently asked questions:
+- ${avoidList}
+
+Generate COMPLETELY DIFFERENT questions on new angles and perspectives.` : ''}
+
+Rules:
+- Write at a 9th grade reading level or lower
+- Use short sentences (under 20 words each)
+- Use simple, everyday words - no jargon
+- Make questions easy to understand on first read
+- Ask open questions (not yes/no)
+- Mix personal story questions with big picture questions
+- Center the disability community voice
+- CRITICAL: Keep each question to 1-2 SHORT sentences max (under 25 words total)
+- CRITICAL: Generate an even mix of vibes: ${vibeDistribution}. Each vibe type MUST be represented.
+- Randomize the order of vibes - do NOT group same vibes together
+- If guest has lived experience, include questions that honor their perspective as an expert
+- If audience is technical (developers/designers), include questions about practical implementation
+- If audience is leaders, include questions about culture and organizational change
+- If guest is new to the field, ask about their journey and what drew them to this work
+- CRITICAL: Each question must be UNIQUE and different from all others - no repetition of themes or angles
+
+IMPORTANT - Be respectful and inclusive:
+- NEVER use offensive, patronizing, or insensitive language about disability
+- NEVER ask questions that treat disability as a tragedy or something to overcome
+- NEVER use inspiration porn framing (e.g., "despite your disability")
+- NEVER assume negative experiences or limitations
+- DO use identity-first or person-first language appropriately (follow the guest's lead)
+- DO frame questions around expertise, experiences, and perspectives - not limitations
+- DO treat guests as experts in their field, not just their disability experience
+- Questions should empower, not objectify or pity
+
+Return a JSON object with a "questions" array containing exactly ${questionCount} objects, each with "text" (the question) and "vibe" (one of: "😜 Whimsical", "🤗 Warm", "🤔 Thoughtful", "🧘 Deep").`
 
     try {
-      const generatedResponse = await generateFreeContentQuestions(topics, focusAreasLabels, questionCount, questionTone)
-      
-      const generatedQuestions: Question[] = shuffleArray(generatedResponse.map((q, i) => ({
+      const result = await spark.llm(prompt, 'gpt-4o', true)
+      const parsed = JSON.parse(result)
+      const generatedQuestions: Question[] = shuffleArray(parsed.questions.map((q: { text: string; vibe: string }, i: number) => ({
         id: `q-${Date.now()}-${i}`,
-        text: q.text.trim(),
-        vibe: q.vibe && VIBE_TYPES.includes(q.vibe) ? q.vibe : getRandomVibe()
+        text: q.text,
+        vibe: q.vibe || getRandomVibe()
       })))
-      
       setQuestions(generatedQuestions)
       
+      const newQuestionTexts = generatedQuestions.map(q => q.text)
+      setPreviousQuestions((prev) => [...(prev ?? []).slice(-100), ...newQuestionTexts])
+      
       playSound(sounds.playMagic)
-    } catch (error) {
-      console.error('Question generation failed:', error)
-      const fallbackQuestions = buildFallbackQuestions()
-      setQuestions(fallbackQuestions)
-      toast.info('Content source unavailable, showing backup questions. Try Shuffle for fresh magic.')
-      playSound(sounds.playMagic)
+    } catch {
+      toast.error('The oracle needs a moment... Please try again.')
     } finally {
       if (!isShuffle) {
         setIsGenerating(false)
       }
       setIsShuffling(false)
     }
-  }, [focusAreas, otherFocusArea, questionCount, questionTone, topics, soundEnabled, sounds, reshuffleTopics, buildFallbackQuestions])
+  }, [focusAreas, otherFocusArea, questionCount, topics, experience, audience, soundEnabled, sounds, reshuffleTopics, previousQuestions, setPreviousQuestions])
 
   const handleGenerateClick = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -1165,32 +1038,15 @@ export default function App() {
                         min={1}
                         max={10}
                         step={1}
-                        className="w-full [&_[data-radix-slider-track]]:bg-muted [&_[data-radix-slider-range]]:bg-accent [&_[data-radix-slider-thumb]]:z-10 [&_[data-radix-slider-thumb]]:flex [&_[data-radix-slider-thumb]]:size-7 [&_[data-radix-slider-thumb]]:items-center [&_[data-radix-slider-thumb]]:justify-center [&_[data-radix-slider-thumb]]:bg-accent [&_[data-radix-slider-thumb]]:text-xs [&_[data-radix-slider-thumb]]:font-bold [&_[data-radix-slider-thumb]]:text-accent-foreground [&_[data-radix-slider-thumb]]:border-2 [&_[data-radix-slider-thumb]]:border-foreground"
+                        className="w-full [&_[data-radix-slider-track]]:bg-muted [&_[data-radix-slider-range]]:bg-accent [&_[data-radix-slider-thumb]]:bg-accent [&_[data-radix-slider-thumb]]:border-2 [&_[data-radix-slider-thumb]]:border-foreground"
                         aria-valuemin={1}
                         aria-valuemax={10}
                         aria-valuenow={questionCount}
                         aria-valuetext={`${questionCount} question${questionCount === 1 ? '' : 's'}`}
                       />
-                      <div className="relative h-7 mt-2 text-base text-foreground font-medium form-field" role="group" aria-label="Question count options">
-                        {Array.from({ length: 10 }, (_, index) => {
-                          const count = index + 1
-                          const position = index / 9
-                          const thumbSizeRem = 1.75
-
-                          return (
-                            <button
-                              key={count}
-                              type="button"
-                              className="absolute top-0 -translate-x-1/2 rounded-full bg-transparent px-1 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                              style={{ left: `calc(${position * 100}% + ${thumbSizeRem / 2 - position * thumbSizeRem}rem)` }}
-                              onClick={() => setQuestionCount(count)}
-                              aria-label={`Set number of questions to ${count}`}
-                              aria-pressed={questionCount === count}
-                            >
-                              {count}
-                            </button>
-                          )
-                        })}
+                      <div className="flex justify-between mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
+                        <span>1</span>
+                        <span>10</span>
                       </div>
                     </div>
                   </div>
@@ -1418,13 +1274,12 @@ export default function App() {
           role="contentinfo"
         >
           <p className="text-sm text-muted-foreground/70 border-t border-border/50 pt-4">
-            Questions are AI-generated. This app may not be fully accessible.{' '}
-            <br />
+            This is an experiment. Questions are AI-generated. This app may not be fully accessible.{' '}
             <a
               href="https://github.com/cehfisher"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center mt-2 gap-1 text-primary hover:text-primary/80 underline underline-offset-2 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded"
+              className="inline-flex items-center gap-1 text-primary hover:text-primary/80 underline underline-offset-2 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded"
               aria-label="Created by cehfisher (opens GitHub in new tab)"
             >
               <svg
