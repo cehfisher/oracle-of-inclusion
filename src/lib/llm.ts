@@ -22,9 +22,17 @@ interface LlmQuestionResponse {
   }>
 }
 
+type QuestionValidationResult =
+  | { question: GeneratedQuestion; reason?: never }
+  | { question?: never; reason: 'missing text' | 'missing question mark' | 'invalid vibe' }
+
 const MAX_QUESTION_COUNT = 8
 const MAX_QUESTION_WORDS = 24
 const LLM_JSON_MODE = true
+const RESPONSE_PREVIEW_LENGTH = 160
+
+const getResponsePreview = (response: string): string =>
+  response.replace(/\s+/g, ' ').trim().slice(0, RESPONSE_PREVIEW_LENGTH)
 
 const getToneDescription = (questionTone: number): string => {
   if (questionTone <= 25) return 'serious, reflective, and grounded'
@@ -45,26 +53,31 @@ const parseJsonResponse = (response: string): LlmQuestionResponse => {
   )
 
   if (!jsonText) {
-    throw new Error('LLM response did not include a JSON object.')
+    throw new Error(`LLM response did not include a valid JSON object. Response preview: ${getResponsePreview(response)}`)
   }
 
-  return JSON.parse(jsonText) as LlmQuestionResponse
+  try {
+    return JSON.parse(jsonText) as LlmQuestionResponse
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    throw new Error(`LLM response JSON could not be parsed: ${message}. Response preview: ${getResponsePreview(response)}`)
+  }
 }
 
-const normalizeQuestion = (
+const validateQuestion = (
   question: { text?: unknown; vibe?: unknown },
   vibeTypes: string[],
-): GeneratedQuestion | null => {
-  if (typeof question.text !== 'string') return null
+): QuestionValidationResult => {
+  if (typeof question.text !== 'string') return { reason: 'missing text' }
 
   const text = question.text.trim()
-  if (!text.endsWith('?')) return null
+  if (!text.endsWith('?')) return { reason: 'missing question mark' }
 
-  const vibe = typeof question.vibe === 'string' && vibeTypes.includes(question.vibe)
-    ? question.vibe
-    : undefined
+  if (typeof question.vibe !== 'string' || !vibeTypes.includes(question.vibe)) {
+    return { reason: 'invalid vibe' }
+  }
 
-  return { text, vibe }
+  return { question: { text, vibe: question.vibe } }
 }
 
 export const generateOracleQuestions = async ({
@@ -103,13 +116,25 @@ Focus areas: ${focusAreaLabels.length > 0 ? focusAreaLabels.join(', ') : 'access
 
   const response = await llm(prompt, 'openai/gpt-4o-mini', LLM_JSON_MODE)
   const parsed = parseJsonResponse(response)
-  const questions = (parsed.questions ?? [])
-    .map(question => normalizeQuestion(question, vibeTypes))
-    .filter((question): question is GeneratedQuestion => question !== null)
+  const validationResults = (parsed.questions ?? []).map(question => validateQuestion(question, vibeTypes))
+  const questions = validationResults
+    .map(result => result.question)
+    .filter((question): question is GeneratedQuestion => question !== undefined)
 
   const generatedCount = parsed.questions?.length ?? 0
   if (questions.length !== requestedCount) {
-    throw new Error(`LLM generated ${generatedCount} questions, but only ${questions.length} passed validation; expected ${requestedCount}.`)
+    const validationFailures = validationResults
+      .filter((result): result is { reason: QuestionValidationResult['reason'] } => result.reason !== undefined)
+      .reduce<Record<NonNullable<QuestionValidationResult['reason']>, number>>((counts, result) => {
+        counts[result.reason] += 1
+        return counts
+      }, { 'missing text': 0, 'missing question mark': 0, 'invalid vibe': 0 })
+    const failureSummary = Object.entries(validationFailures)
+      .filter(([, count]) => count > 0)
+      .map(([reason, count]) => `${count} ${reason}`)
+      .join(', ') || 'no item-level validation failures'
+
+    throw new Error(`LLM generated ${generatedCount} questions, but ${questions.length} passed validation; expected ${requestedCount}. Validation failures: ${failureSummary}.`)
   }
 
   return questions
