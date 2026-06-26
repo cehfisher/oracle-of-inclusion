@@ -262,10 +262,6 @@ const getRandomVibe = (): string => {
   return VIBE_TYPES[Math.floor(Math.random() * VIBE_TYPES.length)]
 }
 
-const getQuestionHistory = (value: unknown): string[] => {
-  return Array.isArray(value) ? value.filter((question): question is string => typeof question === 'string') : []
-}
-
 const FOCUS_AREAS = [
   { id: 'frontend', label: '🖥️ Front-end dev' },
   { id: 'backend', label: '⚙️ Back-end dev' },
@@ -333,7 +329,8 @@ const fetchFreeContentArticles = async (searchTerm: string): Promise<FreeContent
 
   const response = await fetch(`${WIKIPEDIA_API_ENDPOINT}?${params.toString()}`)
   if (!response.ok) {
-    throw new Error(`Wikipedia API request failed with ${response.status} (${response.statusText}) for search term: ${searchTerm}`)
+    console.warn('Free content request failed', { status: response.status, statusText: response.statusText })
+    throw new Error('Unable to fetch content. Please try again later.')
   }
 
   const data = await response.json() as {
@@ -433,7 +430,7 @@ const generateFreeContentQuestions = async (
   const generatedQuestions = buildQuestionsFromFreeContent(articles, questionCount, questionTone, focusAreasText)
 
   if (generatedQuestions.length !== questionCount) {
-    throw new Error(`Could not generate ${questionCount} questions from Wikipedia articles; only generated ${generatedQuestions.length}. Try broader topics or focus areas.`)
+    throw new Error('Could not generate enough questions from available content. Try adjusting your topics or focus areas, or try again later.')
   }
 
   return generatedQuestions
@@ -463,8 +460,6 @@ export default function App() {
   const [animationsEnabled, setAnimationsEnabled] = useKV<boolean>('oracle-animations-enabled-v2', true)
   const [darkMode, setDarkMode] = useKV<boolean>('oracle-dark-mode-v2', false)
 
-  const [, setPreviousQuestions] = useKV<string[]>('oracle-previous-questions', [])
-  
   const [shuffledTopicSuggestions, setShuffledTopicSuggestions] = useState(() => shuffleArray(TOPIC_SUGGESTIONS))
   const [mysticalGreeting, setMysticalGreeting] = useState(() => getRandomGreeting())
   const [greetingKey, setGreetingKey] = useState(0)
@@ -695,16 +690,11 @@ export default function App() {
       
       setQuestions(generatedQuestions)
       
-      const newQuestionTexts = generatedQuestions.map(q => q.text)
-      setPreviousQuestions((prev) => [...getQuestionHistory(prev).slice(-100), ...newQuestionTexts])
-      
       playSound(sounds.playMagic)
     } catch (error) {
       console.error('Question generation failed:', error)
       const fallbackQuestions = buildFallbackQuestions()
       setQuestions(fallbackQuestions)
-      const fallbackTexts = fallbackQuestions.map(q => q.text)
-      setPreviousQuestions((prev) => [...getQuestionHistory(prev).slice(-100), ...fallbackTexts])
       toast.info('Content source unavailable, showing backup questions. Try Shuffle for fresh magic.')
       playSound(sounds.playMagic)
     } finally {
@@ -713,7 +703,7 @@ export default function App() {
       }
       setIsShuffling(false)
     }
-  }, [focusAreas, otherFocusArea, questionCount, questionTone, topics, soundEnabled, sounds, reshuffleTopics, setPreviousQuestions, buildFallbackQuestions])
+  }, [focusAreas, otherFocusArea, questionCount, questionTone, topics, soundEnabled, sounds, reshuffleTopics, buildFallbackQuestions])
 
   const handleGenerateClick = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
