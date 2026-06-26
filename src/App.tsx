@@ -592,7 +592,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
     try {
       const result = await llm(prompt, 'gpt-4o', true)
       const generatedResponse = parseQuestionResponse(result)
-      const generatedQuestions: Question[] = shuffleArray(generatedResponse.slice(0, questionCount).map((q, i) => ({
+      const generatedQuestions: Question[] = shuffleArray(generatedResponse.map((q, i) => ({
         id: `q-${Date.now()}-${i}`,
         text: q.text.trim(),
         vibe: q.vibe && VIBE_TYPES.includes(q.vibe) ? q.vibe : getRandomVibe()
