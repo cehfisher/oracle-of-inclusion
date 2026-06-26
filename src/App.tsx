@@ -434,7 +434,8 @@ export default function App() {
   const [thinkingQuestions, setThinkingQuestions] = useState<string[]>([])
   const [isShuffling, setIsShuffling] = useState(false)
   const [soundEnabled, setSoundEnabled] = useLocalStorageState<boolean>('oracle-sound-enabled-v2', true)
-  const [animationsEnabled, setAnimationsEnabled] = useLocalStorageState<boolean>('oracle-animations-enabled-v2', true)
+  const [savedAnimationsEnabled, setAnimationsEnabled] = useLocalStorageState<boolean | null>('oracle-animations-enabled-v2', true)
+  const animationsEnabled = savedAnimationsEnabled !== false
   const [darkMode, setDarkMode] = useLocalStorageState<boolean>('oracle-dark-mode-v2', false)
 
   const [previousQuestions, setPreviousQuestions] = useLocalStorageState<string[]>('oracle-previous-questions', [])
@@ -913,7 +914,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
       left: `${Math.random() * 100}%`,
       top: `${Math.random() * 100}%`,
       duration: 12 + Math.random() * 20,
-      delay: Math.random() * 25,
+      delay: -(Math.random() * 25),
       size: 0.12 + Math.random() * 0.9,
       symbol: Math.random() > 0.65 ? '★' : '✦',
       hasGlow: Math.random() > 0.5,
@@ -1012,7 +1013,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
               <Label htmlFor="animations-toggle" className="text-sm font-medium cursor-pointer">Animations</Label>
               <Switch 
                 id="animations-toggle"
-                checked={animationsEnabled ?? true}
+                checked={animationsEnabled}
                 onCheckedChange={setAnimationsEnabled}
                 aria-describedby="animations-desc"
               />
