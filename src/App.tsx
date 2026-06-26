@@ -13,8 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useKV } from '@github/spark/hooks'
 import { toast, Toaster } from 'sonner'
 
-declare const spark: {
-  llmPrompt: (strings: TemplateStringsArray, ...values: unknown[]) => string
+interface SparkApi {
   llm: (prompt: string, model?: string, jsonMode?: boolean) => Promise<string>
 }
 
@@ -109,6 +108,163 @@ interface Question {
   id: string
   text: string
   vibe: string
+}
+
+interface GeneratedQuestion {
+  text: string
+  vibe?: string
+}
+
+const FREE_LLM_ENDPOINT = import.meta.env.VITE_FREE_LLM_ENDPOINT ?? 'https://text.pollinations.ai/openai'
+const FREE_LLM_MODEL = 'openai'
+const FREE_LLM_TIMEOUT_MS = 30000
+const FREE_LLM_TEMPERATURE = 0.9
+
+const getFreeLlmEndpoint = (): string => {
+  const endpoint = new URL(FREE_LLM_ENDPOINT)
+
+  if (endpoint.protocol !== 'https:') {
+    throw new Error('Free LLM endpoint must use HTTPS')
+  }
+
+  return endpoint.toString()
+}
+
+const getSparkApi = (): SparkApi | undefined => {
+  return (globalThis as { spark?: SparkApi }).spark
+}
+
+const extractJsonObject = (content: string): string => {
+  const trimmed = content.trim()
+  const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i)
+  const candidate = fenced?.[1]?.trim() ?? trimmed
+  const start = candidate.indexOf('{')
+  const end = candidate.lastIndexOf('}')
+
+  if (start === -1 || end === -1 || end <= start) {
+    throw new Error('LLM response did not include a JSON object')
+  }
+
+  return candidate.slice(start, end + 1)
+}
+
+const describeValue = (value: unknown): string => {
+  if (typeof value === 'string') return value.slice(0, 120)
+
+  try {
+    return JSON.stringify(value)?.slice(0, 120) ?? String(value)
+  } catch {
+    return String(value)
+  }
+}
+
+const parseGeneratedQuestions = (content: string, expectedCount: number): GeneratedQuestion[] => {
+  const parsed = JSON.parse(extractJsonObject(content)) as unknown
+  const questionsValue = parsed && typeof parsed === 'object'
+    ? (parsed as { questions?: unknown }).questions
+    : undefined
+
+  if (!Array.isArray(questionsValue)) {
+    throw new Error(`LLM response did not include a questions array, received: ${describeValue(parsed)}`)
+  }
+
+  const questions = questionsValue
+    .map((question) => {
+      if (!question || typeof question !== 'object') return null
+
+      const { text, vibe } = question as { text?: unknown; vibe?: unknown }
+      if (typeof text !== 'string' || !text.trim()) return null
+
+      return {
+        text: text.trim(),
+        vibe: typeof vibe === 'string' && vibe.trim() ? vibe.trim() : undefined
+      }
+    })
+    .filter((question): question is GeneratedQuestion => question !== null)
+
+  if (questions.length < expectedCount) {
+    throw new Error(`LLM returned ${questions.length} usable questions, expected ${expectedCount}`)
+  }
+
+  return questions.slice(0, expectedCount)
+}
+
+const callFreeQuestionLlm = async (prompt: string): Promise<string> => {
+  const controller = new AbortController()
+  const timeout = window.setTimeout(() => controller.abort(), FREE_LLM_TIMEOUT_MS)
+
+  try {
+    const response = await fetch(getFreeLlmEndpoint(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        model: FREE_LLM_MODEL,
+        messages: [
+          {
+            role: 'system',
+            content: 'You generate inclusive fireside chat questions. Return only valid JSON matching the requested schema.'
+          },
+          { role: 'user', content: prompt }
+        ],
+        response_format: { type: 'json_object' },
+        temperature: FREE_LLM_TEMPERATURE
+      }),
+      signal: controller.signal
+    })
+
+    if (!response.ok) {
+      throw new Error(`Free LLM request failed with ${response.status}`)
+    }
+
+    let data: {
+      choices?: Array<{ message?: { content?: unknown }, text?: unknown }>
+      content?: unknown
+    }
+
+    try {
+      data = await response.json() as typeof data
+    } catch {
+      throw new Error('Failed to parse Free LLM response as JSON')
+    }
+    const content = data.choices?.[0]?.message?.content ?? data.choices?.[0]?.text ?? data.content
+
+    if (typeof content !== 'string' || !content.trim()) {
+      throw new Error('Free LLM returned an empty response')
+    }
+
+    return content
+  } finally {
+    window.clearTimeout(timeout)
+  }
+}
+
+const callSparkQuestionLlm = async (prompt: string): Promise<string> => {
+  const sparkApi = getSparkApi()
+
+  if (!sparkApi?.llm) {
+    throw new Error('Spark LLM is unavailable')
+  }
+
+  return sparkApi.llm(prompt, 'gpt-4o', true)
+}
+
+const generateQuestionsFromLlm = async (prompt: string, expectedCount: number): Promise<GeneratedQuestion[]> => {
+  // Prefer the independent free provider because Spark LLM is the path currently failing in production.
+  const providers = [callFreeQuestionLlm, callSparkQuestionLlm]
+  let lastError: unknown
+
+  for (const provider of providers) {
+    try {
+      return parseGeneratedQuestions(await provider(prompt), expectedCount)
+    } catch (error) {
+      lastError = error
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error('Unable to generate questions')
 }
 
 const MYSTICAL_LOADING_PHRASES = [
@@ -516,7 +672,7 @@ export default function App() {
       ? 'lighter and engaging - lean toward fun, creative, and personal questions while still being meaningful'
       : 'fun and playful - prioritize creative, surprising, and delightful questions that spark joy and interesting stories'
 
-    const prompt = spark.llmPrompt`Generate ${questionCount} simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
+    const prompt = `Generate ${questionCount} simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
 
 Context:
 ${topicEmphasis}
@@ -560,12 +716,11 @@ IMPORTANT - Be respectful and inclusive:
 Return a JSON object with a "questions" array containing exactly ${questionCount} objects, each with "text" (the question) and "vibe" (one of: "😜 Whimsical", "🤗 Warm", "🤔 Thoughtful", "🧘 Deep").`
 
     try {
-      const result = await spark.llm(prompt, 'gpt-4o', true)
-      const parsed = JSON.parse(result)
-      const generatedQuestions: Question[] = shuffleArray(parsed.questions.map((q: { text: string; vibe: string }, i: number) => ({
+      const parsedQuestions = await generateQuestionsFromLlm(prompt, questionCount)
+      const generatedQuestions: Question[] = shuffleArray(parsedQuestions.map((q, i) => ({
         id: `q-${Date.now()}-${i}`,
         text: q.text,
-        vibe: q.vibe || getRandomVibe()
+        vibe: q.vibe ?? getRandomVibe()
       })))
       setQuestions(generatedQuestions)
       
