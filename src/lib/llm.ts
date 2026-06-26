@@ -22,6 +22,10 @@ interface LlmQuestionResponse {
   }>
 }
 
+const MAX_QUESTION_COUNT = 8
+const MAX_QUESTION_WORDS = 24
+const LLM_JSON_MODE = true
+
 const getToneDescription = (questionTone: number): string => {
   if (questionTone <= 25) return 'serious, reflective, and grounded'
   if (questionTone <= 50) return 'balanced, warm, and thoughtful'
@@ -62,7 +66,7 @@ export const generateOracleQuestions = async ({
   questionTone,
   vibeTypes,
 }: GenerateOracleQuestionsInput): Promise<GeneratedQuestion[]> => {
-  const requestedCount = Math.max(1, Math.min(questionCount, 8))
+  const requestedCount = Math.max(1, Math.min(questionCount, MAX_QUESTION_COUNT))
   const prompt = llmPrompt`
 Generate ${requestedCount} original fireside-chat questions as JSON for "Oracle of Inclusion", a mystical Magic 8-Ball style accessibility and inclusion conversation starter.
 
@@ -78,7 +82,7 @@ Requirements:
 - Match this tone: ${getToneDescription(questionTone)}.
 - Make the questions open-ended, human, specific, and useful for a live discussion.
 - Avoid yes/no questions, duplicate ideas, jargon, and generic team-building prompts.
-- Keep each question under 24 words.
+- Keep each question under ${MAX_QUESTION_WORDS} words.
 - Use only the provided vibe values.
 
 Audience: ${audience.trim() || 'technology and inclusion practitioners'}
@@ -87,7 +91,7 @@ Topics: ${topics.length > 0 ? topics.join(', ') : 'accessibility, disability inc
 Focus areas: ${focusAreaLabels.length > 0 ? focusAreaLabels.join(', ') : 'accessibility and inclusion in technology'}
 `
 
-  const response = await llm(prompt, 'openai/gpt-4o-mini', true)
+  const response = await llm(prompt, 'openai/gpt-4o-mini', LLM_JSON_MODE)
   const parsed = parseJsonResponse(response)
   const questions = (parsed.questions ?? [])
     .map(question => normalizeQuestion(question, vibeTypes))
