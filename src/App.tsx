@@ -1109,9 +1109,13 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         aria-valuenow={questionCount}
                         aria-valuetext={`${questionCount} question${questionCount === 1 ? '' : 's'}`}
                       />
-                      <div className="grid grid-cols-10 mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
+                      <div className="relative h-7 mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
                         {Array.from({ length: 10 }, (_, index) => (
-                          <span key={index + 1} className="text-center">
+                          <span
+                            key={index + 1}
+                            className="absolute top-0 -translate-x-1/2"
+                            style={{ left: `${(index / 9) * 100}%` }}
+                          >
                             {index + 1}
                           </span>
                         ))}
