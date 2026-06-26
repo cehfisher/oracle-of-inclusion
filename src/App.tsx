@@ -363,6 +363,14 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 }
 
 const VIBE_TYPES = ['😜 Whimsical', '🤗 Warm', '🤔 Thoughtful', '🧘 Deep']
+const QUESTION_COUNT_MIN = 1
+const QUESTION_COUNT_MAX = 7
+const QUESTION_COUNT_OPTIONS = Array.from(
+  { length: QUESTION_COUNT_MAX - QUESTION_COUNT_MIN + 1 },
+  (_, index) => QUESTION_COUNT_MIN + index
+)
+const getQuestionCountLabelPosition = (count: number): string =>
+  `${((count - QUESTION_COUNT_MIN) / (QUESTION_COUNT_MAX - QUESTION_COUNT_MIN)) * 100}%`
 
 const FOCUS_AREAS = [
   { id: 'frontend', label: '🖥️ Front-end dev' },
@@ -655,13 +663,6 @@ export default function App() {
     const hasCustomTopics = topics.length > 0
     const hasCustomFocusAreas = focusAreas.length > 0
 
-    const vibeDistribution = questionCount === 1 
-      ? 'any vibe of your choice'
-      : VIBE_TYPES.map((vibe, idx) => {
-          const count = Math.floor(questionCount / 4) + (idx < questionCount % 4 ? 1 : 0)
-          return `${count} ${vibe.split(' ')[1]}`
-        }).join(', ')
-
     const recentQuestions = previousQuestions ?? []
     const avoidList = recentQuestions.slice(-50).join('\n- ')
 
@@ -674,12 +675,20 @@ export default function App() {
       : `Guest's work area: accessibility and inclusion in technology (general)`
 
     const toneDescription = questionTone <= 25 
-      ? 'serious and professional - focus on deep, substantive questions about challenges, strategies, and expertise'
+      ? 'serious and professional - ask substantive questions about challenges, strategies, expertise, systems, and impact. Avoid playful, quirky, or whimsical phrasing.'
       : questionTone <= 50
-      ? 'balanced mix - combine thoughtful professional questions with some lighter, more personal ones'
+      ? 'balanced mix - combine thoughtful professional questions with some lighter, more personal ones. Keep the tone conversational but grounded.'
       : questionTone <= 75
-      ? 'lighter and engaging - lean toward fun, creative, and personal questions while still being meaningful'
-      : 'fun and playful - prioritize creative, surprising, and delightful questions that spark joy and interesting stories'
+      ? 'lighter and engaging - lean toward fun, creative, and personal questions while still being meaningful. Prefer warmth, stories, and curiosity over heavy analysis.'
+      : 'fun and playful - prioritize creative, surprising, and delightful questions that spark joy and interesting stories. Avoid sounding formal, academic, or policy-heavy.'
+
+    const toneVibeInstruction = questionTone <= 25
+      ? 'Use only "🤔 Thoughtful" and "🧘 Deep" vibes so the set feels clearly serious.'
+      : questionTone <= 50
+      ? 'Use a balanced mix of "🤔 Thoughtful", "🧘 Deep", "🤗 Warm", and "😜 Whimsical" vibes, as the question count allows.'
+      : questionTone <= 75
+      ? 'Use mostly "🤗 Warm" and "😜 Whimsical" vibes, with at most one "🤔 Thoughtful" question if needed.'
+      : 'Use only "😜 Whimsical" and "🤗 Warm" vibes so the set feels clearly fun and playful.'
 
     const prompt = `Generate ${questionCount} simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
 
@@ -704,8 +713,8 @@ Rules:
 - Mix personal story questions with big picture questions
 - Center the disability community voice
 - CRITICAL: Keep each question to 1-2 SHORT sentences max (under 25 words total)
-- CRITICAL: Generate an even mix of vibes: ${vibeDistribution}. Each vibe type MUST be represented.
-- Randomize the order of vibes - do NOT group same vibes together
+- CRITICAL: Match the selected tone. ${toneVibeInstruction}
+- Randomize the order of vibes when more than one vibe is used - do NOT group same vibes together
 - If guest has lived experience, include questions that honor their perspective as an expert
 - If audience is technical (developers/designers), include questions about practical implementation
 - If audience is leaders, include questions about culture and organizational change
@@ -745,7 +754,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
       }
       setIsShuffling(false)
     }
-  }, [focusAreas, otherFocusArea, questionCount, topics, experience, audience, soundEnabled, sounds, reshuffleTopics, previousQuestions, setPreviousQuestions])
+  }, [focusAreas, otherFocusArea, questionCount, questionTone, topics, experience, audience, soundEnabled, sounds, reshuffleTopics, previousQuestions, setPreviousQuestions])
 
   const handleGenerateClick = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -1199,18 +1208,24 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         id="question-count-slider"
                         value={[questionCount]}
                         onValueChange={(value) => setQuestionCount(value[0])}
-                        min={1}
-                        max={10}
+                        min={QUESTION_COUNT_MIN}
+                        max={QUESTION_COUNT_MAX}
                         step={1}
                         className="w-full [&_[data-radix-slider-track]]:bg-muted [&_[data-radix-slider-range]]:bg-accent [&_[data-radix-slider-thumb]]:bg-accent [&_[data-radix-slider-thumb]]:border-2 [&_[data-radix-slider-thumb]]:border-foreground"
-                        aria-valuemin={1}
-                        aria-valuemax={10}
+                        aria-valuemin={QUESTION_COUNT_MIN}
+                        aria-valuemax={QUESTION_COUNT_MAX}
                         aria-valuenow={questionCount}
                         aria-valuetext={`${questionCount} question${questionCount === 1 ? '' : 's'}`}
                       />
-                      <div className="grid grid-cols-10 mt-2 text-sm sm:text-base text-foreground font-medium form-field" aria-hidden="true">
-                        {Array.from({ length: 10 }, (_, index) => (
-                          <span key={index + 1} className="text-center first:text-left last:text-right">{index + 1}</span>
+                      <div className="relative mt-2 h-6 text-base text-foreground font-medium form-field" aria-hidden="true">
+                        {QUESTION_COUNT_OPTIONS.map((count) => (
+                          <span
+                            key={count}
+                            className="absolute top-0 -translate-x-1/2"
+                            style={{ left: getQuestionCountLabelPosition(count) }}
+                          >
+                            {count}
+                          </span>
                         ))}
                       </div>
                     </div>
