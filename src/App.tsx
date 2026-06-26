@@ -117,6 +117,18 @@ interface GeneratedQuestion {
 
 const FREE_LLM_ENDPOINT = 'https://text.pollinations.ai/openai'
 const FREE_LLM_MODEL = 'openai'
+const FREE_LLM_TIMEOUT_MS = 30000
+const FREE_LLM_TEMPERATURE = 0.9
+
+const getFreeLlmEndpoint = (): string => {
+  const endpoint = new URL(FREE_LLM_ENDPOINT)
+
+  if (endpoint.protocol !== 'https:') {
+    throw new Error('Free LLM endpoint must use HTTPS')
+  }
+
+  return endpoint.toString()
+}
 
 const getSparkApi = (): SparkApi | undefined => {
   return (globalThis as { spark?: SparkApi }).spark
@@ -166,10 +178,10 @@ const parseGeneratedQuestions = (content: string, expectedCount: number): Genera
 
 const callFreeQuestionLlm = async (prompt: string): Promise<string> => {
   const controller = new AbortController()
-  const timeout = window.setTimeout(() => controller.abort(), 30000)
+  const timeout = window.setTimeout(() => controller.abort(), FREE_LLM_TIMEOUT_MS)
 
   try {
-    const response = await fetch(FREE_LLM_ENDPOINT, {
+    const response = await fetch(getFreeLlmEndpoint(), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -185,7 +197,7 @@ const callFreeQuestionLlm = async (prompt: string): Promise<string> => {
           { role: 'user', content: prompt }
         ],
         response_format: { type: 'json_object' },
-        temperature: 0.9
+        temperature: FREE_LLM_TEMPERATURE
       }),
       signal: controller.signal
     })
