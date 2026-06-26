@@ -1165,18 +1165,33 @@ export default function App() {
                         min={1}
                         max={10}
                         step={1}
-                        className="w-full [&_[data-radix-slider-track]]:bg-muted [&_[data-radix-slider-range]]:bg-accent [&_[data-radix-slider-thumb]]:bg-accent [&_[data-radix-slider-thumb]]:border-2 [&_[data-radix-slider-thumb]]:border-foreground"
+                        className="w-full [&_[data-radix-slider-track]]:bg-muted [&_[data-radix-slider-range]]:bg-accent [&_[data-radix-slider-thumb]]:z-10 [&_[data-radix-slider-thumb]]:flex [&_[data-radix-slider-thumb]]:size-7 [&_[data-radix-slider-thumb]]:items-center [&_[data-radix-slider-thumb]]:justify-center [&_[data-radix-slider-thumb]]:bg-accent [&_[data-radix-slider-thumb]]:text-xs [&_[data-radix-slider-thumb]]:font-bold [&_[data-radix-slider-thumb]]:text-accent-foreground [&_[data-radix-slider-thumb]]:border-2 [&_[data-radix-slider-thumb]]:border-foreground"
                         aria-valuemin={1}
                         aria-valuemax={10}
                         aria-valuenow={questionCount}
                         aria-valuetext={`${questionCount} question${questionCount === 1 ? '' : 's'}`}
+                        thumbLabel={(value) => value}
                       />
-                      <div className="grid grid-cols-10 mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
-                        {Array.from({ length: 10 }, (_, index) => (
-                          <span key={index + 1} className="text-center">
-                            {index + 1}
-                          </span>
-                        ))}
+                      <div className="relative h-7 mt-2 text-base text-foreground font-medium form-field" role="group" aria-label="Question count options">
+                        {Array.from({ length: 10 }, (_, index) => {
+                          const count = index + 1
+                          const position = index / 9
+                          const thumbSizeRem = 1.75
+
+                          return (
+                            <button
+                              key={count}
+                              type="button"
+                              className="absolute top-0 -translate-x-1/2 rounded-full bg-transparent px-1 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                              style={{ left: `calc(${position * 100}% + ${thumbSizeRem / 2 - position * thumbSizeRem}rem)` }}
+                              onClick={() => setQuestionCount(count)}
+                              aria-label={`Set number of questions to ${count}`}
+                              aria-pressed={questionCount === count}
+                            >
+                              {count}
+                            </button>
+                          )
+                        })}
                       </div>
                     </div>
                   </div>
