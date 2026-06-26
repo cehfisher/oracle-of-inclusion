@@ -243,6 +243,8 @@ const FREE_CONTENT_BASE_SEARCHES = [
   'digital accessibility inclusive design disability rights',
 ]
 
+const MIN_FREE_CONTENT_EXTRACT_LENGTH = 80
+
 const FALLBACK_QUESTIONS: GeneratedQuestion[] = [
   { text: 'What does inclusion mean in your everyday work?', vibe: '🤗 Warm' },
   { text: 'Where can accessibility make technology better for everyone?', vibe: '🤔 Thoughtful' },
@@ -331,7 +333,7 @@ const fetchFreeContentArticles = async (searchTerm: string): Promise<FreeContent
 
   const response = await fetch(`${WIKIPEDIA_API_ENDPOINT}?${params.toString()}`)
   if (!response.ok) {
-    throw new Error(`Free content request failed with ${response.status}`)
+    throw new Error(`Wikipedia API request failed with ${response.status} (${response.statusText}) for search term: ${searchTerm}`)
   }
 
   const data = await response.json() as {
@@ -349,7 +351,7 @@ const fetchFreeContentArticles = async (searchTerm: string): Promise<FreeContent
       typeof page.title === 'string' &&
       page.title.trim().length > 0 &&
       typeof page.extract === 'string' &&
-      page.extract.trim().length > 80
+      page.extract.trim().length > MIN_FREE_CONTENT_EXTRACT_LENGTH
     )
     .map(page => ({
       title: page.title.trim(),
@@ -431,7 +433,7 @@ const generateFreeContentQuestions = async (
   const generatedQuestions = buildQuestionsFromFreeContent(articles, questionCount, questionTone, focusAreasText)
 
   if (generatedQuestions.length !== questionCount) {
-    throw new Error(`Expected ${questionCount} free-content questions, received ${generatedQuestions.length}`)
+    throw new Error(`Could not generate ${questionCount} questions from Wikipedia articles; only generated ${generatedQuestions.length}. Try broader topics or focus areas.`)
   }
 
   return generatedQuestions
@@ -703,7 +705,7 @@ export default function App() {
       setQuestions(fallbackQuestions)
       const fallbackTexts = fallbackQuestions.map(q => q.text)
       setPreviousQuestions((prev) => [...getQuestionHistory(prev).slice(-100), ...fallbackTexts])
-      toast.info('Free content could not load, showing backup questions. Try Shuffle for fresh magic.')
+      toast.info('Content source unavailable, showing backup questions. Try Shuffle for fresh magic.')
       playSound(sounds.playMagic)
     } finally {
       if (!isShuffle) {
