@@ -1170,7 +1170,6 @@ export default function App() {
                         aria-valuemax={10}
                         aria-valuenow={questionCount}
                         aria-valuetext={`${questionCount} question${questionCount === 1 ? '' : 's'}`}
-                        thumbLabel={(value) => value}
                       />
                       <div className="relative h-7 mt-2 text-base text-foreground font-medium form-field" role="group" aria-label="Question count options">
                         {Array.from({ length: 10 }, (_, index) => {
