@@ -18,6 +18,9 @@ declare const spark: {
   llm: (prompt: string, model?: string, jsonMode?: boolean) => Promise<string>
 }
 
+const getSystemPrefersDark = () =>
+  typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches
+
 const useSound = () => {
   const audioContextRef = useRef<AudioContext | null>(null)
   
@@ -262,7 +265,7 @@ export default function App() {
   const [isShuffling, setIsShuffling] = useState(false)
   const [soundEnabled, setSoundEnabled] = useKV<boolean>('oracle-sound-enabled-v2', true)
   const [animationsEnabled, setAnimationsEnabled] = useKV<boolean>('oracle-animations-enabled-v2', true)
-  const [darkMode, setDarkMode] = useKV<boolean>('oracle-dark-mode-v2', false)
+  const [darkMode, setDarkMode] = useKV<boolean>('oracle-dark-mode-v2', getSystemPrefersDark())
 
   const [previousQuestions, setPreviousQuestions] = useKV<string[]>('oracle-previous-questions', [])
   
@@ -276,10 +279,6 @@ export default function App() {
     setShuffledTopicSuggestions(shuffleArray(TOPIC_SUGGESTIONS))
     setMysticalGreeting(getRandomGreeting())
     setGreetingKey(prev => prev + 1)
-  }, [])
-  
-  useEffect(() => {
-    document.documentElement.classList.remove('dark')
   }, [])
   
   useEffect(() => {
