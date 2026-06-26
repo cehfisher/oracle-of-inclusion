@@ -588,7 +588,7 @@ export default function App() {
           return `${count} ${vibe.split(' ')[1]}`
         }).join(', ')
 
-    const recentQuestions = previousQuestions ?? []
+    const recentQuestions = Array.isArray(previousQuestions) ? previousQuestions : []
     const avoidList = recentQuestions.slice(-50).join('\n- ')
 
     const topicEmphasis = hasCustomTopics 
@@ -649,7 +649,6 @@ IMPORTANT - Be respectful and inclusive:
 - Questions should empower, not objectify or pity
 
 Return a JSON object with a "questions" array containing exactly ${questionCount} objects, each with "text" (the question) and "vibe" (one of: "😜 Whimsical", "🤗 Warm", "🤔 Thoughtful", "🧘 Deep").`
-    try {
     try {
       const generatedResponse = await requestGeneratedQuestions(prompt)
       if (generatedResponse.length !== questionCount) {
