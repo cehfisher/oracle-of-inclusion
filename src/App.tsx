@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback, type Dispatch, type SetStateAction } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Copy, ArrowsClockwise, Check, Plus, X, SpeakerHigh, SpeakerSlash, Sparkle, ArrowCounterClockwise, Moon, Sun } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
@@ -10,12 +10,7 @@ import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
-import { useKV } from '@github/spark/hooks'
 import { toast, Toaster } from 'sonner'
-
-interface SparkApi {
-  llm: (prompt: string, model?: string, jsonMode?: boolean) => Promise<string>
-}
 
 const useSound = () => {
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -117,7 +112,7 @@ interface GeneratedQuestion {
 
 const FREE_LLM_ENDPOINT = import.meta.env.VITE_FREE_LLM_ENDPOINT ?? 'https://text.pollinations.ai/openai'
 const FREE_LLM_MODEL = 'openai'
-const FREE_LLM_TIMEOUT_MS = 30000
+const FREE_LLM_TIMEOUT_MS = 12000
 const FREE_LLM_TEMPERATURE = 0.9
 
 const getFreeLlmEndpoint = (): string => {
@@ -128,10 +123,6 @@ const getFreeLlmEndpoint = (): string => {
   }
 
   return endpoint.toString()
-}
-
-const getSparkApi = (): SparkApi | undefined => {
-  return (globalThis as { spark?: SparkApi }).spark
 }
 
 const extractJsonObject = (content: string): string => {
@@ -210,6 +201,7 @@ const callFreeQuestionLlm = async (prompt: string): Promise<string> => {
           { role: 'user', content: prompt }
         ],
         response_format: { type: 'json_object' },
+        max_tokens: Math.max(350, prompt.length < 2500 ? 700 : 900),
         temperature: FREE_LLM_TEMPERATURE
       }),
       signal: controller.signal
@@ -241,30 +233,8 @@ const callFreeQuestionLlm = async (prompt: string): Promise<string> => {
   }
 }
 
-const callSparkQuestionLlm = async (prompt: string): Promise<string> => {
-  const sparkApi = getSparkApi()
-
-  if (!sparkApi?.llm) {
-    throw new Error('Spark LLM is unavailable')
-  }
-
-  return sparkApi.llm(prompt, 'gpt-4o', true)
-}
-
 const generateQuestionsFromLlm = async (prompt: string, expectedCount: number): Promise<GeneratedQuestion[]> => {
-  // Prefer the independent free provider because Spark LLM is the path currently failing in production.
-  const providers = [callFreeQuestionLlm, callSparkQuestionLlm]
-  let lastError: unknown
-
-  for (const provider of providers) {
-    try {
-      return parseGeneratedQuestions(await provider(prompt), expectedCount)
-    } catch (error) {
-      lastError = error
-    }
-  }
-
-  throw lastError instanceof Error ? lastError : new Error('Unable to generate questions')
+  return parseGeneratedQuestions(await callFreeQuestionLlm(prompt), expectedCount)
 }
 
 const MYSTICAL_LOADING_PHRASES = [
@@ -396,6 +366,36 @@ const FOCUS_AREAS = [
   { id: 'other', label: '✏️ Other' },
 ]
 
+const useLocalStorageState = <T,>(key: string, initialValue: T): [T, Dispatch<SetStateAction<T>>] => {
+  const [storedValue, setStoredValue] = useState<T>(() => {
+    if (typeof window === 'undefined') return initialValue
+
+    try {
+      const item = window.localStorage.getItem(key)
+      return item === null ? initialValue : JSON.parse(item) as T
+    } catch {
+      return initialValue
+    }
+  })
+
+  const setValue: Dispatch<SetStateAction<T>> = useCallback((value) => {
+    setStoredValue((currentValue) => {
+      const nextValue = value instanceof Function ? value(currentValue) : value
+
+      try {
+        window.localStorage.setItem(key, JSON.stringify(nextValue))
+      } catch {
+        // Keep the in-memory value when browser storage is unavailable.
+      }
+
+      return nextValue
+    })
+  }, [key])
+
+  return [storedValue, setValue]
+}
+
+
 
 
 export default function App() {
@@ -416,11 +416,11 @@ export default function App() {
   const [loadingProgress, setLoadingProgress] = useState(0)
   const [thinkingQuestions, setThinkingQuestions] = useState<string[]>([])
   const [isShuffling, setIsShuffling] = useState(false)
-  const [soundEnabled, setSoundEnabled] = useKV<boolean>('oracle-sound-enabled-v2', true)
-  const [animationsEnabled, setAnimationsEnabled] = useKV<boolean>('oracle-animations-enabled-v2', true)
-  const [darkMode, setDarkMode] = useKV<boolean>('oracle-dark-mode-v2', false)
+  const [soundEnabled, setSoundEnabled] = useLocalStorageState<boolean>('oracle-sound-enabled-v2', true)
+  const [animationsEnabled, setAnimationsEnabled] = useLocalStorageState<boolean>('oracle-animations-enabled-v2', true)
+  const [darkMode, setDarkMode] = useLocalStorageState<boolean>('oracle-dark-mode-v2', false)
 
-  const [previousQuestions, setPreviousQuestions] = useKV<string[]>('oracle-previous-questions', [])
+  const [previousQuestions, setPreviousQuestions] = useLocalStorageState<string[]>('oracle-previous-questions', [])
   
   const [shuffledTopicSuggestions, setShuffledTopicSuggestions] = useState(() => shuffleArray(TOPIC_SUGGESTIONS))
   const [mysticalGreeting, setMysticalGreeting] = useState(() => getRandomGreeting())
@@ -1199,9 +1199,10 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         aria-valuenow={questionCount}
                         aria-valuetext={`${questionCount} question${questionCount === 1 ? '' : 's'}`}
                       />
-                      <div className="flex justify-between mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
-                        <span>1</span>
-                        <span>10</span>
+                      <div className="grid grid-cols-10 mt-2 text-sm sm:text-base text-foreground font-medium form-field" aria-hidden="true">
+                        {Array.from({ length: 10 }, (_, index) => (
+                          <span key={index + 1} className="text-center first:text-left last:text-right">{index + 1}</span>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -1237,7 +1238,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     <Button 
                       onClick={handleGenerateClick}
                       disabled={isGenerating}
-                      className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-bold py-7 text-xl tracking-wide focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                      className="flex-1 h-[84px] bg-primary text-primary-foreground hover:bg-primary/90 font-bold py-7 text-xl tracking-wide focus:ring-4 focus:ring-ring focus:ring-offset-2"
                     >
                       {isGenerating ? (
                         <motion.div
@@ -1254,7 +1255,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     <Button 
                       onClick={resetForm}
                       variant="outline"
-                      className="py-7 px-6 border-2 border-primary/50 text-muted-foreground hover:bg-muted hover:text-foreground hover:border-primary focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                      className="h-[84px] px-6 border-2 border-primary/50 text-muted-foreground hover:bg-muted hover:text-foreground hover:border-primary focus:ring-4 focus:ring-ring focus:ring-offset-2"
                       aria-label="Reset form"
                     >
                       <ArrowCounterClockwise size={24} aria-hidden="true" />
