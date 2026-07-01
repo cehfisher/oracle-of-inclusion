@@ -110,15 +110,16 @@ interface GeneratedQuestion {
   vibe?: string
 }
 
-type WookieeBackendResponse = {
+type LlmBackendResponse = {
   answer?: string
   response?: string
   content?: string
 }
 
-const DEFAULT_WOOKIEE_ENDPOINT = '/api/ask-wookiee'
-const FREE_LLM_ENDPOINT = import.meta.env.VITE_FREE_LLM_ENDPOINT ?? DEFAULT_WOOKIEE_ENDPOINT
-const FREE_LLM_MODEL = 'openai'
+const DEFAULT_FREE_LLM_ENDPOINT = 'https://text.pollinations.ai/openai'
+const WOOKIEE_BACKEND_ENDPOINT = '/api/ask-wookiee'
+const CONFIGURED_LLM_ENDPOINT = import.meta.env.VITE_FREE_LLM_ENDPOINT ?? DEFAULT_FREE_LLM_ENDPOINT
+const OPENAI_COMPATIBLE_MODEL = 'openai'
 const DEFAULT_RESPONSE_TIMEOUT_MS = 5500
 const MIN_RESPONSE_TIMEOUT_MS = 1000
 const CACHE_TTL_HOURS = 12
@@ -156,7 +157,7 @@ class FreeLlmRequestError extends Error {
 }
 
 const getFreeLlmEndpoint = (): string => {
-  const endpoint = FREE_LLM_ENDPOINT.trim()
+  const endpoint = CONFIGURED_LLM_ENDPOINT.trim()
 
   if (endpoint.startsWith('/')) {
     return endpoint
@@ -171,7 +172,7 @@ const getFreeLlmEndpoint = (): string => {
   return parsedEndpoint.toString()
 }
 
-const isWookieeEndpoint = (endpoint: string): boolean => endpoint.includes(DEFAULT_WOOKIEE_ENDPOINT)
+const isWookieeEndpoint = (endpoint: string): boolean => endpoint.includes(WOOKIEE_BACKEND_ENDPOINT)
 
 const getPromptCacheKey = (prompt: string): string => {
   let hash = 5381
@@ -219,7 +220,7 @@ const setCachedPromptResponse = (cacheKey: string, content: string): void => {
 }
 
 const extractLlmContent = (
-  data: WookieeBackendResponse & {
+  data: LlmBackendResponse & {
     choices?: Array<{ message?: { content?: unknown }, text?: unknown }>
   }
 ): string | null => {
@@ -340,7 +341,7 @@ const callFreeQuestionLlmOnce = async (prompt: string): Promise<string> => {
             timeoutMs: FREE_LLM_TIMEOUT_MS
           }
           : {
-            model: FREE_LLM_MODEL,
+            model: OPENAI_COMPATIBLE_MODEL,
             messages: [
               {
                 role: 'system',
