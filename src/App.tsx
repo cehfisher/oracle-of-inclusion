@@ -118,6 +118,7 @@ type OpenAiCompatibleResponse = {
 
 const CONFIGURED_EXTERNAL_LLM_ENDPOINT = import.meta.env.VITE_FREE_LLM_ENDPOINT?.trim()
 const OPENAI_COMPATIBLE_MODEL = 'openai'
+const SPARK_LLM_JSON_MODE = true
 const DEFAULT_RESPONSE_TIMEOUT_MS = 5500
 const MIN_RESPONSE_TIMEOUT_MS = 1000
 const CACHE_TTL_HOURS = 12
@@ -282,6 +283,9 @@ const getRetryDelay = (attempt: number): number => {
   return Math.min(exponentialDelay + jitter, FREE_LLM_RETRY_MAX_DELAY_MS)
 }
 
+const isRateLimitError = (error: FreeLlmRequestError): boolean =>
+  error.code === 'http' && error.status === 429
+
 const isRetryableFreeLlmError = (error: unknown): boolean => {
   if (!(error instanceof FreeLlmRequestError)) return false
 
@@ -291,6 +295,8 @@ const isRetryableFreeLlmError = (error: unknown): boolean => {
   }
 
   if (error.code === 'http') {
+    if (isRateLimitError(error)) return false
+
     return error.status === 408 || (error.status !== undefined && error.status >= 500)
   }
 
@@ -302,7 +308,7 @@ const getFallbackToastMessage = (error: unknown): string => {
     return 'The oracle timed out, so backup questions stepped in.'
   }
 
-  if (error instanceof FreeLlmRequestError && error.code === 'http' && error.status === 429) {
+  if (error instanceof FreeLlmRequestError && isRateLimitError(error)) {
     return 'The oracle is rate-limited, so backup questions stepped in.'
   }
 
@@ -324,7 +330,7 @@ const runWithLlmTimeout = async <T,>(request: Promise<T>): Promise<T> => {
     if (timeoutId !== undefined) {
       window.clearTimeout(timeoutId)
     }
-    request.catch(() => undefined)
+    void request.catch(() => undefined)
   }
 }
 
@@ -332,7 +338,7 @@ const callSparkQuestionLlmOnce = async (prompt: string): Promise<string> => {
   let content: string
 
   try {
-    content = await runWithLlmTimeout(llm(prompt, undefined, true))
+    content = await runWithLlmTimeout(llm(prompt, undefined, SPARK_LLM_JSON_MODE))
   } catch (error) {
     if (error instanceof FreeLlmRequestError) {
       throw error
