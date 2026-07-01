@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useMemo, useCallback, type Dispatch, type SetStateAction } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Copy, ArrowsClockwise, Check, Plus, X, SpeakerHigh, SpeakerSlash, Sparkle, ArrowCounterClockwise, Moon, Sun } from '@phosphor-icons/react'
+import { Copy, ArrowsClockwise, Check, Plus, X, SpeakerHigh, SpeakerSlash, Sparkle, ArrowCounterClockwise, Moon, Sun, Gear } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -155,8 +156,14 @@ class FreeLlmRequestError extends Error {
   }
 }
 
-const getFreeLlmEndpoint = (): string => {
-  const endpoint = FREE_LLM_ENDPOINT.trim()
+export interface LlmSettings {
+  endpoint: string
+  apiKey: string
+  model: string
+}
+
+const getFreeLlmEndpoint = (rawEndpoint: string): string => {
+  const endpoint = (rawEndpoint || FREE_LLM_ENDPOINT).trim()
 
   if (endpoint.startsWith('/')) {
     return endpoint
@@ -316,8 +323,8 @@ const getFallbackToastMessage = (error: unknown): string => {
   return 'The oracle signal was faint, so backup questions stepped in.'
 }
 
-const callFreeQuestionLlmOnce = async (prompt: string): Promise<string> => {
-  const endpoint = getFreeLlmEndpoint()
+const callFreeQuestionLlmOnce = async (prompt: string, settings: LlmSettings): Promise<string> => {
+  const endpoint = getFreeLlmEndpoint(settings.endpoint)
   const useWookieeBackend = isWookieeEndpoint(endpoint)
   const controller = new AbortController()
   const timeout = window.setTimeout(() => controller.abort(), FREE_LLM_TIMEOUT_MS)
@@ -326,19 +333,24 @@ const callFreeQuestionLlmOnce = async (prompt: string): Promise<string> => {
     let response: Response
 
     try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+      if (settings.apiKey && !useWookieeBackend) {
+        headers['Authorization'] = 'Bearer ' + settings.apiKey
+      }
+
       response = await fetch(endpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
+        headers,
         body: JSON.stringify(useWookieeBackend
           ? {
             prompt,
             timeoutMs: FREE_LLM_TIMEOUT_MS
           }
           : {
-            model: FREE_LLM_MODEL,
+            model: settings.model || FREE_LLM_MODEL,
             messages: [
               {
                 role: 'system',
@@ -393,7 +405,7 @@ const callFreeQuestionLlmOnce = async (prompt: string): Promise<string> => {
   }
 }
 
-const callFreeQuestionLlm = async (prompt: string): Promise<string> => {
+const callFreeQuestionLlm = async (prompt: string, settings: LlmSettings): Promise<string> => {
   const cacheKey = getPromptCacheKey(prompt)
   const cachedResponse = getCachedPromptResponse(cacheKey)
   if (cachedResponse) {
@@ -404,7 +416,7 @@ const callFreeQuestionLlm = async (prompt: string): Promise<string> => {
 
   for (let attempt = 0; attempt <= FREE_LLM_MAX_RETRIES; attempt++) {
     try {
-      const response = await callFreeQuestionLlmOnce(prompt)
+      const response = await callFreeQuestionLlmOnce(prompt, settings)
       setCachedPromptResponse(cacheKey, response)
       return response
     } catch (error) {
@@ -420,8 +432,8 @@ const callFreeQuestionLlm = async (prompt: string): Promise<string> => {
   throw lastError instanceof Error ? lastError : new Error('Free LLM request failed')
 }
 
-const generateQuestionsFromLlm = async (prompt: string, expectedCount: number): Promise<GeneratedQuestion[]> => {
-  return parseGeneratedQuestions(await callFreeQuestionLlm(prompt), expectedCount)
+const generateQuestionsFromLlm = async (prompt: string, expectedCount: number, settings: LlmSettings): Promise<GeneratedQuestion[]> => {
+  return parseGeneratedQuestions(await callFreeQuestionLlm(prompt, settings), expectedCount)
 }
 
 const MYSTICAL_LOADING_PHRASES = [
@@ -667,6 +679,9 @@ export default function App() {
   const [thinkingQuestions, setThinkingQuestions] = useState<string[]>([])
   const [isShuffling, setIsShuffling] = useState(false)
   const [soundEnabled, setSoundEnabled] = useLocalStorageState<boolean>('oracle-sound-enabled-v2', true)
+  const [llmEndpoint, setLlmEndpoint] = useLocalStorageState<string>('oracle-llm-endpoint', import.meta.env.VITE_FREE_LLM_ENDPOINT ?? '/api/ask-wookiee')
+  const [llmApiKey, setLlmApiKey] = useLocalStorageState<string>('oracle-llm-apikey', '')
+  const [llmModel, setLlmModel] = useLocalStorageState<string>('oracle-llm-model', 'openai')
   const [savedAnimationsEnabled, setAnimationsEnabled] = useLocalStorageState<boolean | null>('oracle-animations-enabled-v2', true)
   const animationsEnabled = savedAnimationsEnabled !== false
   const [darkMode, setDarkMode] = useLocalStorageState<boolean>('oracle-dark-mode-v2', false)
@@ -902,6 +917,12 @@ export default function App() {
       ? focusAreasLabels.join(', ')
       : 'accessibility and inclusion in technology'
 
+    const settings: LlmSettings = {
+      endpoint: llmEndpoint,
+      apiKey: llmApiKey,
+      model: llmModel
+    }
+
     const hasCustomTopics = topics.length > 0
     const hasCustomFocusAreas = focusAreas.length > 0
 
@@ -976,7 +997,7 @@ IMPORTANT - Be respectful and inclusive:
 Return a JSON object with a "questions" array containing exactly ${questionCount} objects, each with "text" (the question) and "vibe" (one of: "😜 Whimsical", "🤗 Warm", "🤔 Thoughtful", "🧘 Deep").`
 
     try {
-      const parsedQuestions = await generateQuestionsFromLlm(prompt, questionCount)
+      const parsedQuestions = await generateQuestionsFromLlm(prompt, questionCount, settings)
       const generatedQuestions: Question[] = shuffleArray(parsedQuestions.map((q, i) => ({
         id: createQuestionId(i),
         text: q.text,
@@ -1291,6 +1312,65 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
               />
               <span id="sound-desc" className="sr-only">Toggle sound effects on or off</span>
             </div>
+
+            <Dialog>
+              <DialogTrigger asChild>
+                <button
+                  className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+                  aria-label="Settings"
+                >
+                  <Gear size={18} className="text-primary" aria-hidden="true" />
+                  <span className="text-sm font-medium">Settings</span>
+                </button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Oracle Settings</DialogTitle>
+                  <DialogDescription>
+                    Configure your AI connection. Changes are saved locally to your browser.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="endpoint">LLM Endpoint URL</Label>
+                    <Input
+                      id="endpoint"
+                      value={llmEndpoint}
+                      onChange={(e) => setLlmEndpoint(e.target.value)}
+                      placeholder="https://text.pollinations.ai/openai"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="apikey">API Key (Optional)</Label>
+                    <Input
+                      id="apikey"
+                      type="password"
+                      value={llmApiKey}
+                      onChange={(e) => setLlmApiKey(e.target.value)}
+                      placeholder="sk-..."
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="model">Model ID</Label>
+                    <Input
+                      id="model"
+                      value={llmModel}
+                      onChange={(e) => setLlmModel(e.target.value)}
+                      placeholder="openai"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button onClick={() => {
+                    setLlmEndpoint(import.meta.env.VITE_FREE_LLM_ENDPOINT ?? '/api/ask-wookiee')
+                    setLlmApiKey('')
+                    setLlmModel('openai')
+                  }} variant="outline">
+                    Reset Defaults
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </motion.header>
 
