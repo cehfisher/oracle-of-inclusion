@@ -124,7 +124,7 @@ const DEFAULT_RESPONSE_TIMEOUT_MS = 5500
 const MIN_RESPONSE_TIMEOUT_MS = 1000
 const CACHE_TTL_HOURS = 12
 const CACHE_TTL_MILLISECONDS = 1000 * 60 * 60 * CACHE_TTL_HOURS
-const CACHE_PREFIX = 'free-llm-response:'
+const CACHE_PREFIX = 'ask-wookiee-response:'
 const memoryCache = new Map<string, { content: string; expiresAt: number }>()
 const FREE_LLM_TIMEOUT_MS = (() => {
   const timeoutMs = Number(import.meta.env.VITE_FREE_LLM_TIMEOUT_MS ?? DEFAULT_RESPONSE_TIMEOUT_MS)
