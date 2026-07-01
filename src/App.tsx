@@ -110,7 +110,7 @@ interface GeneratedQuestion {
   vibe?: string
 }
 
-const FREE_LLM_ENDPOINT = import.meta.env.VITE_FREE_LLM_ENDPOINT ?? 'https://text.pollinations.ai/openai'
+const FREE_LLM_ENDPOINT = import.meta.env.VITE_FREE_LLM_ENDPOINT ?? '/api/ask-wookiee'
 const FREE_LLM_MODEL = 'openai'
 const FREE_LLM_TIMEOUT_MS = 12000
 const FREE_LLM_MAX_RETRIES = 2
@@ -139,13 +139,7 @@ class FreeLlmRequestError extends Error {
 }
 
 const getFreeLlmEndpoint = (): string => {
-  const endpoint = new URL(FREE_LLM_ENDPOINT)
-
-  if (endpoint.protocol !== 'https:') {
-    throw new Error('Free LLM endpoint must use HTTPS')
-  }
-
-  return endpoint.toString()
+  return FREE_LLM_ENDPOINT
 }
 
 const extractJsonObject = (content: string): string => {
@@ -285,6 +279,8 @@ const callFreeQuestionLlmOnce = async (prompt: string): Promise<string> => {
     let data: {
       choices?: Array<{ message?: { content?: unknown }, text?: unknown }>
       content?: unknown
+      answer?: unknown
+      response?: unknown
     }
 
     try {
@@ -292,7 +288,7 @@ const callFreeQuestionLlmOnce = async (prompt: string): Promise<string> => {
     } catch {
       throw new FreeLlmRequestError('parse', 'Failed to parse Free LLM response as JSON')
     }
-    const content = data.choices?.[0]?.message?.content ?? data.choices?.[0]?.text ?? data.content
+    const content = data.choices?.[0]?.message?.content ?? data.choices?.[0]?.text ?? data.answer ?? data.response ?? data.content
 
     if (typeof content !== 'string' || !content.trim()) {
       throw new FreeLlmRequestError('invalid_response', 'Free LLM returned an empty response')
