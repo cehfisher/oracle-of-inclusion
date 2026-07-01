@@ -118,8 +118,8 @@ type LlmBackendResponse = {
 
 const DEFAULT_FREE_LLM_ENDPOINT = 'https://text.pollinations.ai/openai'
 const WOOKIEE_BACKEND_ENDPOINT = '/api/ask-wookiee'
-const FREE_LLM_ENDPOINT = import.meta.env.VITE_FREE_LLM_ENDPOINT ?? DEFAULT_FREE_LLM_ENDPOINT
-const FREE_LLM_MODEL = 'openai'
+const CONFIGURED_LLM_ENDPOINT = import.meta.env.VITE_FREE_LLM_ENDPOINT ?? DEFAULT_FREE_LLM_ENDPOINT
+const OPENAI_COMPATIBLE_MODEL = 'openai'
 const DEFAULT_RESPONSE_TIMEOUT_MS = 5500
 const MIN_RESPONSE_TIMEOUT_MS = 1000
 const CACHE_TTL_HOURS = 12
@@ -157,7 +157,7 @@ class FreeLlmRequestError extends Error {
 }
 
 const getFreeLlmEndpoint = (): string => {
-  const endpoint = FREE_LLM_ENDPOINT.trim()
+  const endpoint = CONFIGURED_LLM_ENDPOINT.trim()
 
   if (endpoint.startsWith('/')) {
     return endpoint
@@ -341,7 +341,7 @@ const callFreeQuestionLlmOnce = async (prompt: string): Promise<string> => {
             timeoutMs: FREE_LLM_TIMEOUT_MS
           }
           : {
-            model: FREE_LLM_MODEL,
+            model: OPENAI_COMPATIBLE_MODEL,
             messages: [
               {
                 role: 'system',
