@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo, useCallback, type Dispatch, type SetStateAction } from 'react'
+import { llm } from '@github/spark/llm'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Copy, ArrowsClockwise, Check, Plus, X, SpeakerHigh, SpeakerSlash, Sparkle, ArrowCounterClockwise, Moon, Sun } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
@@ -110,21 +111,19 @@ interface GeneratedQuestion {
   vibe?: string
 }
 
-type LlmBackendResponse = {
-  answer?: string
-  response?: string
+type OpenAiCompatibleResponse = {
   content?: string
+  choices?: Array<{ message?: { content?: unknown }, text?: unknown }>
 }
 
-const DEFAULT_FREE_LLM_ENDPOINT = 'https://text.pollinations.ai/openai'
-const WOOKIEE_BACKEND_ENDPOINT = '/api/ask-wookiee'
-const CONFIGURED_LLM_ENDPOINT = import.meta.env.VITE_FREE_LLM_ENDPOINT ?? DEFAULT_FREE_LLM_ENDPOINT
+const CONFIGURED_EXTERNAL_LLM_ENDPOINT = import.meta.env.VITE_FREE_LLM_ENDPOINT?.trim()
 const OPENAI_COMPATIBLE_MODEL = 'openai'
+const SPARK_LLM_JSON_MODE = true
 const DEFAULT_RESPONSE_TIMEOUT_MS = 5500
 const MIN_RESPONSE_TIMEOUT_MS = 1000
 const CACHE_TTL_HOURS = 12
 const CACHE_TTL_MILLISECONDS = 1000 * 60 * 60 * CACHE_TTL_HOURS
-const CACHE_PREFIX = 'ask-wookiee-response:'
+const CACHE_PREFIX = 'question-llm-response:'
 const memoryCache = new Map<string, { content: string; expiresAt: number }>()
 const FREE_LLM_TIMEOUT_MS = (() => {
   const timeoutMs = Number(import.meta.env.VITE_FREE_LLM_TIMEOUT_MS ?? DEFAULT_RESPONSE_TIMEOUT_MS)
@@ -156,23 +155,17 @@ class FreeLlmRequestError extends Error {
   }
 }
 
-const getFreeLlmEndpoint = (): string => {
-  const endpoint = CONFIGURED_LLM_ENDPOINT.trim()
+const getExternalLlmEndpoint = (): string | null => {
+  if (!CONFIGURED_EXTERNAL_LLM_ENDPOINT) return null
 
-  if (endpoint.startsWith('/')) {
-    return endpoint
-  }
-
-  const parsedEndpoint = new URL(endpoint)
+  const parsedEndpoint = new URL(CONFIGURED_EXTERNAL_LLM_ENDPOINT)
 
   if (parsedEndpoint.protocol !== 'https:') {
-    throw new Error('Free LLM endpoint must use HTTPS')
+    throw new Error('External LLM endpoint must use HTTPS')
   }
 
   return parsedEndpoint.toString()
 }
-
-const isWookieeEndpoint = (endpoint: string): boolean => endpoint.includes(WOOKIEE_BACKEND_ENDPOINT)
 
 const getPromptCacheKey = (prompt: string): string => {
   let hash = 5381
@@ -219,12 +212,8 @@ const setCachedPromptResponse = (cacheKey: string, content: string): void => {
   }
 }
 
-const extractLlmContent = (
-  data: LlmBackendResponse & {
-    choices?: Array<{ message?: { content?: unknown }, text?: unknown }>
-  }
-): string | null => {
-  const content = data.answer ?? data.response ?? data.content ?? data.choices?.[0]?.message?.content ?? data.choices?.[0]?.text
+const extractLlmContent = (data: OpenAiCompatibleResponse): string | null => {
+  const content = data.content ?? data.choices?.[0]?.message?.content ?? data.choices?.[0]?.text
   if (typeof content !== 'string' || !content.trim()) return null
   return content
 }
@@ -294,6 +283,9 @@ const getRetryDelay = (attempt: number): number => {
   return Math.min(exponentialDelay + jitter, FREE_LLM_RETRY_MAX_DELAY_MS)
 }
 
+const isRateLimitError = (error: FreeLlmRequestError): boolean =>
+  error.code === 'http' && error.status === 429
+
 const isRetryableFreeLlmError = (error: unknown): boolean => {
   if (!(error instanceof FreeLlmRequestError)) return false
 
@@ -303,7 +295,10 @@ const isRetryableFreeLlmError = (error: unknown): boolean => {
   }
 
   if (error.code === 'http') {
-    return error.status === 408 || error.status === 429 || (error.status !== undefined && error.status >= 500)
+    // Rate limits need provider-directed backoff, so fall back instead of retrying immediately.
+    if (isRateLimitError(error)) return false
+
+    return error.status === 408 || (error.status !== undefined && error.status >= 500)
   }
 
   return false
@@ -314,12 +309,61 @@ const getFallbackToastMessage = (error: unknown): string => {
     return 'The oracle timed out, so backup questions stepped in.'
   }
 
+  if (error instanceof FreeLlmRequestError && isRateLimitError(error)) {
+    return 'The oracle is rate-limited, so backup questions stepped in.'
+  }
+
   return 'The oracle signal was faint, so backup questions stepped in.'
 }
 
-const callFreeQuestionLlmOnce = async (prompt: string): Promise<string> => {
-  const endpoint = getFreeLlmEndpoint()
-  const useWookieeBackend = isWookieeEndpoint(endpoint)
+const runWithLlmTimeout = async <T,>(request: Promise<T>): Promise<T> => {
+  let timeoutId: number | undefined
+
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = window.setTimeout(() => {
+      reject(new FreeLlmRequestError('timeout', 'LLM request timed out'))
+    }, FREE_LLM_TIMEOUT_MS)
+  })
+
+  try {
+    return await Promise.race([request, timeout])
+  } finally {
+    if (timeoutId !== undefined) {
+      window.clearTimeout(timeoutId)
+    }
+    // If the timeout wins, the underlying request can still reject later.
+    void request.catch((error) => {
+      console.warn('LLM request settled after timeout', error)
+    })
+  }
+}
+
+const callSparkJsonLlm = (prompt: string): Promise<string> => {
+  // The llm helper accepts modelName as its second argument; undefined keeps Spark's default model.
+  return llm(prompt, undefined, SPARK_LLM_JSON_MODE)
+}
+
+const callSparkQuestionLlmOnce = async (prompt: string): Promise<string> => {
+  let content: string
+
+  try {
+    content = await runWithLlmTimeout(callSparkJsonLlm(prompt))
+  } catch (error) {
+    if (error instanceof FreeLlmRequestError) {
+      throw error
+    }
+
+    throw new FreeLlmRequestError('network', 'Spark LLM request failed')
+  }
+
+  if (!content.trim()) {
+    throw new FreeLlmRequestError('invalid_response', 'Spark LLM returned an empty response')
+  }
+
+  return content
+}
+
+const callExternalQuestionLlmOnce = async (endpoint: string, prompt: string): Promise<string> => {
   const controller = new AbortController()
   const timeout = window.setTimeout(() => controller.abort(), FREE_LLM_TIMEOUT_MS)
 
@@ -335,29 +379,24 @@ const callFreeQuestionLlmOnce = async (prompt: string): Promise<string> => {
       response = await fetch(endpoint, {
         method: 'POST',
         headers,
-        body: JSON.stringify(useWookieeBackend
-          ? {
-            prompt,
-            timeoutMs: FREE_LLM_TIMEOUT_MS
-          }
-          : {
-            model: OPENAI_COMPATIBLE_MODEL,
-            messages: [
-              {
-                role: 'system',
-                content: 'You generate inclusive fireside chat questions. Return only valid JSON matching the requested schema.'
-              },
-              { role: 'user', content: prompt }
-            ],
-            response_format: { type: 'json_object' },
-            max_tokens: Math.max(
-              FREE_LLM_MIN_MAX_TOKENS,
-              prompt.length < FREE_LLM_SHORT_PROMPT_LIMIT
-                ? FREE_LLM_SHORT_PROMPT_MAX_TOKENS
-                : FREE_LLM_LONG_PROMPT_MAX_TOKENS
-            ),
-            temperature: FREE_LLM_TEMPERATURE
-          }),
+        body: JSON.stringify({
+          model: OPENAI_COMPATIBLE_MODEL,
+          messages: [
+            {
+              role: 'system',
+              content: 'You generate inclusive fireside chat questions. Return only valid JSON matching the requested schema.'
+            },
+            { role: 'user', content: prompt }
+          ],
+          response_format: { type: 'json_object' },
+          max_tokens: Math.max(
+            FREE_LLM_MIN_MAX_TOKENS,
+            prompt.length < FREE_LLM_SHORT_PROMPT_LIMIT
+              ? FREE_LLM_SHORT_PROMPT_MAX_TOKENS
+              : FREE_LLM_LONG_PROMPT_MAX_TOKENS
+          ),
+          temperature: FREE_LLM_TEMPERATURE
+        }),
         signal: controller.signal
       })
     } catch (error) {
@@ -372,12 +411,7 @@ const callFreeQuestionLlmOnce = async (prompt: string): Promise<string> => {
       throw new FreeLlmRequestError('http', `Free LLM request failed with ${response.status}`, response.status)
     }
 
-    let data: {
-      choices?: Array<{ message?: { content?: unknown }, text?: unknown }>
-      answer?: unknown
-      response?: unknown
-      content?: unknown
-    }
+    let data: OpenAiCompatibleResponse
 
     try {
       data = await response.json() as typeof data
@@ -394,6 +428,15 @@ const callFreeQuestionLlmOnce = async (prompt: string): Promise<string> => {
   } finally {
     window.clearTimeout(timeout)
   }
+}
+
+const callFreeQuestionLlmOnce = async (prompt: string): Promise<string> => {
+  const endpoint = getExternalLlmEndpoint()
+  if (endpoint) {
+    return callExternalQuestionLlmOnce(endpoint, prompt)
+  }
+
+  return callSparkQuestionLlmOnce(prompt)
 }
 
 const callFreeQuestionLlm = async (prompt: string): Promise<string> => {
