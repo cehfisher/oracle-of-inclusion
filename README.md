@@ -3,7 +3,7 @@ You've just launched your brand-new Spark Template Codespace — everything’s 
 
 ## Question generation
 
-The Oracle generates questions with the free public Pollinations OpenAI-compatible API (`https://text.pollinations.ai/openai`). The public API does not require a key, but availability, rate limits, and terms may change because it is an external free service. Set `VITE_FREE_LLM_ENDPOINT` to use a different HTTPS OpenAI-compatible endpoint or `/api/ask-wookiee` for an internal backend.
+The Oracle generates questions with the free public Pollinations OpenAI-compatible API (`https://text.pollinations.ai/openai`). The public API does not require a key, but availability, rate limits, and terms may change because it is an external free service. If the API is unavailable or rate-limited, the app falls back to built-in backup questions and shows a warning toast. Set `VITE_FREE_LLM_ENDPOINT` to use a different HTTPS OpenAI-compatible endpoint or `/api/ask-wookiee` for an internal backend.
 
 This template is your blank canvas. It comes with a minimal setup to help you get started quickly with Spark development.
 
