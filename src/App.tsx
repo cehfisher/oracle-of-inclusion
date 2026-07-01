@@ -288,6 +288,9 @@ const callFreeQuestionLlmOnce = async (prompt: string): Promise<string> => {
     } catch {
       throw new FreeLlmRequestError('parse', 'Failed to parse Free LLM response as JSON')
     }
+    // The backend may return the response in various formats:
+    // - standard LLM format (data.choices[0].message.content or data.choices[0].text)
+    // - direct custom format (data.answer, data.response, or data.content)
     const content = data.choices?.[0]?.message?.content ?? data.choices?.[0]?.text ?? data.answer ?? data.response ?? data.content
 
     if (typeof content !== 'string' || !content.trim()) {
