@@ -163,7 +163,7 @@ export interface LlmSettings {
 }
 
 const getFreeLlmEndpoint = (rawEndpoint: string): string => {
-  const endpoint = (rawEndpoint || FREE_LLM_ENDPOINT).trim()
+  const endpoint = (!rawEndpoint || !rawEndpoint.trim()) ? FREE_LLM_ENDPOINT : rawEndpoint.trim()
 
   if (endpoint.startsWith('/')) {
     return endpoint
@@ -679,9 +679,9 @@ export default function App() {
   const [thinkingQuestions, setThinkingQuestions] = useState<string[]>([])
   const [isShuffling, setIsShuffling] = useState(false)
   const [soundEnabled, setSoundEnabled] = useLocalStorageState<boolean>('oracle-sound-enabled-v2', true)
-  const [llmEndpoint, setLlmEndpoint] = useLocalStorageState<string>('oracle-llm-endpoint', import.meta.env.VITE_FREE_LLM_ENDPOINT ?? '/api/ask-wookiee')
+  const [llmEndpoint, setLlmEndpoint] = useLocalStorageState<string>('oracle-llm-endpoint', FREE_LLM_ENDPOINT)
   const [llmApiKey, setLlmApiKey] = useLocalStorageState<string>('oracle-llm-apikey', '')
-  const [llmModel, setLlmModel] = useLocalStorageState<string>('oracle-llm-model', 'openai')
+  const [llmModel, setLlmModel] = useLocalStorageState<string>('oracle-llm-model', FREE_LLM_MODEL)
   const [savedAnimationsEnabled, setAnimationsEnabled] = useLocalStorageState<boolean | null>('oracle-animations-enabled-v2', true)
   const animationsEnabled = savedAnimationsEnabled !== false
   const [darkMode, setDarkMode] = useLocalStorageState<boolean>('oracle-dark-mode-v2', false)
@@ -1345,6 +1345,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     <Input
                       id="apikey"
                       type="password"
+                      autoComplete="off"
                       value={llmApiKey}
                       onChange={(e) => setLlmApiKey(e.target.value)}
                       placeholder="sk-..."
@@ -1362,9 +1363,9 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                 </div>
                 <DialogFooter>
                   <Button onClick={() => {
-                    setLlmEndpoint(import.meta.env.VITE_FREE_LLM_ENDPOINT ?? '/api/ask-wookiee')
+                    setLlmEndpoint(FREE_LLM_ENDPOINT)
                     setLlmApiKey('')
-                    setLlmModel('openai')
+                    setLlmModel(FREE_LLM_MODEL)
                   }} variant="outline">
                     Reset Defaults
                   </Button>
