@@ -118,6 +118,8 @@ type OpenAiCompatibleResponse = {
 
 const CONFIGURED_EXTERNAL_LLM_ENDPOINT = import.meta.env.VITE_FREE_LLM_ENDPOINT?.trim()
 const OPENAI_COMPATIBLE_MODEL = 'openai'
+// Keep Spark's default model while enabling JSON mode with the third argument.
+const SPARK_LLM_MODEL: string | undefined = undefined
 const SPARK_LLM_JSON_MODE = true
 const DEFAULT_RESPONSE_TIMEOUT_MS = 5500
 const MIN_RESPONSE_TIMEOUT_MS = 1000
@@ -295,6 +297,7 @@ const isRetryableFreeLlmError = (error: unknown): boolean => {
   }
 
   if (error.code === 'http') {
+    // Rate limits need provider-directed backoff, so fall back instead of retrying immediately.
     if (isRateLimitError(error)) return false
 
     return error.status === 408 || (error.status !== undefined && error.status >= 500)
@@ -330,6 +333,7 @@ const runWithLlmTimeout = async <T,>(request: Promise<T>): Promise<T> => {
     if (timeoutId !== undefined) {
       window.clearTimeout(timeoutId)
     }
+    // If the timeout wins, the underlying request can still reject later.
     void request.catch(() => undefined)
   }
 }
@@ -338,7 +342,7 @@ const callSparkQuestionLlmOnce = async (prompt: string): Promise<string> => {
   let content: string
 
   try {
-    content = await runWithLlmTimeout(llm(prompt, undefined, SPARK_LLM_JSON_MODE))
+    content = await runWithLlmTimeout(llm(prompt, SPARK_LLM_MODEL, SPARK_LLM_JSON_MODE))
   } catch (error) {
     if (error instanceof FreeLlmRequestError) {
       throw error
