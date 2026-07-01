@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback, type Dispatch, type SetStateAction } from 'react'
+import { llm } from '@github/spark/llm'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Copy, ArrowsClockwise, Check, Plus, X, SpeakerHigh, SpeakerSlash, Sparkle, ArrowCounterClockwise, Moon, Sun } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
@@ -10,13 +11,7 @@ import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
-import { useKV } from '@github/spark/hooks'
 import { toast, Toaster } from 'sonner'
-
-declare const spark: {
-  llmPrompt: (strings: TemplateStringsArray, ...values: unknown[]) => string
-  llm: (prompt: string, model?: string, jsonMode?: boolean) => Promise<string>
-}
 
 const useSound = () => {
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -109,6 +104,370 @@ interface Question {
   id: string
   text: string
   vibe: string
+}
+
+interface GeneratedQuestion {
+  text: string
+  vibe?: string
+}
+
+type OpenAiCompatibleResponse = {
+  content?: string
+  choices?: Array<{ message?: { content?: unknown }, text?: unknown }>
+}
+
+const CONFIGURED_EXTERNAL_LLM_ENDPOINT = import.meta.env.VITE_FREE_LLM_ENDPOINT?.trim()
+const OPENAI_COMPATIBLE_MODEL = 'openai'
+const SPARK_LLM_JSON_MODE = true
+const DEFAULT_RESPONSE_TIMEOUT_MS = 5500
+const MIN_RESPONSE_TIMEOUT_MS = 1000
+const CACHE_TTL_HOURS = 12
+const CACHE_TTL_MILLISECONDS = 1000 * 60 * 60 * CACHE_TTL_HOURS
+const CACHE_PREFIX = 'question-llm-response:'
+const memoryCache = new Map<string, { content: string; expiresAt: number }>()
+const FREE_LLM_TIMEOUT_MS = (() => {
+  const timeoutMs = Number(import.meta.env.VITE_FREE_LLM_TIMEOUT_MS ?? DEFAULT_RESPONSE_TIMEOUT_MS)
+  if (!Number.isFinite(timeoutMs)) return DEFAULT_RESPONSE_TIMEOUT_MS
+  return Math.max(MIN_RESPONSE_TIMEOUT_MS, Math.floor(timeoutMs))
+})()
+const FREE_LLM_MAX_RETRIES = 2
+const FREE_LLM_RETRY_BASE_DELAY_MS = 600
+const FREE_LLM_RETRY_MAX_DELAY_MS = 2400
+const FREE_LLM_RETRY_JITTER_MS = 200
+const FREE_LLM_RETRY_ATTEMPT_CAP = 8
+const FREE_LLM_TEMPERATURE = 0.9
+const FREE_LLM_SHORT_PROMPT_LIMIT = 2500
+const FREE_LLM_SHORT_PROMPT_MAX_TOKENS = 700
+const FREE_LLM_LONG_PROMPT_MAX_TOKENS = 900
+const FREE_LLM_MIN_MAX_TOKENS = 350
+
+type FreeLlmErrorCode = 'timeout' | 'http' | 'network' | 'parse' | 'invalid_response'
+
+class FreeLlmRequestError extends Error {
+  code: FreeLlmErrorCode
+  status?: number
+
+  constructor(code: FreeLlmErrorCode, message: string, status?: number) {
+    super(message)
+    this.name = 'FreeLlmRequestError'
+    this.code = code
+    this.status = status
+  }
+}
+
+const getExternalLlmEndpoint = (): string | null => {
+  if (!CONFIGURED_EXTERNAL_LLM_ENDPOINT) return null
+
+  const parsedEndpoint = new URL(CONFIGURED_EXTERNAL_LLM_ENDPOINT)
+
+  if (parsedEndpoint.protocol !== 'https:') {
+    throw new Error('External LLM endpoint must use HTTPS')
+  }
+
+  return parsedEndpoint.toString()
+}
+
+const getPromptCacheKey = (prompt: string): string => {
+  let hash = 5381
+  for (let index = 0; index < prompt.length; index += 1) {
+    hash = ((hash << 5) + hash) ^ prompt.charCodeAt(index)
+  }
+  return `${CACHE_PREFIX}${Math.abs(hash).toString(36)}:${prompt.length}`
+}
+
+const getCachedPromptResponse = (cacheKey: string): string | null => {
+  const now = Date.now()
+  const memoryCached = memoryCache.get(cacheKey)
+  if (memoryCached && memoryCached.expiresAt > now) {
+    return memoryCached.content
+  }
+  if (memoryCached) {
+    memoryCache.delete(cacheKey)
+  }
+
+  try {
+    const rawStored = window.localStorage.getItem(cacheKey)
+    if (!rawStored) return null
+
+    const parsed = JSON.parse(rawStored) as { content?: unknown; expiresAt?: unknown }
+    if (typeof parsed.content !== 'string' || typeof parsed.expiresAt !== 'number' || parsed.expiresAt <= now) {
+      window.localStorage.removeItem(cacheKey)
+      return null
+    }
+
+    memoryCache.set(cacheKey, { content: parsed.content, expiresAt: parsed.expiresAt })
+    return parsed.content
+  } catch {
+    return null
+  }
+}
+
+const setCachedPromptResponse = (cacheKey: string, content: string): void => {
+  const cacheValue = { content, expiresAt: Date.now() + CACHE_TTL_MILLISECONDS }
+  memoryCache.set(cacheKey, cacheValue)
+  try {
+    window.localStorage.setItem(cacheKey, JSON.stringify(cacheValue))
+  } catch {
+    // Ignore storage quota and serialization issues.
+  }
+}
+
+const extractLlmContent = (data: OpenAiCompatibleResponse): string | null => {
+  const content = data.content ?? data.choices?.[0]?.message?.content ?? data.choices?.[0]?.text
+  if (typeof content !== 'string' || !content.trim()) return null
+  return content
+}
+
+const extractJsonObject = (content: string): string => {
+  const trimmed = content.trim()
+  const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i)
+  const candidate = fenced?.[1]?.trim() ?? trimmed
+  const start = candidate.indexOf('{')
+  const end = candidate.lastIndexOf('}')
+
+  if (start === -1 || end === -1 || end <= start) {
+    throw new Error('LLM response did not include a JSON object')
+  }
+
+  return candidate.slice(start, end + 1)
+}
+
+const describeValue = (value: unknown): string => {
+  if (typeof value === 'string') return value.slice(0, 120)
+
+  try {
+    return JSON.stringify(value)?.slice(0, 120) ?? String(value)
+  } catch {
+    return String(value)
+  }
+}
+
+const parseGeneratedQuestions = (content: string, expectedCount: number): GeneratedQuestion[] => {
+  const parsed = JSON.parse(extractJsonObject(content)) as unknown
+  const questionsValue = parsed && typeof parsed === 'object'
+    ? (parsed as { questions?: unknown }).questions
+    : undefined
+
+  if (!Array.isArray(questionsValue)) {
+    throw new Error(`LLM response did not include a questions array, received: ${describeValue(parsed)}`)
+  }
+
+  const questions = questionsValue
+    .map((question) => {
+      if (!question || typeof question !== 'object') return null
+
+      const { text, vibe } = question as { text?: unknown; vibe?: unknown }
+      if (typeof text !== 'string' || !text.trim()) return null
+
+      return {
+        text: text.trim(),
+        vibe: typeof vibe === 'string' && vibe.trim() ? vibe.trim() : undefined
+      }
+    })
+    .filter((question): question is GeneratedQuestion => question !== null)
+
+  if (questions.length < expectedCount) {
+    throw new Error(`LLM returned ${questions.length} usable questions, expected ${expectedCount}`)
+  }
+
+  return questions.slice(0, expectedCount)
+}
+
+const wait = (delayMs: number): Promise<void> =>
+  new Promise((resolve) => window.setTimeout(resolve, delayMs))
+
+const getRetryDelay = (attempt: number): number => {
+  const safeAttempt = Math.min(Math.max(attempt, 0), FREE_LLM_RETRY_ATTEMPT_CAP)
+  const exponentialDelay = FREE_LLM_RETRY_BASE_DELAY_MS * (2 ** safeAttempt)
+  const jitter = Math.floor(Math.random() * FREE_LLM_RETRY_JITTER_MS)
+  return Math.min(exponentialDelay + jitter, FREE_LLM_RETRY_MAX_DELAY_MS)
+}
+
+const isRateLimitError = (error: FreeLlmRequestError): boolean =>
+  error.code === 'http' && error.status === 429
+
+const isRetryableFreeLlmError = (error: unknown): boolean => {
+  if (!(error instanceof FreeLlmRequestError)) return false
+
+  const retryableCodes: FreeLlmErrorCode[] = ['timeout', 'network', 'parse', 'invalid_response']
+  if (retryableCodes.includes(error.code)) {
+    return true
+  }
+
+  if (error.code === 'http') {
+    // Rate limits need provider-directed backoff, so fall back instead of retrying immediately.
+    if (isRateLimitError(error)) return false
+
+    return error.status === 408 || (error.status !== undefined && error.status >= 500)
+  }
+
+  return false
+}
+
+const getFallbackToastMessage = (error: unknown): string => {
+  if (error instanceof FreeLlmRequestError && error.code === 'timeout') {
+    return 'The oracle timed out, so backup questions stepped in.'
+  }
+
+  if (error instanceof FreeLlmRequestError && isRateLimitError(error)) {
+    return 'The oracle is rate-limited, so backup questions stepped in.'
+  }
+
+  return 'The oracle signal was faint, so backup questions stepped in.'
+}
+
+const runWithLlmTimeout = async <T,>(request: Promise<T>): Promise<T> => {
+  let timeoutId: number | undefined
+
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = window.setTimeout(() => {
+      reject(new FreeLlmRequestError('timeout', 'LLM request timed out'))
+    }, FREE_LLM_TIMEOUT_MS)
+  })
+
+  try {
+    return await Promise.race([request, timeout])
+  } finally {
+    if (timeoutId !== undefined) {
+      window.clearTimeout(timeoutId)
+    }
+    // If the timeout wins, the underlying request can still reject later.
+    void request.catch((error) => {
+      console.warn('LLM request settled after timeout', error)
+    })
+  }
+}
+
+const callSparkJsonLlm = (prompt: string): Promise<string> => {
+  // The llm helper accepts modelName as its second argument; undefined keeps Spark's default model.
+  return llm(prompt, undefined, SPARK_LLM_JSON_MODE)
+}
+
+const callSparkQuestionLlmOnce = async (prompt: string): Promise<string> => {
+  let content: string
+
+  try {
+    content = await runWithLlmTimeout(callSparkJsonLlm(prompt))
+  } catch (error) {
+    if (error instanceof FreeLlmRequestError) {
+      throw error
+    }
+
+    throw new FreeLlmRequestError('network', 'Spark LLM request failed')
+  }
+
+  if (!content.trim()) {
+    throw new FreeLlmRequestError('invalid_response', 'Spark LLM returned an empty response')
+  }
+
+  return content
+}
+
+const callExternalQuestionLlmOnce = async (endpoint: string, prompt: string): Promise<string> => {
+  const controller = new AbortController()
+  const timeout = window.setTimeout(() => controller.abort(), FREE_LLM_TIMEOUT_MS)
+
+  try {
+    let response: Response
+
+    try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+
+      response = await fetch(endpoint, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          model: OPENAI_COMPATIBLE_MODEL,
+          messages: [
+            {
+              role: 'system',
+              content: 'You generate inclusive fireside chat questions. Return only valid JSON matching the requested schema.'
+            },
+            { role: 'user', content: prompt }
+          ],
+          response_format: { type: 'json_object' },
+          max_tokens: Math.max(
+            FREE_LLM_MIN_MAX_TOKENS,
+            prompt.length < FREE_LLM_SHORT_PROMPT_LIMIT
+              ? FREE_LLM_SHORT_PROMPT_MAX_TOKENS
+              : FREE_LLM_LONG_PROMPT_MAX_TOKENS
+          ),
+          temperature: FREE_LLM_TEMPERATURE
+        }),
+        signal: controller.signal
+      })
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw new FreeLlmRequestError('timeout', 'Free LLM request timed out')
+      }
+
+      throw new FreeLlmRequestError('network', 'Free LLM network request failed')
+    }
+
+    if (!response.ok) {
+      throw new FreeLlmRequestError('http', `Free LLM request failed with ${response.status}`, response.status)
+    }
+
+    let data: OpenAiCompatibleResponse
+
+    try {
+      data = await response.json() as typeof data
+    } catch {
+      throw new FreeLlmRequestError('parse', 'Failed to parse Free LLM response as JSON')
+    }
+    const content = extractLlmContent(data)
+
+    if (!content) {
+      throw new FreeLlmRequestError('invalid_response', 'Free LLM returned an empty response')
+    }
+
+    return content
+  } finally {
+    window.clearTimeout(timeout)
+  }
+}
+
+const callFreeQuestionLlmOnce = async (prompt: string): Promise<string> => {
+  const endpoint = getExternalLlmEndpoint()
+  if (endpoint) {
+    return callExternalQuestionLlmOnce(endpoint, prompt)
+  }
+
+  return callSparkQuestionLlmOnce(prompt)
+}
+
+const callFreeQuestionLlm = async (prompt: string): Promise<string> => {
+  const cacheKey = getPromptCacheKey(prompt)
+  const cachedResponse = getCachedPromptResponse(cacheKey)
+  if (cachedResponse) {
+    return cachedResponse
+  }
+
+  let lastError: unknown
+
+  for (let attempt = 0; attempt <= FREE_LLM_MAX_RETRIES; attempt++) {
+    try {
+      const response = await callFreeQuestionLlmOnce(prompt)
+      setCachedPromptResponse(cacheKey, response)
+      return response
+    } catch (error) {
+      lastError = error
+      if (attempt < FREE_LLM_MAX_RETRIES && isRetryableFreeLlmError(error)) {
+        await wait(getRetryDelay(attempt))
+        continue
+      }
+      break
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error('Free LLM request failed')
+}
+
+const generateQuestionsFromLlm = async (prompt: string, expectedCount: number): Promise<GeneratedQuestion[]> => {
+  return parseGeneratedQuestions(await callFreeQuestionLlm(prompt), expectedCount)
 }
 
 const MYSTICAL_LOADING_PHRASES = [
@@ -228,6 +587,69 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 }
 
 const VIBE_TYPES = ['😜 Whimsical', '🤗 Warm', '🤔 Thoughtful', '🧘 Deep']
+const QUESTION_COUNT_MIN = 1
+const QUESTION_COUNT_MAX = 7
+const QUESTION_COUNT_OPTIONS = Array.from(
+  { length: QUESTION_COUNT_MAX - QUESTION_COUNT_MIN + 1 },
+  (_, index) => QUESTION_COUNT_MIN + index
+)
+const getQuestionCountLabelPosition = (count: number): string =>
+  `${((count - QUESTION_COUNT_MIN) / (QUESTION_COUNT_MAX - QUESTION_COUNT_MIN)) * 100}%`
+
+const generateFallbackQuestions = (
+  questionCount: number,
+  topics: string[],
+  focusAreasText: string,
+  audience: string,
+  experience: string,
+  questionTone: number
+): GeneratedQuestion[] => {
+  const topicSummary = topics
+    .map((topic) => topic.trim())
+    .filter(Boolean)
+    .slice(0, 3)
+    .join(', ')
+  const focusArea = focusAreasText
+    .split(',')
+    .map((focus) => focus.trim())
+    .filter(Boolean)
+    .slice(0, 2)
+    .join(' and ') || 'accessibility and inclusion'
+  const audienceText = audience.trim() || 'your audience'
+  const experienceText = experience.trim() ? `${experience.trim()} years` : 'your journey'
+
+  const fallbackPool: GeneratedQuestion[] = [
+    { text: topicSummary ? `What is one thing people misunderstand about ${topicSummary}?` : 'What is one thing people misunderstand about accessibility and inclusion?', vibe: '🤔 Thoughtful' },
+    { text: topicSummary ? `How could a team make ${topicSummary} easier to apply this quarter?` : 'How could a team make accessibility easier to apply this quarter?', vibe: '🧘 Deep' },
+    { text: `What practical change in ${focusArea} creates the biggest inclusion win?`, vibe: '🤔 Thoughtful' },
+    { text: `What would you ask ${audienceText} to stop doing and start doing instead?`, vibe: '🧘 Deep' },
+    { text: `How has ${experienceText} in this work changed how you define inclusion?`, vibe: '🤗 Warm' },
+    { text: 'What is one small action people can take this week to improve access?', vibe: '🤗 Warm' },
+    { text: 'Which accessibility tradeoff is most misunderstood in real projects?', vibe: '🧘 Deep' },
+    { text: 'When does inclusive design feel joyful, not just compliant?', vibe: '😜 Whimsical' },
+    { text: 'What question should teams ask before they ship any new feature?', vibe: '🤔 Thoughtful' },
+    { text: 'What story from your work still shapes how you lead conversations today?', vibe: '🤗 Warm' },
+    { text: 'What assumption about disability in tech would you retire today?', vibe: '🧘 Deep' },
+    { text: 'If you could wave a wand over one process, what would become more inclusive?', vibe: '😜 Whimsical' }
+  ]
+
+  let preferredVibes: string[]
+  if (questionTone <= 25) {
+    preferredVibes = ['🤔 Thoughtful', '🧘 Deep']
+  } else if (questionTone <= 50) {
+    preferredVibes = ['🤔 Thoughtful', '🧘 Deep', '🤗 Warm', '😜 Whimsical']
+  } else if (questionTone <= 75) {
+    preferredVibes = ['🤗 Warm', '😜 Whimsical', '🤔 Thoughtful']
+  } else {
+    preferredVibes = ['😜 Whimsical', '🤗 Warm']
+  }
+
+  const prioritized = shuffleArray(fallbackPool.filter((q) => preferredVibes.includes(q.vibe)))
+  const remaining = shuffleArray(fallbackPool.filter((q) => !preferredVibes.includes(q.vibe)))
+  const orderedQuestions = [...prioritized, ...remaining]
+
+  return orderedQuestions.slice(0, questionCount)
+}
 
 const FOCUS_AREAS = [
   { id: 'frontend', label: '🖥️ Front-end dev' },
@@ -239,6 +661,36 @@ const FOCUS_AREAS = [
   { id: 'advocacy', label: '📣 Advocacy & community' },
   { id: 'other', label: '✏️ Other' },
 ]
+
+const useLocalStorageState = <T,>(key: string, initialValue: T): [T, Dispatch<SetStateAction<T>>] => {
+  const [storedValue, setStoredValue] = useState<T>(() => {
+    if (typeof window === 'undefined') return initialValue
+
+    try {
+      const item = window.localStorage.getItem(key)
+      return item === null ? initialValue : JSON.parse(item) as T
+    } catch {
+      return initialValue
+    }
+  })
+
+  const setValue: Dispatch<SetStateAction<T>> = useCallback((value) => {
+    setStoredValue((currentValue) => {
+      const nextValue = value instanceof Function ? value(currentValue) : value
+
+      try {
+        window.localStorage.setItem(key, JSON.stringify(nextValue))
+      } catch {
+        // Keep the in-memory value when browser storage is unavailable.
+      }
+
+      return nextValue
+    })
+  }, [key])
+
+  return [storedValue, setValue]
+}
+
 
 
 
@@ -260,11 +712,12 @@ export default function App() {
   const [loadingProgress, setLoadingProgress] = useState(0)
   const [thinkingQuestions, setThinkingQuestions] = useState<string[]>([])
   const [isShuffling, setIsShuffling] = useState(false)
-  const [soundEnabled, setSoundEnabled] = useKV<boolean>('oracle-sound-enabled-v2', true)
-  const [animationsEnabled, setAnimationsEnabled] = useKV<boolean>('oracle-animations-enabled-v2', true)
-  const [darkMode, setDarkMode] = useKV<boolean>('oracle-dark-mode-v2', false)
+  const [soundEnabled, setSoundEnabled] = useLocalStorageState<boolean>('oracle-sound-enabled-v2', true)
+  const [savedAnimationsEnabled, setAnimationsEnabled] = useLocalStorageState<boolean | null>('oracle-animations-enabled-v2', true)
+  const animationsEnabled = savedAnimationsEnabled !== false
+  const [darkMode, setDarkMode] = useLocalStorageState<boolean>('oracle-dark-mode-v2', false)
 
-  const [previousQuestions, setPreviousQuestions] = useKV<string[]>('oracle-previous-questions', [])
+  const [previousQuestions, setPreviousQuestions] = useLocalStorageState<string[]>('oracle-previous-questions', [])
   
   const [shuffledTopicSuggestions, setShuffledTopicSuggestions] = useState(() => shuffleArray(TOPIC_SUGGESTIONS))
   const [mysticalGreeting, setMysticalGreeting] = useState(() => getRandomGreeting())
@@ -435,6 +888,14 @@ export default function App() {
     return VIBE_TYPES[Math.floor(Math.random() * VIBE_TYPES.length)]
   }
 
+  const createQuestionId = (index: number): string => {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return `q-${crypto.randomUUID()}-${index}`
+    }
+
+    return `q-${Date.now()}-${index}-${Math.random().toString(16).slice(2, 8)}`
+  }
+
   const generateQuestions = useCallback(async (isShuffle = false) => {
     if (isShuffle) {
       setIsShuffling(true)
@@ -490,13 +951,6 @@ export default function App() {
     const hasCustomTopics = topics.length > 0
     const hasCustomFocusAreas = focusAreas.length > 0
 
-    const vibeDistribution = questionCount === 1 
-      ? 'any vibe of your choice'
-      : VIBE_TYPES.map((vibe, idx) => {
-          const count = Math.floor(questionCount / 4) + (idx < questionCount % 4 ? 1 : 0)
-          return `${count} ${vibe.split(' ')[1]}`
-        }).join(', ')
-
     const recentQuestions = previousQuestions ?? []
     const avoidList = recentQuestions.slice(-50).join('\n- ')
 
@@ -509,14 +963,22 @@ export default function App() {
       : `Guest's work area: accessibility and inclusion in technology (general)`
 
     const toneDescription = questionTone <= 25 
-      ? 'serious and professional - focus on deep, substantive questions about challenges, strategies, and expertise'
+      ? 'serious and professional - ask substantive questions about challenges, strategies, expertise, systems, and impact. Avoid playful, quirky, or whimsical phrasing.'
       : questionTone <= 50
-      ? 'balanced mix - combine thoughtful professional questions with some lighter, more personal ones'
+      ? 'balanced mix - combine thoughtful professional questions with some lighter, more personal ones. Keep the tone conversational but grounded.'
       : questionTone <= 75
-      ? 'lighter and engaging - lean toward fun, creative, and personal questions while still being meaningful'
-      : 'fun and playful - prioritize creative, surprising, and delightful questions that spark joy and interesting stories'
+      ? 'lighter and engaging - lean toward fun, creative, and personal questions while still being meaningful. Prefer warmth, stories, and curiosity over heavy analysis.'
+      : 'fun and playful - prioritize creative, surprising, and delightful questions that spark joy and interesting stories. Avoid sounding formal, academic, or policy-heavy.'
 
-    const prompt = spark.llmPrompt`Generate ${questionCount} simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
+    const toneVibeInstruction = questionTone <= 25
+      ? 'Use only "🤔 Thoughtful" and "🧘 Deep" vibes so the set feels clearly serious.'
+      : questionTone <= 50
+      ? 'Use a balanced mix of "🤔 Thoughtful", "🧘 Deep", "🤗 Warm", and "😜 Whimsical" vibes, as the question count allows.'
+      : questionTone <= 75
+      ? 'Use mostly "🤗 Warm" and "😜 Whimsical" vibes, with at most one "🤔 Thoughtful" question if needed.'
+      : 'Use only "😜 Whimsical" and "🤗 Warm" vibes so the set feels clearly fun and playful.'
+
+    const prompt = `Generate ${questionCount} simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
 
 Context:
 ${topicEmphasis}
@@ -539,8 +1001,8 @@ Rules:
 - Mix personal story questions with big picture questions
 - Center the disability community voice
 - CRITICAL: Keep each question to 1-2 SHORT sentences max (under 25 words total)
-- CRITICAL: Generate an even mix of vibes: ${vibeDistribution}. Each vibe type MUST be represented.
-- Randomize the order of vibes - do NOT group same vibes together
+- CRITICAL: Match the selected tone. ${toneVibeInstruction}
+- Randomize the order of vibes when more than one vibe is used - do NOT group same vibes together
 - If guest has lived experience, include questions that honor their perspective as an expert
 - If audience is technical (developers/designers), include questions about practical implementation
 - If audience is leaders, include questions about culture and organizational change
@@ -560,12 +1022,11 @@ IMPORTANT - Be respectful and inclusive:
 Return a JSON object with a "questions" array containing exactly ${questionCount} objects, each with "text" (the question) and "vibe" (one of: "😜 Whimsical", "🤗 Warm", "🤔 Thoughtful", "🧘 Deep").`
 
     try {
-      const result = await spark.llm(prompt, 'gpt-4o', true)
-      const parsed = JSON.parse(result)
-      const generatedQuestions: Question[] = shuffleArray(parsed.questions.map((q: { text: string; vibe: string }, i: number) => ({
-        id: `q-${Date.now()}-${i}`,
+      const parsedQuestions = await generateQuestionsFromLlm(prompt, questionCount)
+      const generatedQuestions: Question[] = shuffleArray(parsedQuestions.map((q, i) => ({
+        id: createQuestionId(i),
         text: q.text,
-        vibe: q.vibe || getRandomVibe()
+        vibe: q.vibe ?? getRandomVibe()
       })))
       setQuestions(generatedQuestions)
       
@@ -573,15 +1034,33 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
       setPreviousQuestions((prev) => [...(prev ?? []).slice(-100), ...newQuestionTexts])
       
       playSound(sounds.playMagic)
-    } catch {
-      toast.error('The oracle needs a moment... Please try again.')
+    } catch (error) {
+      const fallbackQuestions = generateFallbackQuestions(
+        questionCount,
+        topics,
+        focusAreasText,
+        audience,
+        experience,
+        questionTone
+      )
+
+      const generatedQuestions: Question[] = shuffleArray(fallbackQuestions.map((q, i) => ({
+        id: createQuestionId(i),
+        text: q.text,
+        vibe: q.vibe ?? getRandomVibe()
+      })))
+      setQuestions(generatedQuestions)
+
+      const newQuestionTexts = generatedQuestions.map(q => q.text)
+      setPreviousQuestions((prev) => [...(prev ?? []).slice(-100), ...newQuestionTexts])
+      toast.warning(getFallbackToastMessage(error))
     } finally {
       if (!isShuffle) {
         setIsGenerating(false)
       }
       setIsShuffling(false)
     }
-  }, [focusAreas, otherFocusArea, questionCount, topics, experience, audience, soundEnabled, sounds, reshuffleTopics, previousQuestions, setPreviousQuestions])
+  }, [focusAreas, otherFocusArea, questionCount, questionTone, topics, experience, audience, soundEnabled, sounds, reshuffleTopics, previousQuestions, setPreviousQuestions])
 
   const handleGenerateClick = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -740,7 +1219,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
       left: `${Math.random() * 100}%`,
       top: `${Math.random() * 100}%`,
       duration: 12 + Math.random() * 20,
-      delay: Math.random() * 25,
+      delay: -(Math.random() * 25),
       size: 0.12 + Math.random() * 0.9,
       symbol: Math.random() > 0.65 ? '★' : '✦',
       hasGlow: Math.random() > 0.5,
@@ -836,22 +1315,24 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
             
             <div className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border text-foreground">
               <Sparkle size={18} className="text-primary" aria-hidden="true" />
-              <Label htmlFor="animations-toggle" className="text-sm font-medium cursor-pointer">Animations</Label>
+              <Label id="animations-toggle-label" htmlFor="animations-toggle" className="text-sm font-medium cursor-pointer">Animations</Label>
               <Switch 
                 id="animations-toggle"
-                checked={animationsEnabled ?? true}
+                checked={animationsEnabled}
                 onCheckedChange={setAnimationsEnabled}
+                aria-labelledby="animations-toggle-label"
                 aria-describedby="animations-desc"
               />
               <span id="animations-desc" className="sr-only">Toggle animations on or off</span>
             </div>
             <div className="flex items-center gap-2 bg-card/80 px-4 py-2 rounded-full border border-border text-foreground">
               {soundEnabled ? <SpeakerHigh size={18} className="text-primary" aria-hidden="true" /> : <SpeakerSlash size={18} className="text-muted-foreground" aria-hidden="true" />}
-              <Label htmlFor="sound-toggle" className="text-sm font-medium cursor-pointer">Sound</Label>
+              <Label id="sound-toggle-label" htmlFor="sound-toggle" className="text-sm font-medium cursor-pointer">Sound</Label>
               <Switch 
                 id="sound-toggle"
                 checked={soundEnabled ?? true}
                 onCheckedChange={setSoundEnabled}
+                aria-labelledby="sound-toggle-label"
                 aria-describedby="sound-desc"
               />
               <span id="sound-desc" className="sr-only">Toggle sound effects on or off</span>
@@ -1027,37 +1508,46 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                   </div>
 
                   <div>
-                    <Label htmlFor="question-count-slider" className="text-foreground mb-3 block text-xl font-bold form-heading">
+                    <Label id="question-count-slider-label" className="text-foreground mb-3 block text-xl font-bold form-heading">
                       🔢 Number of questions
                     </Label>
                     <div className="px-2 py-4">
                       <Slider
                         id="question-count-slider"
+                        aria-labelledby="question-count-slider-label"
                         value={[questionCount]}
                         onValueChange={(value) => setQuestionCount(value[0])}
-                        min={1}
-                        max={10}
+                        min={QUESTION_COUNT_MIN}
+                        max={QUESTION_COUNT_MAX}
                         step={1}
                         className="w-full [&_[data-radix-slider-track]]:bg-muted [&_[data-radix-slider-range]]:bg-accent [&_[data-radix-slider-thumb]]:bg-accent [&_[data-radix-slider-thumb]]:border-2 [&_[data-radix-slider-thumb]]:border-foreground"
-                        aria-valuemin={1}
-                        aria-valuemax={10}
+                        aria-valuemin={QUESTION_COUNT_MIN}
+                        aria-valuemax={QUESTION_COUNT_MAX}
                         aria-valuenow={questionCount}
                         aria-valuetext={`${questionCount} question${questionCount === 1 ? '' : 's'}`}
                       />
-                      <div className="flex justify-between mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
-                        <span>1</span>
-                        <span>10</span>
+                      <div className="relative mt-2 h-6 text-base text-foreground font-medium form-field" aria-hidden="true">
+                        {QUESTION_COUNT_OPTIONS.map((count) => (
+                          <span
+                            key={count}
+                            className="absolute top-0 -translate-x-1/2"
+                            style={{ left: getQuestionCountLabelPosition(count) }}
+                          >
+                            {count}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   </div>
 
                   <div>
-                    <Label htmlFor="question-tone-slider" className="text-foreground mb-3 block text-xl font-bold form-heading">
+                    <Label id="question-tone-slider-label" className="text-foreground mb-3 block text-xl font-bold form-heading">
                       🎭 Question type
                     </Label>
                     <div className="px-2 py-4">
                       <Slider
                         id="question-tone-slider"
+                        aria-labelledby="question-tone-slider-label"
                         value={[questionTone]}
                         onValueChange={(value) => setQuestionTone(value[0])}
                         min={0}
@@ -1082,7 +1572,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     <Button 
                       onClick={handleGenerateClick}
                       disabled={isGenerating}
-                      className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-bold py-7 text-xl tracking-wide focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                      className="flex-1 h-[84px] bg-primary text-primary-foreground hover:bg-primary/90 font-bold py-7 text-xl tracking-wide focus:ring-4 focus:ring-ring focus:ring-offset-2"
                     >
                       {isGenerating ? (
                         <motion.div
@@ -1099,7 +1589,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     <Button 
                       onClick={resetForm}
                       variant="outline"
-                      className="py-7 px-6 border-2 border-primary/50 text-muted-foreground hover:bg-muted hover:text-foreground hover:border-primary focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                      className="h-[84px] px-6 border-2 border-primary/50 text-muted-foreground hover:bg-muted hover:text-foreground hover:border-primary focus:ring-4 focus:ring-ring focus:ring-offset-2"
                       aria-label="Reset form"
                     >
                       <ArrowCounterClockwise size={24} aria-hidden="true" />
@@ -1274,15 +1764,24 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           role="contentinfo"
         >
           <p className="text-sm text-muted-foreground/70 border-t border-border/50 pt-4">
-            This is an experiment. Questions are AI-generated. This app may not be fully accessible.{' '}
+            Questions are AI-generated. This app may not be fully accessible.
+            <br />
             <a
-              href="https://www.linkedin.com/in/cariefisher/"
+              href="https://github.com/cehfisher"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary hover:text-primary/80 underline underline-offset-2 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded"
-              aria-label="Reach out with feedback (opens LinkedIn in new tab)"
+              className="mt-3 inline-flex items-center gap-1 text-primary hover:text-primary/80 underline underline-offset-2 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background rounded"
+              aria-label="Created by cehfisher (opens GitHub in new tab)"
             >
-              Reach out with feedback
+              <svg
+                aria-hidden="true"
+                focusable="false"
+                viewBox="0 0 16 16"
+                className="size-4 fill-current"
+              >
+                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82A7.65 7.65 0 0 1 8 3.86c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z" />
+              </svg>
+              Created by cehfisher
             </a>
           </p>
         </motion.footer>

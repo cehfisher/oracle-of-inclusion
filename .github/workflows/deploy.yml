@@ -32,6 +32,8 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          VITE_FREE_LLM_ENDPOINT: https://text.pollinations.ai/openai
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
