@@ -116,9 +116,8 @@ type LlmBackendResponse = {
   content?: string
 }
 
-const DEFAULT_FREE_LLM_ENDPOINT = 'https://text.pollinations.ai/openai'
 const WOOKIEE_BACKEND_ENDPOINT = '/api/ask-wookiee'
-const CONFIGURED_LLM_ENDPOINT = import.meta.env.VITE_FREE_LLM_ENDPOINT ?? DEFAULT_FREE_LLM_ENDPOINT
+const CONFIGURED_LLM_ENDPOINT = import.meta.env.VITE_FREE_LLM_ENDPOINT ?? WOOKIEE_BACKEND_ENDPOINT
 const OPENAI_COMPATIBLE_MODEL = 'openai'
 const DEFAULT_RESPONSE_TIMEOUT_MS = 5500
 const MIN_RESPONSE_TIMEOUT_MS = 1000
@@ -303,7 +302,7 @@ const isRetryableFreeLlmError = (error: unknown): boolean => {
   }
 
   if (error.code === 'http') {
-    return error.status === 408 || error.status === 429 || (error.status !== undefined && error.status >= 500)
+    return error.status === 408 || (error.status !== undefined && error.status >= 500)
   }
 
   return false
@@ -312,6 +311,10 @@ const isRetryableFreeLlmError = (error: unknown): boolean => {
 const getFallbackToastMessage = (error: unknown): string => {
   if (error instanceof FreeLlmRequestError && error.code === 'timeout') {
     return 'The oracle timed out, so backup questions stepped in.'
+  }
+
+  if (error instanceof FreeLlmRequestError && error.code === 'http' && error.status === 429) {
+    return 'The oracle is rate-limited, so backup questions stepped in.'
   }
 
   return 'The oracle signal was faint, so backup questions stepped in.'
