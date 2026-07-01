@@ -3,7 +3,7 @@ You've just launched your brand-new Spark Template Codespace — everything’s 
 
 ## Question generation
 
-The Oracle defaults to the internal Ask Wookiee backend endpoint (`/api/ask-wookiee`) for question generation. Set `VITE_FREE_LLM_ENDPOINT` to use a different HTTPS OpenAI-compatible endpoint, such as `https://text.pollinations.ai/openai`, if you want to use an external provider. If the configured endpoint is unavailable or rate-limited, the app falls back to built-in backup questions and shows a warning toast.
+The Oracle uses GitHub Spark's built-in AI API for question generation by default. Set `VITE_FREE_LLM_ENDPOINT` to use an HTTPS OpenAI-compatible endpoint, such as `https://text.pollinations.ai/openai`, if you want to use an external provider. If AI is unavailable or the configured endpoint is rate-limited, the app falls back to built-in backup questions and shows a warning toast.
 
 This template is your blank canvas. It comes with a minimal setup to help you get started quickly with Spark development.
 
