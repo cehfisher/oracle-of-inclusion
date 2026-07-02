@@ -275,16 +275,17 @@ const QUESTION_COUNT_STEP = 0.1
 const QUESTION_TYPE_MAX = 100
 const QUESTION_TYPE_STEP = 1
 
-const QUESTION_TYPE_DESCRIPTIONS = [
-  'whimsical, playful, and imaginative questions',
-  'warm, friendly, and personal questions',
-  'thoughtful, reflective, and substantive questions',
-  'deep, nuanced, and big-picture questions',
-]
+const getVibeTypeDescription = (label: string): string => {
+  if (label.includes('Whimsical')) return 'whimsical, playful, and imaginative questions'
+  if (label.includes('Warm')) return 'warm, friendly, and personal questions'
+  if (label.includes('Thoughtful')) return 'thoughtful, reflective, and substantive questions'
+  if (label.includes('Deep')) return 'deep, nuanced, and big-picture questions'
+  return `${label} questions`
+}
 
-const QUESTION_TYPE_SCALE = VIBE_TYPES.map((label, index) => ({
+const QUESTION_TYPE_SCALE = VIBE_TYPES.map((label) => ({
   label,
-  description: QUESTION_TYPE_DESCRIPTIONS[index] ?? `${label} questions`,
+  description: getVibeTypeDescription(label),
 }))
 
 const roundUpQuestionCount = (value: number): number => (
@@ -315,7 +316,7 @@ const getQuestionTypeDescription = (value: number): string => {
 
   const lowerWeight = 1 - upperWeight
 
-  return `blend of ${lower.label} (${Math.round(lowerWeight * 100)}%) and ${upper.label} (${Math.round(upperWeight * 100)}%) - combine ${lower.description} with ${upper.description}`
+  return `blend of ${lower.label} (${Math.round(lowerWeight * 100)}%) and ${upper.label} (${Math.round(upperWeight * 100)}%) questions`
 }
 
 const getQuestionTypeAriaText = (value: number): string => {
@@ -325,7 +326,11 @@ const getQuestionTypeAriaText = (value: number): string => {
     return lower.label
   }
 
-  return `Between ${lower.label} and ${upper.label}, leaning ${upperWeight >= 0.5 ? upper.label : lower.label}`
+  if (Math.round(upperWeight * 100) === 50) {
+    return `Equally between ${lower.label} and ${upper.label}`
+  }
+
+  return `Between ${lower.label} and ${upper.label}, leaning ${upperWeight > 0.5 ? upper.label : lower.label}`
 }
 
 const getQuestionHistory = (value: unknown): string[] => {
