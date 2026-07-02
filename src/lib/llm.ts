@@ -23,7 +23,13 @@ export const MAX_QUESTION_COUNT = 10
 const MAX_RECENT_QUESTIONS_TO_AVOID = 50
 const TOPIC_EMPHASIS_RATIO = 0.7
 const FOCUS_AREA_EMPHASIS_RATIO = 0.6
-export const VIBE_TYPES = ['😜 Whimsical', '🤗 Warm', '🤔 Thoughtful', '🧘 Deep']
+export const VIBE_TYPE_OPTIONS: { label: string; description: string }[] = [
+  { label: '😜 Whimsical', description: 'whimsical, playful, and imaginative questions' },
+  { label: '🤗 Warm', description: 'warm, friendly, and personal questions' },
+  { label: '🤔 Thoughtful', description: 'thoughtful, reflective, and substantive questions' },
+  { label: '🧘 Deep', description: 'deep, nuanced, and big-picture questions' },
+]
+export const VIBE_TYPES = VIBE_TYPE_OPTIONS.map(option => option.label)
 
 const memoryCache = new Map<string, { value: string; expiresAt: number }>()
 
@@ -45,8 +51,12 @@ function setCached(key: string, value: string): void {
   memoryCache.set(key, { value, expiresAt: Date.now() + CACHE_TTL_MILLISECONDS })
 }
 
+export function normalizeQuestionCount(value = 3): number {
+  return Math.max(MIN_QUESTION_COUNT, Math.min(MAX_QUESTION_COUNT, Math.ceil(value)))
+}
+
 function buildQuestionPrompt(params: AskOracleParams): string {
-  const questionCount = Math.max(MIN_QUESTION_COUNT, Math.min(MAX_QUESTION_COUNT, Math.ceil(params.numQuestions ?? 3)))
+  const questionCount = normalizeQuestionCount(params.numQuestions)
   const topic = params.topic?.trim()
   const focusAreas = params.focusAreas?.map(area => area.trim()).filter(Boolean) ?? []
   const focusAreasText = focusAreas.length > 0

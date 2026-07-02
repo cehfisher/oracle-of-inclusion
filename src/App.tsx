@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 import { toast, Toaster } from 'sonner'
 
-import { askOracle, MAX_QUESTION_COUNT, MIN_QUESTION_COUNT, VIBE_TYPES } from '@/lib/llm'
+import { askOracle, MAX_QUESTION_COUNT, MIN_QUESTION_COUNT, normalizeQuestionCount, VIBE_TYPE_OPTIONS, VIBE_TYPES } from '@/lib/llm'
 
 const useSound = () => {
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -273,21 +273,7 @@ const QUESTION_COUNT_STEP = 0.1
 const QUESTION_TYPE_MAX = 100
 const QUESTION_TYPE_STEP = 1
 
-const QUESTION_TYPE_DESCRIPTIONS_BY_VIBE: Record<string, string> = {
-  '😜 Whimsical': 'whimsical, playful, and imaginative questions',
-  '🤗 Warm': 'warm, friendly, and personal questions',
-  '🤔 Thoughtful': 'thoughtful, reflective, and substantive questions',
-  '🧘 Deep': 'deep, nuanced, and big-picture questions',
-}
-
-const QUESTION_TYPE_SCALE = VIBE_TYPES.map((label) => ({
-  label,
-  description: QUESTION_TYPE_DESCRIPTIONS_BY_VIBE[label] ?? `${label} questions`,
-}))
-
-const roundUpQuestionCount = (value: number): number => (
-  Math.max(MIN_QUESTION_COUNT, Math.min(MAX_QUESTION_COUNT, Math.ceil(value)))
-)
+const QUESTION_TYPE_SCALE = VIBE_TYPE_OPTIONS
 
 const getQuestionTypePosition = (value: number): number => (
   (Math.max(0, Math.min(QUESTION_TYPE_MAX, value)) / QUESTION_TYPE_MAX) * (QUESTION_TYPE_SCALE.length - 1)
@@ -370,7 +356,7 @@ export default function App() {
   const [darkMode, setDarkMode] = useLocalStorageState<boolean>('oracle-dark-mode-v2', false)
 
   const [previousQuestions, setPreviousQuestions] = useLocalStorageState<string[]>('oracle-previous-questions', [])
-  const effectiveQuestionCount = roundUpQuestionCount(questionCount)
+  const effectiveQuestionCount = normalizeQuestionCount(questionCount)
   
   const [shuffledTopicSuggestions, setShuffledTopicSuggestions] = useState(() => shuffleArray(TOPIC_SUGGESTIONS))
   const [mysticalGreeting, setMysticalGreeting] = useState(() => getRandomGreeting())
