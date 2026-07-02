@@ -37,6 +37,8 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Build site
+        env:
+          VITE_ORACLE_API_URL: https://oracle-of-inclusion-api.cehfisher.workers.dev
         run: npm run build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
