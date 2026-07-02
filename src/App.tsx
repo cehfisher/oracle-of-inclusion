@@ -275,24 +275,17 @@ const QUESTION_COUNT_STEP = 0.1
 const QUESTION_TYPE_MAX = 100
 const QUESTION_TYPE_STEP = 1
 
-const QUESTION_TYPE_SCALE = [
-  {
-    label: VIBE_TYPES[0],
-    description: 'whimsical, playful, and imaginative questions',
-  },
-  {
-    label: VIBE_TYPES[1],
-    description: 'warm, friendly, and personal questions',
-  },
-  {
-    label: VIBE_TYPES[2],
-    description: 'thoughtful, reflective, and substantive questions',
-  },
-  {
-    label: VIBE_TYPES[3],
-    description: 'deep, nuanced, and big-picture questions',
-  },
+const QUESTION_TYPE_DESCRIPTIONS = [
+  'whimsical, playful, and imaginative questions',
+  'warm, friendly, and personal questions',
+  'thoughtful, reflective, and substantive questions',
+  'deep, nuanced, and big-picture questions',
 ]
+
+const QUESTION_TYPE_SCALE = VIBE_TYPES.map((label, index) => ({
+  label,
+  description: QUESTION_TYPE_DESCRIPTIONS[index] ?? `${label} questions`,
+}))
 
 const roundUpQuestionCount = (value: number): number => (
   Math.max(QUESTION_COUNT_MIN, Math.min(QUESTION_COUNT_MAX, Math.ceil(value)))
@@ -302,21 +295,37 @@ const getQuestionTypePosition = (value: number): number => (
   Math.max(0, Math.min(QUESTION_TYPE_MAX, value)) / QUESTION_TYPE_MAX * (QUESTION_TYPE_SCALE.length - 1)
 )
 
-const getQuestionTypeDescription = (value: number): string => {
+const getQuestionTypeBlend = (value: number) => {
   const position = getQuestionTypePosition(value)
   const lowerIndex = Math.floor(position)
   const upperIndex = Math.ceil(position)
-  const lower = QUESTION_TYPE_SCALE[lowerIndex]
-  const upper = QUESTION_TYPE_SCALE[upperIndex]
+  return {
+    lower: QUESTION_TYPE_SCALE[lowerIndex],
+    upper: QUESTION_TYPE_SCALE[upperIndex],
+    upperWeight: position - lowerIndex,
+  }
+}
 
-  if (lowerIndex === upperIndex) {
+const getQuestionTypeDescription = (value: number): string => {
+  const { lower, upper, upperWeight } = getQuestionTypeBlend(value)
+
+  if (lower === upper) {
     return `${lower.label} - ${lower.description}`
   }
 
-  const upperWeight = position - lowerIndex
   const lowerWeight = 1 - upperWeight
 
   return `blend of ${lower.label} (${Math.round(lowerWeight * 100)}%) and ${upper.label} (${Math.round(upperWeight * 100)}%) - combine ${lower.description} with ${upper.description}`
+}
+
+const getQuestionTypeAriaText = (value: number): string => {
+  const { lower, upper, upperWeight } = getQuestionTypeBlend(value)
+
+  if (lower === upper) {
+    return lower.label
+  }
+
+  return `Between ${lower.label} and ${upper.label}, leaning ${upperWeight >= 0.5 ? upper.label : lower.label}`
 }
 
 const getQuestionHistory = (value: unknown): string[] => {
@@ -1127,7 +1136,7 @@ export default function App() {
                         aria-valuemin={0}
                         aria-valuemax={QUESTION_TYPE_MAX}
                         aria-valuenow={questionTone}
-                        aria-valuetext={getQuestionTypeDescription(questionTone)}
+                        aria-valuetext={getQuestionTypeAriaText(questionTone)}
                       />
                       <div className="relative h-7 mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
                         {QUESTION_TYPE_SCALE.map((questionType, index) => (
