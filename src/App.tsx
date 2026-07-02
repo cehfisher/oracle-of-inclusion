@@ -1262,7 +1262,7 @@ export default function App() {
                       className="space-y-6"
                     >
                       <div className="text-center mb-4 flex items-center justify-center gap-3 flex-wrap">
-                        <span className="text-lg font-bold text-muted-foreground bg-muted/50 px-4 py-2 rounded-full">
+                        <span id="current-question-heading" className="text-lg font-bold text-muted-foreground bg-muted/50 px-4 py-2 rounded-full">
                           Question {currentQuestionIndex + 1} of {questions.length}
                         </span>
                         <span className="text-lg font-bold text-primary bg-primary/20 px-4 py-2 rounded-full">
@@ -1270,7 +1270,7 @@ export default function App() {
                         </span>
                       </div>
                       
-                      <div className="p-6 rounded-xl bg-gradient-to-br from-primary/15 via-accent/10 to-secondary/15 border-2 border-primary/30 max-h-[50vh] overflow-y-auto" tabIndex={0} role="region" aria-label="Generated question text">
+                      <div className="p-6 rounded-xl bg-gradient-to-br from-primary/15 via-accent/10 to-secondary/15 border-2 border-primary/30 max-h-[50vh] overflow-y-auto" tabIndex={0} role="region" aria-labelledby="current-question-heading">
                         <p className="text-xl md:text-2xl text-foreground leading-relaxed font-medium text-center break-words" role="status" aria-live="polite">
                           "{currentQuestion.text}"
                         </p>
