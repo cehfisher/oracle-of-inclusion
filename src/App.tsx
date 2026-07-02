@@ -10,15 +10,9 @@ import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
-import { useKV } from '@github/spark/hooks'
 import { toast, Toaster } from 'sonner'
 
 import { askOracle } from '@/lib/llm'
-
-
-declare const spark: {
-  llmPrompt: (strings: TemplateStringsArray, ...values: unknown[]) => string
-}
 
 const useSound = () => {
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -105,6 +99,35 @@ const useSound = () => {
   }
   
   return { playTwinkle, playMagic, playNav, playReset }
+}
+
+const useLocalStorageState = <T,>(key: string, defaultValue: T) => {
+  const [value, setValue] = useState<T>(() => {
+    try {
+      const storedValue = window.localStorage.getItem(key)
+      return storedValue === null ? defaultValue : JSON.parse(storedValue)
+    } catch {
+      return defaultValue
+    }
+  })
+
+  const setStoredValue = useCallback((nextValue: T | ((previousValue: T) => T)) => {
+    setValue((previousValue) => {
+      const resolvedValue = typeof nextValue === 'function'
+        ? (nextValue as (previousValue: T) => T)(previousValue)
+        : nextValue
+
+      try {
+        window.localStorage.setItem(key, JSON.stringify(resolvedValue))
+      } catch {
+        return resolvedValue
+      }
+
+      return resolvedValue
+    })
+  }, [key])
+
+  return [value, setStoredValue] as const
 }
 
 interface Question {
@@ -262,11 +285,11 @@ export default function App() {
   const [loadingProgress, setLoadingProgress] = useState(0)
   const [thinkingQuestions, setThinkingQuestions] = useState<string[]>([])
   const [isShuffling, setIsShuffling] = useState(false)
-  const [soundEnabled, setSoundEnabled] = useKV<boolean>('oracle-sound-enabled-v2', true)
-  const [animationsEnabled, setAnimationsEnabled] = useKV<boolean>('oracle-animations-enabled-v2', true)
-  const [darkMode, setDarkMode] = useKV<boolean>('oracle-dark-mode-v2', false)
+  const [soundEnabled, setSoundEnabled] = useLocalStorageState<boolean>('oracle-sound-enabled-v2', true)
+  const [animationsEnabled, setAnimationsEnabled] = useLocalStorageState<boolean>('oracle-animations-enabled-v2', true)
+  const [darkMode, setDarkMode] = useLocalStorageState<boolean>('oracle-dark-mode-v2', false)
 
-  const [previousQuestions, setPreviousQuestions] = useKV<string[]>('oracle-previous-questions', [])
+  const [previousQuestions, setPreviousQuestions] = useLocalStorageState<string[]>('oracle-previous-questions', [])
   
   const [shuffledTopicSuggestions, setShuffledTopicSuggestions] = useState(() => shuffleArray(TOPIC_SUGGESTIONS))
   const [mysticalGreeting, setMysticalGreeting] = useState(() => getRandomGreeting())
@@ -518,7 +541,7 @@ export default function App() {
       ? 'lighter and engaging - lean toward fun, creative, and personal questions while still being meaningful'
       : 'fun and playful - prioritize creative, surprising, and delightful questions that spark joy and interesting stories'
 
-    const prompt = spark.llmPrompt`Generate ${questionCount} simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
+    const prompt = `Generate ${questionCount} simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
 
 Context:
 ${topicEmphasis}
