@@ -3,14 +3,16 @@ type OracleBackendResponse = {
   error?: string
 }
 
+export type OracleMode = 'generate' | 'chat'
+
 const CACHE_TTL_HOURS = 12
 const CACHE_TTL_MILLISECONDS = 1000 * 60 * 60 * CACHE_TTL_HOURS
 const CACHE_PREFIX = 'ask-oracle-response:'
 
 const memoryCache = new Map<string, { value: string; expiresAt: number }>()
 
-function cacheKey(question: string): string {
-  return CACHE_PREFIX + question
+function cacheKey(question: string, mode: OracleMode): string {
+  return `${CACHE_PREFIX}${mode}:${question}`
 }
 
 function getCached(key: string): string | null {
@@ -27,8 +29,8 @@ function setCached(key: string, value: string): void {
   memoryCache.set(key, { value, expiresAt: Date.now() + CACHE_TTL_MILLISECONDS })
 }
 
-export async function askOracle(question: string): Promise<string> {
-  const key = cacheKey(question)
+export async function askOracle(question: string, mode: OracleMode = 'chat'): Promise<string> {
+  const key = cacheKey(question, mode)
   const cached = getCached(key)
   if (cached !== null) return cached
 
@@ -40,7 +42,7 @@ export async function askOracle(question: string): Promise<string> {
   const res = await fetch(baseUrl.replace(/\/$/, ''), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ question }),
+    body: JSON.stringify({ question, mode }),
   })
 
   if (!res.ok) {
