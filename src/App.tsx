@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 import { toast, Toaster } from 'sonner'
 
-import { askOracle } from '@/lib/llm'
+import { askOracle, VIBE_TYPES } from '@/lib/llm'
 
 const useSound = () => {
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -251,8 +251,6 @@ const shuffleArray = <T,>(array: T[]): T[] => {
   }
   return shuffled
 }
-
-const VIBE_TYPES = ['😜 Whimsical', '🤗 Warm', '🤔 Thoughtful', '🧘 Deep']
 
 const FALLBACK_QUESTIONS: Pick<Question, 'text' | 'vibe'>[] = [
   { text: 'What does inclusion mean in your everyday work?', vibe: '🤗 Warm' },

@@ -18,7 +18,7 @@ export type AskOracleParams = {
 const CACHE_TTL_HOURS = 12
 const CACHE_TTL_MILLISECONDS = 1000 * 60 * 60 * CACHE_TTL_HOURS
 const CACHE_PREFIX = 'ask-oracle-response:'
-const VIBE_TYPES = ['😜 Whimsical', '🤗 Warm', '🤔 Thoughtful', '🧘 Deep']
+export const VIBE_TYPES = ['😜 Whimsical', '🤗 Warm', '🤔 Thoughtful', '🧘 Deep']
 
 const memoryCache = new Map<string, { value: string; expiresAt: number }>()
 
@@ -54,7 +54,7 @@ function buildQuestionPrompt(params: AskOracleParams): string {
   const avoidList = recentQuestions.slice(-50).join('\n- ')
 
   const topicEmphasis = topic
-    ? `CRITICAL PRIORITY - The user specifically selected these topics: ${topic}. At least ${Math.ceil(questionCount * 0.7)} of the ${questionCount} questions (70%+) MUST directly relate to one or more of these specific topics. These are the primary focus areas the user cares about most.`
+    ? `CRITICAL PRIORITY - The user specifically selected this topic or topic list: ${topic}. At least ${Math.ceil(questionCount * 0.7)} of the ${questionCount} questions (70%+) MUST directly relate to it. This is the primary focus the user cares about most.`
     : `Topics: accessibility, inclusion, disability in tech, universal design, assistive technology`
 
   const focusAreaEmphasis = focusAreas.length > 0
