@@ -330,6 +330,8 @@ const getToastMotionProps = (animationsEnabled: boolean) => (
       }
     : {
         initial: false as const,
+        animate: {},
+        exit: {},
         transition: { duration: 0 },
       }
 )
@@ -1265,7 +1267,7 @@ export default function App() {
                       </div>
                       
                       <div className="p-6 rounded-xl bg-gradient-to-br from-primary/15 via-accent/10 to-secondary/15 border-2 border-primary/30">
-                        <p className="text-xl md:text-2xl text-foreground leading-relaxed font-medium text-center" role="status" aria-live="polite">
+                        <p className="text-xl md:text-2xl text-foreground leading-relaxed font-medium text-center break-words" role="status" aria-live="polite">
                           "{currentQuestion.text}"
                         </p>
                       </div>
