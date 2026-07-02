@@ -1268,7 +1268,7 @@ export default function App() {
                         </span>
                       </div>
                       
-                      <div className="p-6 rounded-xl bg-gradient-to-br from-primary/15 via-accent/10 to-secondary/15 border-2 border-primary/30 max-h-[50vh] overflow-y-auto" tabIndex={0} aria-labelledby="current-question-heading" aria-describedby="question-scroll-hint">
+                      <div className="p-6 rounded-xl bg-gradient-to-br from-primary/15 via-accent/10 to-secondary/15 border-2 border-primary/30 max-h-[50vh] overflow-y-auto focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background" tabIndex={0} aria-labelledby="current-question-heading" aria-describedby="question-scroll-hint">
                         <span id="question-scroll-hint" className="sr-only">Scrollable question text</span>
                         <p className="text-xl md:text-2xl text-foreground leading-relaxed font-medium text-center break-words" role="status" aria-live="polite">
                           "{currentQuestion.text}"
