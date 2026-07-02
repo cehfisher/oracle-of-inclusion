@@ -1094,10 +1094,10 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                     <div className="h-px flex-1 bg-gradient-to-l from-transparent via-border to-transparent" />
                   </div>
 
-                  <fieldset className="border-0 p-0 m-0">
-                    <legend id="question-count-label" className="text-foreground mb-3 block text-xl font-bold form-heading p-0">
+                  <div>
+                    <label id="question-count-label" className="text-foreground mb-3 block text-xl font-bold form-heading">
                       🔢 Number of questions
-                    </legend>
+                    </label>
                     <div className="px-2 py-4">
                       <Slider
                         id="question-count-slider"
@@ -1124,12 +1124,12 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         ))}
                       </div>
                     </div>
-                  </fieldset>
+                  </div>
 
-                  <fieldset className="border-0 p-0 m-0">
-                    <legend id="question-tone-label" className="text-foreground mb-3 block text-xl font-bold form-heading p-0">
+                  <div>
+                    <label id="question-tone-label" className="text-foreground mb-3 block text-xl font-bold form-heading">
                       🎭 Question type
-                    </legend>
+                    </label>
                     <div className="px-2 py-4">
                       <Slider
                         id="question-tone-slider"
@@ -1151,7 +1151,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         <span>🎪 Fun</span>
                       </div>
                     </div>
-                  </fieldset>
+                  </div>
 
                   <div className="flex gap-3 flex-wrap">
                     <Button 
