@@ -1095,9 +1095,9 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                   </div>
 
                   <div>
-                    <div id="question-count-label" className="text-foreground mb-3 block text-xl font-bold form-heading">
+                    <Label id="question-count-label" className="text-foreground mb-3 block text-xl font-bold form-heading">
                       🔢 Number of questions
-                    </div>
+                    </Label>
                     <div className="px-2 py-4">
                       <Slider
                         id="question-count-slider"
@@ -1112,6 +1112,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         aria-valuenow={questionCount}
                         aria-valuetext={`${questionCount} question${questionCount === 1 ? '' : 's'}`}
                         aria-labelledby="question-count-label"
+                        thumbProps={[{ 'aria-labelledby': 'question-count-label' }]}
                       />
                       <div className="relative h-7 mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
                         {Array.from({ length: 10 }, (_, index) => (
@@ -1128,9 +1129,9 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                   </div>
 
                   <div>
-                    <div id="question-tone-label" className="text-foreground mb-3 block text-xl font-bold form-heading">
+                    <Label id="question-tone-label" className="text-foreground mb-3 block text-xl font-bold form-heading">
                       🎭 Question type
-                    </div>
+                    </Label>
                     <div className="px-2 py-4">
                       <Slider
                         id="question-tone-slider"
@@ -1145,6 +1146,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         aria-valuenow={questionTone}
                         aria-valuetext={questionTone <= 25 ? 'Serious' : questionTone <= 50 ? 'Balanced' : questionTone <= 75 ? 'Lighter' : 'Fun'}
                         aria-labelledby="question-tone-label"
+                        thumbProps={[{ 'aria-labelledby': 'question-tone-label' }]}
                       />
                       <div className="flex justify-between mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
                         <span>🎯 Serious</span>
