@@ -377,14 +377,12 @@ export default function App() {
   
   const [shuffledTopicSuggestions, setShuffledTopicSuggestions] = useState(() => shuffleArray(TOPIC_SUGGESTIONS))
   const [mysticalGreeting, setMysticalGreeting] = useState(() => getRandomGreeting())
-  const [greetingKey, setGreetingKey] = useState(0)
   const [explosionParticles, setExplosionParticles] = useState<Array<{ id: number; x: number; y: number; angle: number; distance: number; symbol: string; color: string }>>([])
   const [isExploding, setIsExploding] = useState(false)
   
   const reshuffleTopics = useCallback(() => {
     setShuffledTopicSuggestions(shuffleArray(TOPIC_SUGGESTIONS))
     setMysticalGreeting(getRandomGreeting())
-    setGreetingKey(prev => prev + 1)
   }, [])
   
   useEffect(() => {
