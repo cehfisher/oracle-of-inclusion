@@ -13,9 +13,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useKV } from '@github/spark/hooks'
 import { toast, Toaster } from 'sonner'
 
+import { askOracle } from '@/lib/llm'
+
 declare const spark: {
   llmPrompt: (strings: TemplateStringsArray, ...values: unknown[]) => string
-  llm: (prompt: string, model?: string, jsonMode?: boolean) => Promise<string>
 }
 
 const useSound = () => {
@@ -560,7 +561,7 @@ IMPORTANT - Be respectful and inclusive:
 Return a JSON object with a "questions" array containing exactly ${questionCount} objects, each with "text" (the question) and "vibe" (one of: "😜 Whimsical", "🤗 Warm", "🤔 Thoughtful", "🧘 Deep").`
 
     try {
-      const result = await spark.llm(prompt, 'gpt-4o', true)
+      const result = await askOracle(prompt)
       const parsed = JSON.parse(result)
       const generatedQuestions: Question[] = shuffleArray(parsed.questions.map((q: { text: string; vibe: string }, i: number) => ({
         id: `q-${Date.now()}-${i}`,
