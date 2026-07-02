@@ -507,6 +507,7 @@ export default function App() {
           
           <div 
             className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-primary via-accent to-primary"
+            aria-hidden="true"
           />
         </motion.div>
       ),
@@ -578,6 +579,7 @@ export default function App() {
             
             <div 
               className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-primary via-accent to-primary"
+              aria-hidden="true"
             />
           </motion.div>
         ),
@@ -673,6 +675,7 @@ export default function App() {
           
           <div 
             className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-primary via-accent to-primary"
+            aria-hidden="true"
           />
         </motion.div>
       ),
@@ -731,6 +734,7 @@ export default function App() {
           
           <div 
             className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-primary via-accent to-primary"
+            aria-hidden="true"
           />
         </motion.div>
       ),
@@ -1266,7 +1270,7 @@ export default function App() {
                         </span>
                       </div>
                       
-                      <div className="p-6 rounded-xl bg-gradient-to-br from-primary/15 via-accent/10 to-secondary/15 border-2 border-primary/30">
+                      <div className="p-6 rounded-xl bg-gradient-to-br from-primary/15 via-accent/10 to-secondary/15 border-2 border-primary/30 max-h-[50vh] overflow-y-auto">
                         <p className="text-xl md:text-2xl text-foreground leading-relaxed font-medium text-center break-words" role="status" aria-live="polite">
                           "{currentQuestion.text}"
                         </p>
