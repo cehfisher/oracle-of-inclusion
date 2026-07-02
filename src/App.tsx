@@ -560,7 +560,7 @@ IMPORTANT - Be respectful and inclusive:
 Return a JSON object with a "questions" array containing exactly ${questionCount} objects, each with "text" (the question) and "vibe" (one of: "😜 Whimsical", "🤗 Warm", "🤔 Thoughtful", "🧘 Deep").`
 
     try {
-  const result = await spark.llm(prompt, 'gpt-4o', true)
+      const result = await spark.llm(prompt, 'gpt-4o', true)
       const parsed = JSON.parse(result)
       const generatedQuestions: Question[] = shuffleArray(parsed.questions.map((q: { text: string; vibe: string }, i: number) => ({
         id: `q-${Date.now()}-${i}`,
