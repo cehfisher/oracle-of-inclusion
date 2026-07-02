@@ -1077,9 +1077,9 @@ export default function App() {
                   </div>
 
                   <div>
-                    <Label htmlFor="question-count-slider" className="text-foreground mb-3 block text-xl font-bold form-heading">
+                    <label id="question-count-label" className="text-foreground mb-3 block text-xl font-bold form-heading">
                       🔢 Number of questions
-                    </Label>
+                    </label>
                     <div className="px-2 py-4">
                       <Slider
                         id="question-count-slider"
@@ -1089,10 +1089,10 @@ export default function App() {
                         max={MAX_QUESTION_COUNT}
                         step={QUESTION_COUNT_STEP}
                         className="w-full [&_[data-radix-slider-track]]:bg-muted [&_[data-radix-slider-range]]:bg-accent [&_[data-radix-slider-thumb]]:bg-accent [&_[data-radix-slider-thumb]]:border-2 [&_[data-radix-slider-thumb]]:border-foreground"
-                        aria-valuemin={MIN_QUESTION_COUNT}
-                        aria-valuemax={MAX_QUESTION_COUNT}
-                        aria-valuenow={questionCount}
-                        aria-valuetext={`${effectiveQuestionCount} question${effectiveQuestionCount === 1 ? '' : 's'}`}
+                        getThumbProps={() => ({
+                          'aria-labelledby': 'question-count-label',
+                          'aria-valuetext': `${effectiveQuestionCount} question${effectiveQuestionCount === 1 ? '' : 's'}`
+                        })}
                       />
                       <div className="relative h-7 mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
                         {Array.from({ length: MAX_QUESTION_COUNT }, (_, index) => (
@@ -1109,9 +1109,9 @@ export default function App() {
                   </div>
 
                   <div>
-                    <Label htmlFor="question-tone-slider" className="text-foreground mb-3 block text-xl font-bold form-heading">
+                    <label id="question-tone-label" className="text-foreground mb-3 block text-xl font-bold form-heading">
                       🎭 Question type
-                    </Label>
+                    </label>
                     <div className="px-2 py-4">
                       <Slider
                         id="question-tone-slider"
@@ -1121,10 +1121,10 @@ export default function App() {
                         max={QUESTION_TYPE_MAX}
                         step={QUESTION_TYPE_STEP}
                         className="w-full [&_[data-radix-slider-track]]:bg-muted [&_[data-radix-slider-range]]:bg-accent [&_[data-radix-slider-thumb]]:bg-accent [&_[data-radix-slider-thumb]]:border-2 [&_[data-radix-slider-thumb]]:border-foreground"
-                        aria-valuemin={0}
-                        aria-valuemax={QUESTION_TYPE_MAX}
-                        aria-valuenow={questionTone}
-                        aria-valuetext={getQuestionTypeAriaText(questionTone)}
+                        getThumbProps={() => ({
+                          'aria-labelledby': 'question-tone-label',
+                          'aria-valuetext': getQuestionTypeAriaText(questionTone)
+                        })}
                       />
                       <div className="relative h-7 mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
                         {QUESTION_TYPE_SCALE.map((questionType, index) => (
