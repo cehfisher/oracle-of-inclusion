@@ -18,6 +18,11 @@ export type AskOracleParams = {
 const CACHE_TTL_HOURS = 12
 const CACHE_TTL_MILLISECONDS = 1000 * 60 * 60 * CACHE_TTL_HOURS
 const CACHE_PREFIX = 'ask-oracle-response:'
+const MIN_QUESTION_COUNT = 1
+const MAX_QUESTION_COUNT = 10
+const MAX_RECENT_QUESTIONS_TO_AVOID = 50
+const TOPIC_EMPHASIS_RATIO = 0.7
+const FOCUS_AREA_EMPHASIS_RATIO = 0.6
 export const VIBE_TYPES = ['😜 Whimsical', '🤗 Warm', '🤔 Thoughtful', '🧘 Deep']
 
 const memoryCache = new Map<string, { value: string; expiresAt: number }>()
@@ -41,7 +46,7 @@ function setCached(key: string, value: string): void {
 }
 
 function buildQuestionPrompt(params: AskOracleParams): string {
-  const questionCount = Math.max(1, Math.min(10, Math.round(params.numQuestions ?? 3)))
+  const questionCount = Math.max(MIN_QUESTION_COUNT, Math.min(MAX_QUESTION_COUNT, Math.round(params.numQuestions ?? 3)))
   const topic = params.topic?.trim()
   const focusAreas = params.focusAreas?.map(area => area.trim()).filter(Boolean) ?? []
   const focusAreasText = focusAreas.length > 0
@@ -51,14 +56,14 @@ function buildQuestionPrompt(params: AskOracleParams): string {
   const questionType = params.questionType?.trim() || 'balanced mix - combine thoughtful professional questions with some lighter, more personal ones'
   const accessibilityExpertise = params.accessibilityExpertise?.trim() || 'not specified'
   const recentQuestions = params.recentQuestions?.map(question => question.trim()).filter(Boolean) ?? []
-  const avoidList = recentQuestions.slice(-50).join('\n- ')
+  const avoidList = recentQuestions.slice(-MAX_RECENT_QUESTIONS_TO_AVOID).join('\n- ')
 
   const topicEmphasis = topic
-    ? `CRITICAL PRIORITY - The user specifically selected this topic or topic list: ${topic}. At least ${Math.ceil(questionCount * 0.7)} of the ${questionCount} questions (70%+) MUST directly relate to it. This is the primary focus the user cares about most.`
+    ? `CRITICAL PRIORITY - The user specifically selected this topic or topic list: ${topic}. At least ${Math.ceil(questionCount * TOPIC_EMPHASIS_RATIO)} of the ${questionCount} questions (70%+) MUST directly relate to it. This is the primary focus the user cares about most.`
     : `Topics: accessibility, inclusion, disability in tech, universal design, assistive technology`
 
   const focusAreaEmphasis = focusAreas.length > 0
-    ? `CRITICAL PRIORITY - The guest works in: ${focusAreasText}. Tailor questions to their specific expertise. At least ${Math.ceil(questionCount * 0.6)} of the ${questionCount} questions (60%+) should connect to their professional focus areas.`
+    ? `CRITICAL PRIORITY - The guest works in: ${focusAreasText}. Tailor questions to their specific expertise. At least ${Math.ceil(questionCount * FOCUS_AREA_EMPHASIS_RATIO)} of the ${questionCount} questions (60%+) should connect to their professional focus areas.`
     : `Guest's work area: accessibility and inclusion in technology (general)`
 
   const vibeDistribution = questionCount < VIBE_TYPES.length
