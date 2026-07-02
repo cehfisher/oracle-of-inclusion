@@ -320,6 +320,20 @@ const getQuestionHistory = (value: unknown): string[] => {
   return Array.isArray(value) ? value.filter((question): question is string => typeof question === 'string') : []
 }
 
+const getToastMotionProps = (animationsEnabled: boolean) => (
+  animationsEnabled
+    ? {
+        initial: { opacity: 0, scale: 0.8, y: -20 },
+        animate: { opacity: 1, scale: 1, y: 0 },
+        exit: { opacity: 0, scale: 0.9, y: -10 },
+        transition: { duration: 0.4, ease: "easeOut" },
+      }
+    : {
+        initial: false as const,
+        transition: { duration: 0 },
+      }
+)
+
 const FOCUS_AREAS = [
   { id: 'frontend', label: '🖥️ Front-end dev' },
   { id: 'backend', label: '⚙️ Back-end dev' },
@@ -357,6 +371,7 @@ export default function App() {
 
   const [previousQuestions, setPreviousQuestions] = useLocalStorageState<string[]>('oracle-previous-questions', [])
   const effectiveQuestionCount = normalizeQuestionCount(questionCount)
+  const toastMotionProps = useMemo(() => getToastMotionProps(animationsEnabled), [animationsEnabled])
   
   const [shuffledTopicSuggestions, setShuffledTopicSuggestions] = useState(() => shuffleArray(TOPIC_SUGGESTIONS))
   const [mysticalGreeting, setMysticalGreeting] = useState(() => getRandomGreeting())
@@ -372,7 +387,7 @@ export default function App() {
   
   useEffect(() => {
     document.documentElement.classList.remove('dark')
-  }, [])
+  }, [toastMotionProps])
   
   useEffect(() => {
     if (darkMode === true) {
@@ -389,6 +404,13 @@ export default function App() {
       soundFn()
     }
   }
+
+  useEffect(() => {
+    if (!animationsEnabled && isExploding) {
+      setIsExploding(false)
+      setExplosionParticles([])
+    }
+  }, [animationsEnabled, isExploding])
   
   useEffect(() => {
     if (isGenerating) {
@@ -461,14 +483,11 @@ export default function App() {
     setQuestions([])
     setCurrentQuestionIndex(0)
     playSound(sounds.playReset)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    window.scrollTo({ top: 0, behavior: animationsEnabled ? 'smooth' : 'auto' })
     toast.custom(
       (t) => (
         <motion.div
-          initial={{ opacity: 0, scale: 0.8, y: -20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: -10 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
+          {...toastMotionProps}
           className="relative px-8 py-5 rounded-2xl border-2 border-border overflow-hidden mystic-glow cursor-pointer toast-popup"
           onClick={() => toast.dismiss(t)}
         >
@@ -484,20 +503,22 @@ export default function App() {
             </div>
           </div>
           
-          <motion.div 
+          <div 
             className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-primary via-accent to-primary"
-            initial={{ width: '100%' }}
-            animate={{ width: '0%' }}
-            transition={{ duration: 3, ease: 'linear' }}
           />
         </motion.div>
       ),
       { duration: 3000 }
     )
-  }, [soundEnabled, sounds])
+  }, [animationsEnabled, soundEnabled, sounds, toastMotionProps])
 
   const triggerExplosion = useCallback(() => {
     if (isExploding) return
+
+    if (!animationsEnabled) {
+      resetForm()
+      return
+    }
     
     const symbols = ['✨', '💫', '⭐', '🌟', '💎', '🔮', '✦', '★', '🌙']
     const colors = ['text-primary', 'text-accent', 'text-secondary', 'text-yellow-400', 'text-purple-400', 'text-pink-400']
@@ -521,7 +542,7 @@ export default function App() {
       setExplosionParticles([])
       resetForm()
     }, 800)
-  }, [isExploding, resetForm, sounds, playSound])
+  }, [animationsEnabled, isExploding, resetForm, sounds, playSound])
 
   const buildFallbackQuestions = useCallback((): Question[] => {
     return shuffleArray([...FALLBACK_QUESTIONS]).slice(0, effectiveQuestionCount).map((question, i) => ({
@@ -537,10 +558,7 @@ export default function App() {
       toast.custom(
         (t) => (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8, y: -20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: -10 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
+            {...toastMotionProps}
             className="relative px-8 py-5 rounded-2xl border-2 border-border overflow-hidden mystic-glow cursor-pointer toast-popup"
             onClick={() => toast.dismiss(t)}
           >
@@ -556,11 +574,8 @@ export default function App() {
               </div>
             </div>
             
-            <motion.div 
+            <div 
               className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-primary via-accent to-primary"
-              initial={{ width: '100%' }}
-              animate={{ width: '0%' }}
-              transition={{ duration: 3, ease: 'linear' }}
             />
           </motion.div>
         ),
@@ -631,17 +646,14 @@ export default function App() {
       }
       setIsShuffling(false)
     }
-  }, [focusAreas, otherFocusArea, effectiveQuestionCount, questionTone, topics, experience, audience, soundEnabled, sounds, reshuffleTopics, previousQuestions, setPreviousQuestions, buildFallbackQuestions])
+  }, [focusAreas, otherFocusArea, effectiveQuestionCount, questionTone, topics, experience, audience, soundEnabled, sounds, reshuffleTopics, previousQuestions, setPreviousQuestions, buildFallbackQuestions, toastMotionProps])
 
   const handleGenerateClick = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    window.scrollTo({ top: 0, behavior: animationsEnabled ? 'smooth' : 'auto' })
     toast.custom(
       (t) => (
         <motion.div
-          initial={{ opacity: 0, scale: 0.8, y: -20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: -10 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
+          {...toastMotionProps}
           className="relative px-8 py-5 rounded-2xl border-2 border-border overflow-hidden mystic-glow cursor-pointer toast-popup"
           onClick={() => toast.dismiss(t)}
         >
@@ -657,11 +669,8 @@ export default function App() {
             </div>
           </div>
           
-          <motion.div 
+          <div 
             className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-primary via-accent to-primary"
-            initial={{ width: '100%' }}
-            animate={{ width: '0%' }}
-            transition={{ duration: 3, ease: 'linear' }}
           />
         </motion.div>
       ),
@@ -702,10 +711,7 @@ export default function App() {
     toast.custom(
       (t) => (
         <motion.div
-          initial={{ opacity: 0, scale: 0.8, y: -20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: -10 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
+          {...toastMotionProps}
           className="relative px-8 py-5 rounded-2xl border-2 border-border overflow-hidden mystic-glow cursor-pointer toast-popup"
           onClick={() => toast.dismiss(t)}
         >
@@ -721,11 +727,8 @@ export default function App() {
             </div>
           </div>
           
-          <motion.div 
+          <div 
             className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-primary via-accent to-primary"
-            initial={{ width: '100%' }}
-            animate={{ width: '0%' }}
-            transition={{ duration: 2, ease: 'linear' }}
           />
         </motion.div>
       ),
@@ -800,7 +803,7 @@ export default function App() {
 
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8 relative overflow-hidden mystical-bg">
+    <div className={`min-h-screen bg-background p-4 md:p-8 relative overflow-hidden mystical-bg ${animationsEnabled ? '' : 'animations-disabled'}`}>
       {animationsEnabled && (
         <div className="fixed inset-0 pointer-events-none z-[1]" aria-hidden="true">
           {sparklePositions.map((sparkle) => (
@@ -841,13 +844,13 @@ export default function App() {
           >
             <motion.span 
               className="text-7xl md:text-8xl inline-block"
-              animate={isExploding ? { scale: [1, 1.3, 0], opacity: [1, 1, 0] } : { scale: 1, opacity: 1 }}
-              transition={isExploding ? { duration: 0.4, ease: "easeOut" } : { duration: 0.5, ease: "easeOut" }}
+              animate={animationsEnabled && isExploding ? { scale: [1, 1.3, 0], opacity: [1, 1, 0] } : { scale: 1, opacity: 1 }}
+              transition={animationsEnabled && isExploding ? { duration: 0.4, ease: "easeOut" } : { duration: 0 }}
             >
               🔮
             </motion.span>
             <AnimatePresence>
-              {isExploding && explosionParticles.map((particle) => (
+              {animationsEnabled && isExploding && explosionParticles.map((particle) => (
                 <motion.span
                   key={particle.id}
                   className={`absolute left-1/2 top-1/2 ${particle.color} pointer-events-none`}
@@ -1088,7 +1091,7 @@ export default function App() {
                         min={MIN_QUESTION_COUNT}
                         max={MAX_QUESTION_COUNT}
                         step={QUESTION_COUNT_STEP}
-                        className="w-full [&_[data-radix-slider-track]]:bg-muted [&_[data-radix-slider-range]]:bg-accent [&_[data-radix-slider-thumb]]:bg-accent [&_[data-radix-slider-thumb]]:border-2 [&_[data-radix-slider-thumb]]:border-foreground"
+                        className="accessible-slider w-full"
                         getThumbProps={() => ({
                           'aria-labelledby': 'question-count-label',
                           'aria-valuetext': `${effectiveQuestionCount} question${effectiveQuestionCount === 1 ? '' : 's'}`
@@ -1120,7 +1123,7 @@ export default function App() {
                         min={0}
                         max={QUESTION_TYPE_MAX}
                         step={QUESTION_TYPE_STEP}
-                        className="w-full [&_[data-radix-slider-track]]:bg-muted [&_[data-radix-slider-range]]:bg-accent [&_[data-radix-slider-thumb]]:bg-accent [&_[data-radix-slider-thumb]]:border-2 [&_[data-radix-slider-thumb]]:border-foreground"
+                        className="accessible-slider w-full"
                         getThumbProps={() => ({
                           'aria-labelledby': 'question-tone-label',
                           'aria-valuetext': getQuestionTypeAriaText(questionTone)
@@ -1158,8 +1161,8 @@ export default function App() {
                     >
                       {isGenerating ? (
                         <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+                          animate={animationsEnabled ? { rotate: 360 } : {}}
+                          transition={animationsEnabled ? { duration: 1.5, repeat: Infinity, ease: 'linear' } : { duration: 0 }}
                           aria-hidden="true"
                         >
                           <ArrowsClockwise size={28} />
@@ -1197,7 +1200,7 @@ export default function App() {
                         scale: [1, 1.2, 1],
                         rotate: [0, 10, -10, 0]
                       } : {}}
-                      transition={{ duration: 2, repeat: Infinity }}
+                      transition={animationsEnabled ? { duration: 2, repeat: Infinity } : { duration: 0 }}
                       className="text-8xl mb-6"
                       aria-hidden="true"
                     >
@@ -1206,7 +1209,7 @@ export default function App() {
                     <motion.p 
                       className="text-xl text-primary font-medium mb-6"
                       animate={animationsEnabled ? { opacity: [0.7, 1, 0.7] } : {}}
-                      transition={{ duration: 1.5, repeat: Infinity }}
+                      transition={animationsEnabled ? { duration: 1.5, repeat: Infinity } : { duration: 0 }}
                     >
                       {loadingPhrase}
                     </motion.p>
@@ -1235,7 +1238,7 @@ export default function App() {
                         className="h-full bg-gradient-to-r from-primary via-accent to-primary rounded-full"
                         initial={{ width: 0 }}
                         animate={{ width: `${loadingProgress}%` }}
-                        transition={{ duration: 0.3 }}
+                        transition={animationsEnabled ? { duration: 0.3 } : { duration: 0 }}
                       />
                     </div>
                     <p className="text-sm text-muted-foreground mt-2">Summoning wisdom...</p>
@@ -1262,7 +1265,7 @@ export default function App() {
                       </div>
                       
                       <div className="p-6 rounded-xl bg-gradient-to-br from-primary/15 via-accent/10 to-secondary/15 border-2 border-primary/30">
-                        <p className="text-2xl md:text-3xl text-foreground leading-relaxed font-medium text-center line-clamp-3" role="status" aria-live="polite">
+                        <p className="text-xl md:text-2xl text-foreground leading-relaxed font-medium text-center" role="status" aria-live="polite">
                           "{currentQuestion.text}"
                         </p>
                       </div>
