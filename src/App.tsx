@@ -1126,7 +1126,7 @@ export default function App() {
                           'aria-valuetext': getQuestionTypeAriaText(questionTone)
                         })}
                       />
-                      <div className="relative min-h-7 mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
+                      <div className="relative min-h-12 mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
                         {QUESTION_TYPE_SCALE.map((questionType, index) => (
                           <span
                             key={questionType.label}
