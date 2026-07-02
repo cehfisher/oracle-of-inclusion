@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 import { toast, Toaster } from 'sonner'
 
-import { askOracle } from '@/lib/llm'
+import { askOracle, MAX_QUESTION_COUNT, MIN_QUESTION_COUNT, normalizeQuestionCount, VIBE_TYPE_OPTIONS, VIBE_TYPES } from '@/lib/llm'
 
 const useSound = () => {
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -252,8 +252,6 @@ const shuffleArray = <T,>(array: T[]): T[] => {
   return shuffled
 }
 
-const VIBE_TYPES = ['😜 Whimsical', '🤗 Warm', '🤔 Thoughtful', '🧘 Deep']
-
 const FALLBACK_QUESTIONS: Pick<Question, 'text' | 'vibe'>[] = [
   { text: 'What does inclusion mean in your everyday work?', vibe: '🤗 Warm' },
   { text: 'Where can accessibility make technology better for everyone?', vibe: '🤔 Thoughtful' },
@@ -269,6 +267,53 @@ const FALLBACK_QUESTIONS: Pick<Question, 'text' | 'vibe'>[] = [
 
 const getRandomVibe = (): string => {
   return VIBE_TYPES[Math.floor(Math.random() * VIBE_TYPES.length)]
+}
+
+const QUESTION_COUNT_STEP = 0.1
+const QUESTION_TYPE_MAX = 100
+const QUESTION_TYPE_STEP = 1
+
+const QUESTION_TYPE_SCALE = VIBE_TYPE_OPTIONS
+
+const getQuestionTypePosition = (value: number): number => (
+  (Math.max(0, Math.min(QUESTION_TYPE_MAX, value)) / QUESTION_TYPE_MAX) * (QUESTION_TYPE_SCALE.length - 1)
+)
+
+const getQuestionTypeBlend = (value: number) => {
+  const position = getQuestionTypePosition(value)
+  const lowerIndex = Math.floor(position)
+  const upperIndex = Math.ceil(position)
+  return {
+    lower: QUESTION_TYPE_SCALE[lowerIndex],
+    upper: QUESTION_TYPE_SCALE[upperIndex],
+    upperWeight: position - lowerIndex,
+  }
+}
+
+const getQuestionTypeDescription = (value: number): string => {
+  const { lower, upper, upperWeight } = getQuestionTypeBlend(value)
+
+  if (lower === upper) {
+    return `${lower.label} - ${lower.description}`
+  }
+
+  const lowerWeight = 1 - upperWeight
+
+  return `blend of ${lower.label} (${Math.round(lowerWeight * 100)}%) and ${upper.label} (${Math.round(upperWeight * 100)}%) questions`
+}
+
+const getQuestionTypeAriaText = (value: number): string => {
+  const { lower, upper, upperWeight } = getQuestionTypeBlend(value)
+
+  if (lower === upper) {
+    return lower.label
+  }
+
+  if (Math.abs(upperWeight - 0.5) < 0.01) {
+    return `Equally between ${lower.label} and ${upper.label}`
+  }
+
+  return `Between ${lower.label} and ${upper.label}, leaning ${upperWeight > 0.5 ? upper.label : lower.label}`
 }
 
 const getQuestionHistory = (value: unknown): string[] => {
@@ -311,6 +356,7 @@ export default function App() {
   const [darkMode, setDarkMode] = useLocalStorageState<boolean>('oracle-dark-mode-v2', false)
 
   const [previousQuestions, setPreviousQuestions] = useLocalStorageState<string[]>('oracle-previous-questions', [])
+  const effectiveQuestionCount = normalizeQuestionCount(questionCount)
   
   const [shuffledTopicSuggestions, setShuffledTopicSuggestions] = useState(() => shuffleArray(TOPIC_SUGGESTIONS))
   const [mysticalGreeting, setMysticalGreeting] = useState(() => getRandomGreeting())
@@ -478,12 +524,12 @@ export default function App() {
   }, [isExploding, resetForm, sounds, playSound])
 
   const buildFallbackQuestions = useCallback((): Question[] => {
-    return shuffleArray([...FALLBACK_QUESTIONS]).slice(0, questionCount).map((question, i) => ({
+    return shuffleArray([...FALLBACK_QUESTIONS]).slice(0, effectiveQuestionCount).map((question, i) => ({
       id: `fallback-${Date.now()}-${i}`,
       text: question.text,
       vibe: question.vibe && VIBE_TYPES.includes(question.vibe) ? question.vibe : getRandomVibe()
     }))
-  }, [questionCount])
+  }, [effectiveQuestionCount])
 
   const generateQuestions = useCallback(async (isShuffle = false) => {
     if (isShuffle) {
@@ -533,84 +579,20 @@ export default function App() {
     if (focusAreas.includes('other') && otherFocusArea.trim()) {
       focusAreasLabels.push(otherFocusArea.trim())
     }
-    const focusAreasText = focusAreasLabels.length > 0 
-      ? focusAreasLabels.join(', ')
-      : 'accessibility and inclusion in technology'
-
-    const hasCustomTopics = topics.length > 0
-    const hasCustomFocusAreas = focusAreas.length > 0
-
-    const vibeDistribution = questionCount < VIBE_TYPES.length
-      ? `Use ${questionCount} distinct vibe type${questionCount === 1 ? '' : 's'} selected from: ${VIBE_TYPES.join(', ')}.`
-      : VIBE_TYPES.map((vibe, idx) => {
-          const count = Math.floor(questionCount / VIBE_TYPES.length) + (idx < questionCount % VIBE_TYPES.length ? 1 : 0)
-          return `${count} ${vibe.split(' ')[1]}`
-        }).join(', ')
-
     const recentQuestions = getQuestionHistory(previousQuestions)
-    const avoidList = recentQuestions.slice(-50).join('\n- ')
 
-    const topicEmphasis = hasCustomTopics 
-      ? `CRITICAL PRIORITY - The user specifically selected these topics: ${topics.join(', ')}. At least ${Math.ceil(questionCount * 0.7)} of the ${questionCount} questions (70%+) MUST directly relate to one or more of these specific topics. These are the primary focus areas the user cares about most.`
-      : `Topics: accessibility, inclusion, disability in tech, universal design, assistive technology`
-
-    const focusAreaEmphasis = hasCustomFocusAreas
-      ? `CRITICAL PRIORITY - The guest works in: ${focusAreasText}. Tailor questions to their specific expertise. At least ${Math.ceil(questionCount * 0.6)} of the ${questionCount} questions (60%+) should connect to their professional focus areas.`
-      : `Guest's work area: accessibility and inclusion in technology (general)`
-
-    const toneDescription = questionTone <= 25 
-      ? 'serious and professional - focus on deep, substantive questions about challenges, strategies, and expertise'
-      : questionTone <= 50
-      ? 'balanced mix - combine thoughtful professional questions with some lighter, more personal ones'
-      : questionTone <= 75
-      ? 'lighter and engaging - lean toward fun, creative, and personal questions while still being meaningful'
-      : 'fun and playful - prioritize creative, surprising, and delightful questions that spark joy and interesting stories'
-
-    const prompt = `Generate ${questionCount} simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
-
-Context:
-${topicEmphasis}
-${focusAreaEmphasis}
-- Question tone/style: ${toneDescription}
-- Years in accessibility/inclusion work: ${experience || 'not specified'}
-- Audience type: ${audience || 'general / mixed'}
-
-${avoidList ? `IMPORTANT - Do NOT generate questions similar to these recently asked questions:
-- ${avoidList}
-
-Generate COMPLETELY DIFFERENT questions on new angles and perspectives.` : ''}
-
-Rules:
-- Write at a 9th grade reading level or lower
-- Use short sentences (under 20 words each)
-- Use simple, everyday words - no jargon
-- Make questions easy to understand on first read
-- Ask open questions (not yes/no)
-- Mix personal story questions with big picture questions
-- Center the disability community voice
-- CRITICAL: Keep each question to 1-2 SHORT sentences max (under 25 words total)
-- CRITICAL: Generate the requested vibe mix: ${vibeDistribution}
-- Randomize the order of vibes - do NOT group same vibes together
-- If guest has lived experience, include questions that honor their perspective as an expert
-- If audience is technical (developers/designers), include questions about practical implementation
-- If audience is leaders, include questions about culture and organizational change
-- If guest is new to the field, ask about their journey and what drew them to this work
-- CRITICAL: Each question must be UNIQUE and different from all others - no repetition of themes or angles
-
-IMPORTANT - Be respectful and inclusive:
-- NEVER use offensive, patronizing, or insensitive language about disability
-- NEVER ask questions that treat disability as a tragedy or something to overcome
-- NEVER use inspiration porn framing (e.g., "despite your disability")
-- NEVER assume negative experiences or limitations
-- DO use identity-first or person-first language appropriately (follow the guest's lead)
-- DO frame questions around expertise, experiences, and perspectives - not limitations
-- DO treat guests as experts in their field, not just their disability experience
-- Questions should empower, not objectify or pity
-
-Return a JSON object with a "questions" array containing exactly ${questionCount} objects, each with "text" (the question) and "vibe" (one of: "😜 Whimsical", "🤗 Warm", "🤔 Thoughtful", "🧘 Deep").`
+    const toneDescription = getQuestionTypeDescription(questionTone)
 
     try {
-      const result = await askOracle(prompt, 'generate')
+      const result = await askOracle({
+        topic: topics.join(', '),
+        focusAreas: focusAreasLabels,
+        audience,
+        numQuestions: effectiveQuestionCount,
+        questionType: toneDescription,
+        accessibilityExpertise: experience,
+        recentQuestions,
+      })
       const parsed = JSON.parse(result)
       const generatedItems = Array.isArray(parsed?.questions)
         ? parsed.questions.filter((q: unknown): q is { text: string; vibe?: string } => (
@@ -620,11 +602,11 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
           ))
         : []
 
-      if (generatedItems.length < questionCount) {
+      if (generatedItems.length < effectiveQuestionCount) {
         throw new Error('Oracle API returned too few questions')
       }
 
-      const generatedQuestions: Question[] = shuffleArray(generatedItems.slice(0, questionCount).map((q, i) => ({
+      const generatedQuestions: Question[] = shuffleArray(generatedItems.slice(0, effectiveQuestionCount).map((q, i) => ({
         id: `q-${Date.now()}-${i}`,
         text: q.text,
         vibe: q.vibe && VIBE_TYPES.includes(q.vibe) ? q.vibe : getRandomVibe()
@@ -649,7 +631,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
       }
       setIsShuffling(false)
     }
-  }, [focusAreas, otherFocusArea, questionCount, questionTone, topics, experience, audience, soundEnabled, sounds, reshuffleTopics, previousQuestions, setPreviousQuestions, buildFallbackQuestions])
+  }, [focusAreas, otherFocusArea, effectiveQuestionCount, questionTone, topics, experience, audience, soundEnabled, sounds, reshuffleTopics, previousQuestions, setPreviousQuestions, buildFallbackQuestions])
 
   const handleGenerateClick = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -1103,21 +1085,21 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         id="question-count-slider"
                         value={[questionCount]}
                         onValueChange={(value) => setQuestionCount(value[0])}
-                        min={1}
-                        max={10}
-                        step={1}
+                        min={MIN_QUESTION_COUNT}
+                        max={MAX_QUESTION_COUNT}
+                        step={QUESTION_COUNT_STEP}
                         className="w-full [&_[data-radix-slider-track]]:bg-muted [&_[data-radix-slider-range]]:bg-accent [&_[data-radix-slider-thumb]]:bg-accent [&_[data-radix-slider-thumb]]:border-2 [&_[data-radix-slider-thumb]]:border-foreground"
                         getThumbProps={() => ({
                           'aria-labelledby': 'question-count-label',
-                          'aria-valuetext': `${questionCount} question${questionCount === 1 ? '' : 's'}`
+                          'aria-valuetext': `${effectiveQuestionCount} question${effectiveQuestionCount === 1 ? '' : 's'}`
                         })}
                       />
                       <div className="relative h-7 mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
-                        {Array.from({ length: 10 }, (_, index) => (
+                        {Array.from({ length: MAX_QUESTION_COUNT }, (_, index) => (
                           <span
                             key={index + 1}
                             className="absolute top-0 -translate-x-1/2"
-                            style={{ left: `${(index / 9) * 100}%` }}
+                            style={{ left: `${(index / (MAX_QUESTION_COUNT - 1)) * 100}%` }}
                           >
                             {index + 1}
                           </span>
@@ -1136,19 +1118,24 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         value={[questionTone]}
                         onValueChange={(value) => setQuestionTone(value[0])}
                         min={0}
-                        max={100}
-                        step={25}
+                        max={QUESTION_TYPE_MAX}
+                        step={QUESTION_TYPE_STEP}
                         className="w-full [&_[data-radix-slider-track]]:bg-muted [&_[data-radix-slider-range]]:bg-accent [&_[data-radix-slider-thumb]]:bg-accent [&_[data-radix-slider-thumb]]:border-2 [&_[data-radix-slider-thumb]]:border-foreground"
                         getThumbProps={() => ({
                           'aria-labelledby': 'question-tone-label',
-                          'aria-valuetext': questionTone <= 25 ? 'Serious' : questionTone <= 50 ? 'Balanced' : questionTone <= 75 ? 'Lighter' : 'Fun'
+                          'aria-valuetext': getQuestionTypeAriaText(questionTone)
                         })}
                       />
-                      <div className="flex justify-between mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
-                        <span>🎯 Serious</span>
-                        <span>⚖️ Balanced</span>
-                        <span>💡 Lighter</span>
-                        <span>🎪 Fun</span>
+                      <div className="relative h-7 mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
+                        {QUESTION_TYPE_SCALE.map((questionType, index) => (
+                          <span
+                            key={questionType.label}
+                            className="absolute top-0 -translate-x-1/2"
+                            style={{ left: `${(index / (QUESTION_TYPE_SCALE.length - 1)) * 100}%` }}
+                          >
+                            {questionType.label}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   </div>
