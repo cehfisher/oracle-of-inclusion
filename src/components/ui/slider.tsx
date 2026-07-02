@@ -14,7 +14,7 @@ function Slider({
   getThumbProps,
   ...props
 }: ComponentProps<typeof SliderPrimitive.Root> & {
-  getThumbProps?: (index: number) => ComponentProps<typeof SliderPrimitive.Thumb> | undefined
+  getThumbProps?: (index: number) => ComponentProps<typeof SliderPrimitive.Thumb>
 }) {
   const _values = useMemo(
     () =>
@@ -53,7 +53,7 @@ function Slider({
         />
       </SliderPrimitive.Track>
       {Array.from({ length: _values.length }, (_, index) => {
-        const thumbProps = getThumbProps?.(index)
+        const thumbProps = getThumbProps?.(index) ?? {}
 
         return (
           <SliderPrimitive.Thumb
