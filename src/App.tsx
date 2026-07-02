@@ -740,7 +740,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
       left: `${Math.random() * 100}%`,
       top: `${Math.random() * 100}%`,
       duration: 12 + Math.random() * 20,
-      delay: -(Math.random() * 25),
+      delay: Math.random() * 25,
       size: 0.12 + Math.random() * 0.9,
       symbol: Math.random() > 0.65 ? '★' : '✦',
       hasGlow: Math.random() > 0.5,
