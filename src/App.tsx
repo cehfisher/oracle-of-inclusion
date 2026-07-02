@@ -273,17 +273,16 @@ const QUESTION_COUNT_STEP = 0.1
 const QUESTION_TYPE_MAX = 100
 const QUESTION_TYPE_STEP = 1
 
-const getVibeTypeDescription = (label: string): string => {
-  if (label.includes('Whimsical')) return 'whimsical, playful, and imaginative questions'
-  if (label.includes('Warm')) return 'warm, friendly, and personal questions'
-  if (label.includes('Thoughtful')) return 'thoughtful, reflective, and substantive questions'
-  if (label.includes('Deep')) return 'deep, nuanced, and big-picture questions'
-  return `${label} questions`
+const QUESTION_TYPE_DESCRIPTIONS_BY_VIBE: Record<string, string> = {
+  '😜 Whimsical': 'whimsical, playful, and imaginative questions',
+  '🤗 Warm': 'warm, friendly, and personal questions',
+  '🤔 Thoughtful': 'thoughtful, reflective, and substantive questions',
+  '🧘 Deep': 'deep, nuanced, and big-picture questions',
 }
 
 const QUESTION_TYPE_SCALE = VIBE_TYPES.map((label) => ({
   label,
-  description: getVibeTypeDescription(label),
+  description: QUESTION_TYPE_DESCRIPTIONS_BY_VIBE[label] ?? `${label} questions`,
 }))
 
 const roundUpQuestionCount = (value: number): number => (
@@ -324,7 +323,7 @@ const getQuestionTypeAriaText = (value: number): string => {
     return lower.label
   }
 
-  if (Math.round(upperWeight * 100) === 50) {
+  if (Math.abs(upperWeight - 0.5) < 0.01) {
     return `Equally between ${lower.label} and ${upper.label}`
   }
 
