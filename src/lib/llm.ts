@@ -19,7 +19,7 @@ const CACHE_TTL_HOURS = 12
 const CACHE_TTL_MILLISECONDS = 1000 * 60 * 60 * CACHE_TTL_HOURS
 const CACHE_PREFIX = 'ask-oracle-response:'
 export const MIN_QUESTION_COUNT = 1
-export const MAX_QUESTION_COUNT = 10
+export const MAX_QUESTION_COUNT = 7
 const MAX_RECENT_QUESTIONS_TO_AVOID = 50
 const TOPIC_EMPHASIS_RATIO = 0.7
 const FOCUS_AREA_EMPHASIS_RATIO = 0.6
@@ -76,12 +76,15 @@ function buildQuestionPrompt(params: AskOracleParams): string {
     ? `CRITICAL PRIORITY - The guest works in: ${focusAreasText}. Tailor questions to their specific expertise. At least ${Math.ceil(questionCount * FOCUS_AREA_EMPHASIS_RATIO)} of the ${questionCount} questions (60%+) should connect to their professional focus areas.`
     : `Guest's work area: accessibility and inclusion in technology (general)`
 
-  const vibeDistribution = questionCount < VIBE_TYPES.length
-    ? `Use ${questionCount} distinct vibe type${questionCount === 1 ? '' : 's'} selected from: ${VIBE_TYPES.join(', ')}.`
-    : VIBE_TYPES.map((vibe, idx) => {
-        const count = Math.floor(questionCount / VIBE_TYPES.length) + (idx < questionCount % VIBE_TYPES.length ? 1 : 0)
-        return `${count} ${vibe.split(' ')[1]}`
-      }).join(', ')
+  const selectedVibe = params.questionType?.trim()
+  const vibeDistribution = selectedVibe
+    ? `All ${questionCount} questions must use this single vibe type: ${selectedVibe}. Do NOT mix in other vibes.`
+    : questionCount < VIBE_TYPES.length
+      ? `Use ${questionCount} distinct vibe type${questionCount === 1 ? '' : 's'} selected from: ${VIBE_TYPES.join(', ')}.`
+      : VIBE_TYPES.map((vibe, idx) => {
+          const count = Math.floor(questionCount / VIBE_TYPES.length) + (idx < questionCount % VIBE_TYPES.length ? 1 : 0)
+          return `${count} ${vibe.split(' ')[1]}`
+        }).join(', ')
 
   return `Generate ${questionCount} simple, clear questions for a casual fireside chat about accessibility, inclusion, disability, and tech.
 
