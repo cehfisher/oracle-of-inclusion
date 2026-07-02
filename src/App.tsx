@@ -254,6 +254,27 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 
 const VIBE_TYPES = ['😜 Whimsical', '🤗 Warm', '🤔 Thoughtful', '🧘 Deep']
 
+const FALLBACK_QUESTIONS: Pick<Question, 'text' | 'vibe'>[] = [
+  { text: 'What does inclusion mean in your everyday work?', vibe: '🤗 Warm' },
+  { text: 'Where can accessibility make technology better for everyone?', vibe: '🤔 Thoughtful' },
+  { text: 'What small design choice has made a big difference for people?', vibe: '🧘 Deep' },
+  { text: 'What is one accessibility win that made you smile?', vibe: '😜 Whimsical' },
+  { text: 'How can teams listen better to disabled people?', vibe: '🤗 Warm' },
+  { text: 'What barrier should tech teams stop accepting as normal?', vibe: '🤔 Thoughtful' },
+  { text: 'What does respectful innovation look like to you?', vibe: '🧘 Deep' },
+  { text: 'If accessibility had a superpower, what would it be?', vibe: '😜 Whimsical' },
+  { text: 'What helps people feel like they truly belong?', vibe: '🤗 Warm' },
+  { text: 'How can leaders make inclusion part of everyday decisions?', vibe: '🤔 Thoughtful' },
+]
+
+const getRandomVibe = (): string => {
+  return VIBE_TYPES[Math.floor(Math.random() * VIBE_TYPES.length)]
+}
+
+const getQuestionHistory = (value: unknown): string[] => {
+  return Array.isArray(value) ? value.filter((question): question is string => typeof question === 'string') : []
+}
+
 const FOCUS_AREAS = [
   { id: 'frontend', label: '🖥️ Front-end dev' },
   { id: 'backend', label: '⚙️ Back-end dev' },
@@ -456,9 +477,13 @@ export default function App() {
     }, 800)
   }, [isExploding, resetForm, sounds, playSound])
 
-  const getRandomVibe = (): string => {
-    return VIBE_TYPES[Math.floor(Math.random() * VIBE_TYPES.length)]
-  }
+  const buildFallbackQuestions = useCallback((): Question[] => {
+    return shuffleArray([...FALLBACK_QUESTIONS]).slice(0, questionCount).map((question, i) => ({
+      id: `fallback-${Date.now()}-${i}`,
+      text: question.text,
+      vibe: question.vibe && VIBE_TYPES.includes(question.vibe) ? question.vibe : getRandomVibe()
+    }))
+  }, [questionCount])
 
   const generateQuestions = useCallback(async (isShuffle = false) => {
     if (isShuffle) {
@@ -515,14 +540,14 @@ export default function App() {
     const hasCustomTopics = topics.length > 0
     const hasCustomFocusAreas = focusAreas.length > 0
 
-    const vibeDistribution = questionCount === 1 
-      ? 'any vibe of your choice'
+    const vibeDistribution = questionCount < VIBE_TYPES.length
+      ? `Use ${questionCount} distinct vibe type${questionCount === 1 ? '' : 's'} selected from: ${VIBE_TYPES.join(', ')}.`
       : VIBE_TYPES.map((vibe, idx) => {
-          const count = Math.floor(questionCount / 4) + (idx < questionCount % 4 ? 1 : 0)
+          const count = Math.floor(questionCount / VIBE_TYPES.length) + (idx < questionCount % VIBE_TYPES.length ? 1 : 0)
           return `${count} ${vibe.split(' ')[1]}`
         }).join(', ')
 
-    const recentQuestions = previousQuestions ?? []
+    const recentQuestions = getQuestionHistory(previousQuestions)
     const avoidList = recentQuestions.slice(-50).join('\n- ')
 
     const topicEmphasis = hasCustomTopics 
@@ -564,7 +589,7 @@ Rules:
 - Mix personal story questions with big picture questions
 - Center the disability community voice
 - CRITICAL: Keep each question to 1-2 SHORT sentences max (under 25 words total)
-- CRITICAL: Generate an even mix of vibes: ${vibeDistribution}. Each vibe type MUST be represented.
+- CRITICAL: Generate the requested vibe mix: ${vibeDistribution}
 - Randomize the order of vibes - do NOT group same vibes together
 - If guest has lived experience, include questions that honor their perspective as an expert
 - If audience is technical (developers/designers), include questions about practical implementation
@@ -587,26 +612,44 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
     try {
       const result = await askOracle(prompt, 'generate')
       const parsed = JSON.parse(result)
-      const generatedQuestions: Question[] = shuffleArray(parsed.questions.map((q: { text: string; vibe: string }, i: number) => ({
+      const generatedItems = Array.isArray(parsed?.questions)
+        ? parsed.questions.filter((q: unknown): q is { text: string; vibe?: string } => (
+            typeof q === 'object' &&
+            q !== null &&
+            typeof (q as { text?: unknown }).text === 'string'
+          ))
+        : []
+
+      if (generatedItems.length < questionCount) {
+        throw new Error('Oracle API returned too few questions')
+      }
+
+      const generatedQuestions: Question[] = shuffleArray(generatedItems.slice(0, questionCount).map((q, i) => ({
         id: `q-${Date.now()}-${i}`,
         text: q.text,
-        vibe: q.vibe || getRandomVibe()
+        vibe: q.vibe && VIBE_TYPES.includes(q.vibe) ? q.vibe : getRandomVibe()
       })))
       setQuestions(generatedQuestions)
       
       const newQuestionTexts = generatedQuestions.map(q => q.text)
-      setPreviousQuestions((prev) => [...(prev ?? []).slice(-100), ...newQuestionTexts])
+      setPreviousQuestions((prev) => [...getQuestionHistory(prev).slice(-100), ...newQuestionTexts])
       
       playSound(sounds.playMagic)
-    } catch {
-      toast.error('The oracle needs a moment... Please try again.')
+    } catch (error) {
+      console.error('Question generation failed:', error)
+      const fallbackQuestions = buildFallbackQuestions()
+      setQuestions(fallbackQuestions)
+      const fallbackTexts = fallbackQuestions.map(q => q.text)
+      setPreviousQuestions((prev) => [...getQuestionHistory(prev).slice(-100), ...fallbackTexts])
+      toast.info('Generation failed, showing backup questions. Try Shuffle for fresh magic.')
+      playSound(sounds.playMagic)
     } finally {
       if (!isShuffle) {
         setIsGenerating(false)
       }
       setIsShuffling(false)
     }
-  }, [focusAreas, otherFocusArea, questionCount, topics, experience, audience, soundEnabled, sounds, reshuffleTopics, previousQuestions, setPreviousQuestions])
+  }, [focusAreas, otherFocusArea, questionCount, questionTone, topics, experience, audience, soundEnabled, sounds, reshuffleTopics, previousQuestions, setPreviousQuestions, buildFallbackQuestions])
 
   const handleGenerateClick = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
