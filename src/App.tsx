@@ -269,6 +269,56 @@ const getRandomVibe = (): string => {
   return VIBE_TYPES[Math.floor(Math.random() * VIBE_TYPES.length)]
 }
 
+const QUESTION_COUNT_MIN = 1
+const QUESTION_COUNT_MAX = 10
+const QUESTION_COUNT_STEP = 0.1
+const QUESTION_TYPE_MAX = 100
+const QUESTION_TYPE_STEP = 1
+
+const QUESTION_TYPE_SCALE = [
+  {
+    label: VIBE_TYPES[0],
+    description: 'whimsical, playful, and imaginative questions',
+  },
+  {
+    label: VIBE_TYPES[1],
+    description: 'warm, friendly, and personal questions',
+  },
+  {
+    label: VIBE_TYPES[2],
+    description: 'thoughtful, reflective, and substantive questions',
+  },
+  {
+    label: VIBE_TYPES[3],
+    description: 'deep, nuanced, and big-picture questions',
+  },
+]
+
+const roundUpQuestionCount = (value: number): number => (
+  Math.max(QUESTION_COUNT_MIN, Math.min(QUESTION_COUNT_MAX, Math.ceil(value)))
+)
+
+const getQuestionTypePosition = (value: number): number => (
+  Math.max(0, Math.min(QUESTION_TYPE_MAX, value)) / QUESTION_TYPE_MAX * (QUESTION_TYPE_SCALE.length - 1)
+)
+
+const getQuestionTypeDescription = (value: number): string => {
+  const position = getQuestionTypePosition(value)
+  const lowerIndex = Math.floor(position)
+  const upperIndex = Math.ceil(position)
+  const lower = QUESTION_TYPE_SCALE[lowerIndex]
+  const upper = QUESTION_TYPE_SCALE[upperIndex]
+
+  if (lowerIndex === upperIndex) {
+    return `${lower.label} - ${lower.description}`
+  }
+
+  const upperWeight = position - lowerIndex
+  const lowerWeight = 1 - upperWeight
+
+  return `blend of ${lower.label} (${Math.round(lowerWeight * 100)}%) and ${upper.label} (${Math.round(upperWeight * 100)}%) - combine ${lower.description} with ${upper.description}`
+}
+
 const getQuestionHistory = (value: unknown): string[] => {
   return Array.isArray(value) ? value.filter((question): question is string => typeof question === 'string') : []
 }
@@ -309,6 +359,7 @@ export default function App() {
   const [darkMode, setDarkMode] = useLocalStorageState<boolean>('oracle-dark-mode-v2', false)
 
   const [previousQuestions, setPreviousQuestions] = useLocalStorageState<string[]>('oracle-previous-questions', [])
+  const effectiveQuestionCount = roundUpQuestionCount(questionCount)
   
   const [shuffledTopicSuggestions, setShuffledTopicSuggestions] = useState(() => shuffleArray(TOPIC_SUGGESTIONS))
   const [mysticalGreeting, setMysticalGreeting] = useState(() => getRandomGreeting())
@@ -476,12 +527,12 @@ export default function App() {
   }, [isExploding, resetForm, sounds, playSound])
 
   const buildFallbackQuestions = useCallback((): Question[] => {
-    return shuffleArray([...FALLBACK_QUESTIONS]).slice(0, questionCount).map((question, i) => ({
+    return shuffleArray([...FALLBACK_QUESTIONS]).slice(0, effectiveQuestionCount).map((question, i) => ({
       id: `fallback-${Date.now()}-${i}`,
       text: question.text,
       vibe: question.vibe && VIBE_TYPES.includes(question.vibe) ? question.vibe : getRandomVibe()
     }))
-  }, [questionCount])
+  }, [effectiveQuestionCount])
 
   const generateQuestions = useCallback(async (isShuffle = false) => {
     if (isShuffle) {
@@ -533,20 +584,14 @@ export default function App() {
     }
     const recentQuestions = getQuestionHistory(previousQuestions)
 
-    const toneDescription = questionTone <= 25 
-      ? 'serious and professional - focus on deep, substantive questions about challenges, strategies, and expertise'
-      : questionTone <= 50
-      ? 'balanced mix - combine thoughtful professional questions with some lighter, more personal ones'
-      : questionTone <= 75
-      ? 'lighter and engaging - lean toward fun, creative, and personal questions while still being meaningful'
-      : 'fun and playful - prioritize creative, surprising, and delightful questions that spark joy and interesting stories'
+    const toneDescription = getQuestionTypeDescription(questionTone)
 
     try {
       const result = await askOracle({
         topic: topics.join(', '),
         focusAreas: focusAreasLabels,
         audience,
-        numQuestions: questionCount,
+        numQuestions: effectiveQuestionCount,
         questionType: toneDescription,
         accessibilityExpertise: experience,
         recentQuestions,
@@ -560,11 +605,11 @@ export default function App() {
           ))
         : []
 
-      if (generatedItems.length < questionCount) {
+      if (generatedItems.length < effectiveQuestionCount) {
         throw new Error('Oracle API returned too few questions')
       }
 
-      const generatedQuestions: Question[] = shuffleArray(generatedItems.slice(0, questionCount).map((q, i) => ({
+      const generatedQuestions: Question[] = shuffleArray(generatedItems.slice(0, effectiveQuestionCount).map((q, i) => ({
         id: `q-${Date.now()}-${i}`,
         text: q.text,
         vibe: q.vibe && VIBE_TYPES.includes(q.vibe) ? q.vibe : getRandomVibe()
@@ -589,7 +634,7 @@ export default function App() {
       }
       setIsShuffling(false)
     }
-  }, [focusAreas, otherFocusArea, questionCount, questionTone, topics, experience, audience, soundEnabled, sounds, reshuffleTopics, previousQuestions, setPreviousQuestions, buildFallbackQuestions])
+  }, [focusAreas, otherFocusArea, effectiveQuestionCount, questionTone, topics, experience, audience, soundEnabled, sounds, reshuffleTopics, previousQuestions, setPreviousQuestions, buildFallbackQuestions])
 
   const handleGenerateClick = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -1043,21 +1088,21 @@ export default function App() {
                         id="question-count-slider"
                         value={[questionCount]}
                         onValueChange={(value) => setQuestionCount(value[0])}
-                        min={1}
-                        max={10}
-                        step={1}
+                        min={QUESTION_COUNT_MIN}
+                        max={QUESTION_COUNT_MAX}
+                        step={QUESTION_COUNT_STEP}
                         className="w-full [&_[data-radix-slider-track]]:bg-muted [&_[data-radix-slider-range]]:bg-accent [&_[data-radix-slider-thumb]]:bg-accent [&_[data-radix-slider-thumb]]:border-2 [&_[data-radix-slider-thumb]]:border-foreground"
-                        aria-valuemin={1}
-                        aria-valuemax={10}
+                        aria-valuemin={QUESTION_COUNT_MIN}
+                        aria-valuemax={QUESTION_COUNT_MAX}
                         aria-valuenow={questionCount}
-                        aria-valuetext={`${questionCount} question${questionCount === 1 ? '' : 's'}`}
+                        aria-valuetext={`${effectiveQuestionCount} question${effectiveQuestionCount === 1 ? '' : 's'}`}
                       />
                       <div className="relative h-7 mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
-                        {Array.from({ length: 10 }, (_, index) => (
+                        {Array.from({ length: QUESTION_COUNT_MAX }, (_, index) => (
                           <span
                             key={index + 1}
                             className="absolute top-0 -translate-x-1/2"
-                            style={{ left: `${(index / 9) * 100}%` }}
+                            style={{ left: `${(index / (QUESTION_COUNT_MAX - 1)) * 100}%` }}
                           >
                             {index + 1}
                           </span>
@@ -1076,19 +1121,24 @@ export default function App() {
                         value={[questionTone]}
                         onValueChange={(value) => setQuestionTone(value[0])}
                         min={0}
-                        max={100}
-                        step={25}
+                        max={QUESTION_TYPE_MAX}
+                        step={QUESTION_TYPE_STEP}
                         className="w-full [&_[data-radix-slider-track]]:bg-muted [&_[data-radix-slider-range]]:bg-accent [&_[data-radix-slider-thumb]]:bg-accent [&_[data-radix-slider-thumb]]:border-2 [&_[data-radix-slider-thumb]]:border-foreground"
                         aria-valuemin={0}
-                        aria-valuemax={100}
+                        aria-valuemax={QUESTION_TYPE_MAX}
                         aria-valuenow={questionTone}
-                        aria-valuetext={questionTone <= 25 ? 'Serious' : questionTone <= 50 ? 'Balanced' : questionTone <= 75 ? 'Lighter' : 'Fun'}
+                        aria-valuetext={getQuestionTypeDescription(questionTone)}
                       />
-                      <div className="flex justify-between mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
-                        <span>🎯 Serious</span>
-                        <span>⚖️ Balanced</span>
-                        <span>💡 Lighter</span>
-                        <span>🎪 Fun</span>
+                      <div className="relative h-7 mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
+                        {QUESTION_TYPE_SCALE.map((questionType, index) => (
+                          <span
+                            key={questionType.label}
+                            className="absolute top-0 -translate-x-1/2"
+                            style={{ left: `${(index / (QUESTION_TYPE_SCALE.length - 1)) * 100}%` }}
+                          >
+                            {questionType.label}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   </div>

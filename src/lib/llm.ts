@@ -46,7 +46,7 @@ function setCached(key: string, value: string): void {
 }
 
 function buildQuestionPrompt(params: AskOracleParams): string {
-  const questionCount = Math.max(MIN_QUESTION_COUNT, Math.min(MAX_QUESTION_COUNT, Math.round(params.numQuestions ?? 3)))
+  const questionCount = Math.max(MIN_QUESTION_COUNT, Math.min(MAX_QUESTION_COUNT, Math.ceil(params.numQuestions ?? 3)))
   const topic = params.topic?.trim()
   const focusAreas = params.focusAreas?.map(area => area.trim()).filter(Boolean) ?? []
   const focusAreasText = focusAreas.length > 0
