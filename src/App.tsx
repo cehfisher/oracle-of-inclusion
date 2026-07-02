@@ -387,7 +387,7 @@ export default function App() {
   
   useEffect(() => {
     document.documentElement.classList.remove('dark')
-  }, [toastMotionProps])
+  }, [])
   
   useEffect(() => {
     if (darkMode === true) {
@@ -735,7 +735,7 @@ export default function App() {
       { duration: 2000 }
     )
     setTimeout(() => setCopiedId(null), 2000)
-  }, [])
+  }, [toastMotionProps])
 
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
