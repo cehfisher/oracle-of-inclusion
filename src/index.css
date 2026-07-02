@@ -220,7 +220,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .dark .accessible-slider [data-slot="slider-range"] {
-  background-color: oklch(0.15 0.025 280);
+  background-color: oklch(1 0 0);
 }
 
 .animations-disabled *,

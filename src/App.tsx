@@ -367,6 +367,7 @@ export default function App() {
   const [loadingProgress, setLoadingProgress] = useState(0)
   const [thinkingQuestions, setThinkingQuestions] = useState<string[]>([])
   const [isShuffling, setIsShuffling] = useState(false)
+  const generationRequestRef = useRef(0)
   const [soundEnabled, setSoundEnabled] = useLocalStorageState<boolean>('oracle-sound-enabled-v2', true)
   const [animationsEnabled, setAnimationsEnabled] = useLocalStorageState<boolean>('oracle-animations-enabled-v2', true)
   const [darkMode, setDarkMode] = useLocalStorageState<boolean>('oracle-dark-mode-v2', false)
@@ -471,6 +472,7 @@ export default function App() {
   }
 
   const resetForm = useCallback(() => {
+    generationRequestRef.current += 1
     setTopics([])
     setTopicInput('')
     setFocusAreas([])
@@ -482,6 +484,12 @@ export default function App() {
     setQuestionTone(50)
     setQuestions([])
     setCurrentQuestionIndex(0)
+    setIsGenerating(false)
+    setIsShuffling(false)
+    setCopiedId(null)
+    setLoadingPhrase('')
+    setLoadingProgress(0)
+    setThinkingQuestions([])
     playSound(sounds.playReset)
     window.scrollTo({ top: 0, behavior: animationsEnabled ? 'smooth' : 'auto' })
     toast.custom(
@@ -554,6 +562,9 @@ export default function App() {
   }, [effectiveQuestionCount])
 
   const generateQuestions = useCallback(async (isShuffle = false) => {
+    const requestId = generationRequestRef.current + 1
+    generationRequestRef.current = requestId
+
     if (isShuffle) {
       setIsShuffling(true)
       toast.custom(
@@ -610,6 +621,9 @@ export default function App() {
         accessibilityExpertise: experience,
         recentQuestions,
       })
+
+      if (requestId !== generationRequestRef.current) return
+
       const parsed = JSON.parse(result)
       const generatedItems = Array.isArray(parsed?.questions)
         ? parsed.questions.filter((q: unknown): q is { text: string; vibe?: string } => (
@@ -635,6 +649,8 @@ export default function App() {
       
       playSound(sounds.playMagic)
     } catch (error) {
+      if (requestId !== generationRequestRef.current) return
+
       console.error('Question generation failed:', error)
       const fallbackQuestions = buildFallbackQuestions()
       setQuestions(fallbackQuestions)
@@ -643,10 +659,12 @@ export default function App() {
       toast.info('Generation failed, showing backup questions. Try Shuffle for fresh magic.')
       playSound(sounds.playMagic)
     } finally {
-      if (!isShuffle) {
-        setIsGenerating(false)
+      if (requestId === generationRequestRef.current) {
+        if (!isShuffle) {
+          setIsGenerating(false)
+        }
+        setIsShuffling(false)
       }
-      setIsShuffling(false)
     }
   }, [focusAreas, otherFocusArea, effectiveQuestionCount, questionTone, topics, experience, audience, soundEnabled, sounds, reshuffleTopics, previousQuestions, setPreviousQuestions, buildFallbackQuestions, toastMotionProps])
 
