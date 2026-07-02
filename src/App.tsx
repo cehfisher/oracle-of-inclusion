@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 import { toast, Toaster } from 'sonner'
 
-import { askOracle, VIBE_TYPES } from '@/lib/llm'
+import { askOracle, MAX_QUESTION_COUNT, MIN_QUESTION_COUNT, VIBE_TYPES } from '@/lib/llm'
 
 const useSound = () => {
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -269,8 +269,6 @@ const getRandomVibe = (): string => {
   return VIBE_TYPES[Math.floor(Math.random() * VIBE_TYPES.length)]
 }
 
-const QUESTION_COUNT_MIN = 1
-const QUESTION_COUNT_MAX = 10
 const QUESTION_COUNT_STEP = 0.1
 const QUESTION_TYPE_MAX = 100
 const QUESTION_TYPE_STEP = 1
@@ -289,11 +287,11 @@ const QUESTION_TYPE_SCALE = VIBE_TYPES.map((label) => ({
 }))
 
 const roundUpQuestionCount = (value: number): number => (
-  Math.max(QUESTION_COUNT_MIN, Math.min(QUESTION_COUNT_MAX, Math.ceil(value)))
+  Math.max(MIN_QUESTION_COUNT, Math.min(MAX_QUESTION_COUNT, Math.ceil(value)))
 )
 
 const getQuestionTypePosition = (value: number): number => (
-  Math.max(0, Math.min(QUESTION_TYPE_MAX, value)) / QUESTION_TYPE_MAX * (QUESTION_TYPE_SCALE.length - 1)
+  (Math.max(0, Math.min(QUESTION_TYPE_MAX, value)) / QUESTION_TYPE_MAX) * (QUESTION_TYPE_SCALE.length - 1)
 )
 
 const getQuestionTypeBlend = (value: number) => {
@@ -1102,21 +1100,21 @@ export default function App() {
                         id="question-count-slider"
                         value={[questionCount]}
                         onValueChange={(value) => setQuestionCount(value[0])}
-                        min={QUESTION_COUNT_MIN}
-                        max={QUESTION_COUNT_MAX}
+                        min={MIN_QUESTION_COUNT}
+                        max={MAX_QUESTION_COUNT}
                         step={QUESTION_COUNT_STEP}
                         className="w-full [&_[data-radix-slider-track]]:bg-muted [&_[data-radix-slider-range]]:bg-accent [&_[data-radix-slider-thumb]]:bg-accent [&_[data-radix-slider-thumb]]:border-2 [&_[data-radix-slider-thumb]]:border-foreground"
-                        aria-valuemin={QUESTION_COUNT_MIN}
-                        aria-valuemax={QUESTION_COUNT_MAX}
+                        aria-valuemin={MIN_QUESTION_COUNT}
+                        aria-valuemax={MAX_QUESTION_COUNT}
                         aria-valuenow={questionCount}
                         aria-valuetext={`${effectiveQuestionCount} question${effectiveQuestionCount === 1 ? '' : 's'}`}
                       />
                       <div className="relative h-7 mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
-                        {Array.from({ length: QUESTION_COUNT_MAX }, (_, index) => (
+                        {Array.from({ length: MAX_QUESTION_COUNT }, (_, index) => (
                           <span
                             key={index + 1}
                             className="absolute top-0 -translate-x-1/2"
-                            style={{ left: `${(index / (QUESTION_COUNT_MAX - 1)) * 100}%` }}
+                            style={{ left: `${(index / (MAX_QUESTION_COUNT - 1)) * 100}%` }}
                           >
                             {index + 1}
                           </span>
