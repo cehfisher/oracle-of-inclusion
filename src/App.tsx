@@ -1126,12 +1126,22 @@ export default function App() {
                           'aria-valuetext': getQuestionTypeAriaText(questionTone)
                         })}
                       />
-                      <div className="relative h-7 mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
+                      <div className="relative min-h-7 mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
                         {QUESTION_TYPE_SCALE.map((questionType, index) => (
                           <span
                             key={questionType.label}
-                            className="absolute top-0 -translate-x-1/2"
-                            style={{ left: `${(index / (QUESTION_TYPE_SCALE.length - 1)) * 100}%` }}
+                            className={`absolute top-0 max-w-[35%] whitespace-normal ${
+                              index === 0
+                                ? 'left-0 text-left'
+                                : index === QUESTION_TYPE_SCALE.length - 1
+                                  ? 'right-0 text-right'
+                                  : '-translate-x-1/2 text-center'
+                            }`}
+                            style={
+                              index === 0 || index === QUESTION_TYPE_SCALE.length - 1
+                                ? undefined
+                                : { left: `${(index / (QUESTION_TYPE_SCALE.length - 1)) * 100}%` }
+                            }
                           >
                             {questionType.label}
                           </span>
