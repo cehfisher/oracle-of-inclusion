@@ -1111,8 +1111,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         aria-valuemax={10}
                         aria-valuenow={questionCount}
                         aria-valuetext={`${questionCount} question${questionCount === 1 ? '' : 's'}`}
-                        aria-labelledby="question-count-label"
-                        thumbProps={[{ 'aria-labelledby': 'question-count-label' }]}
+                        thumbProps={{ 'aria-labelledby': 'question-count-label' }}
                       />
                       <div className="relative h-7 mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
                         {Array.from({ length: 10 }, (_, index) => (
@@ -1145,8 +1144,7 @@ Return a JSON object with a "questions" array containing exactly ${questionCount
                         aria-valuemax={100}
                         aria-valuenow={questionTone}
                         aria-valuetext={questionTone <= 25 ? 'Serious' : questionTone <= 50 ? 'Balanced' : questionTone <= 75 ? 'Lighter' : 'Fun'}
-                        aria-labelledby="question-tone-label"
-                        thumbProps={[{ 'aria-labelledby': 'question-tone-label' }]}
+                        thumbProps={{ 'aria-labelledby': 'question-tone-label' }}
                       />
                       <div className="flex justify-between mt-2 text-base text-foreground font-medium form-field" aria-hidden="true">
                         <span>🎯 Serious</span>
