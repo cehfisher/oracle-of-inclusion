@@ -1324,11 +1324,11 @@ export default function App() {
 
               <div className="flex flex-wrap gap-3 justify-center mt-6">
                 <Button
-                  variant="outline"
+                  variant="default"
                   size="lg"
                   onClick={() => currentQuestion && copyQuestion(currentQuestion)}
                   disabled={!currentQuestion}
-                  className="text-lg py-6 px-6 border-2 border-border text-foreground hover:bg-primary/15 hover:text-primary hover:border-primary focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                  className="text-lg py-6 px-6 bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-4 focus:ring-ring focus:ring-offset-2"
                   aria-label={copiedId === currentQuestion?.id ? 'Copied to clipboard' : 'Copy question to clipboard'}
                 >
                   {copiedId === currentQuestion?.id ? (
@@ -1339,21 +1339,21 @@ export default function App() {
                   {copiedId === currentQuestion?.id ? 'Copied!' : 'Copy'}
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="default"
                   size="lg"
                   onClick={() => generateQuestions(true)}
                   disabled={isGenerating}
-                  className="text-lg py-6 px-8 border-2 border-border text-foreground hover:bg-accent/15 hover:text-accent hover:border-accent focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                  className="text-lg py-6 px-8 bg-accent text-accent-foreground hover:bg-accent/90 focus:ring-4 focus:ring-ring focus:ring-offset-2"
                   aria-label="Shuffle all questions and generate new ones"
                 >
                   <ArrowsClockwise size={22} className="mr-2" aria-hidden="true" />
                   Shuffle
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   size="lg"
                   onClick={resetForm}
-                  className="text-lg py-6 px-8 border-2 border-border text-foreground hover:bg-muted/50 hover:text-muted-foreground hover:border-muted-foreground focus:ring-4 focus:ring-ring focus:ring-offset-2"
+                  className="text-lg py-6 px-8 bg-secondary text-secondary-foreground hover:bg-secondary/90 focus:ring-4 focus:ring-ring focus:ring-offset-2"
                   aria-label="Restart and reset the form"
                 >
                   <ArrowCounterClockwise size={22} className="mr-2" aria-hidden="true" />
